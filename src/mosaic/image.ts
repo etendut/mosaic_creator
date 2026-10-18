@@ -60,7 +60,27 @@ export const imageToCanvas = (image: HTMLImageElement) => {
  * Encode an image for a project file. Always lossless PNG: JPEG shifts pixels near colour edges, so a reopened
  * project would match a few bricks differently from the parts already ordered. PNG also keeps transparency.
  */
-export const canvasToDataUrl = (canvas: HTMLCanvasElement) => canvas.toDataURL('image/png');
+export const canvasToPng = (canvas: HTMLCanvasElement) =>
+    new Promise<Uint8Array>((resolve, reject) =>
+        canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error('Could not save the image'));
+            blob.arrayBuffer().then((buffer) => resolve(new Uint8Array(buffer)), reject);
+        }, 'image/png'),
+    );
+
+/**
+ * Decode PNG bytes (from a project file) into an image. The image keeps its blob: URL as its src because the image
+ * step displays it from there; whoever replaces the image revokes it, as for any chosen file.
+ */
+export const pngToImage = async (png: Uint8Array) => {
+    const url = URL.createObjectURL(new Blob([png.slice()], { type: 'image/png' }));
+    try {
+        return await loadImage(url);
+    } catch (e) {
+        URL.revokeObjectURL(url);
+        throw e;
+    }
+};
 
 /** Mirror an image. Done as a separate step so the cropper can show the flipped image. */
 export const flipImage = (

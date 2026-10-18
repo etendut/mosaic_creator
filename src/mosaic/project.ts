@@ -1,3 +1,4 @@
+import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { catalog, DEFAULT_BRICK_ID, DEFAULT_PLATE_ID } from '../data/catalog';
 import type { ColorMetric } from './color';
 import type { PalettePreset } from './palette';
@@ -93,29 +94,63 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
     };
 };
 
-export const serializeProject = (settings: ProjectSettings, image: string | null) =>
-    JSON.stringify({ app: PROJECT_APP, version: PROJECT_VERSION, savedAt: new Date().toISOString(), settings, image });
+/** What's inside a project zip. Plain files, so the image or settings can be recovered without this app. */
+export const PROJECT_FILES = {
+    settings: 'project.json',
+    image: 'image.png',
+    wantedList: 'bricklink-wanted-list.xml',
+} as const;
 
-export interface OpenedProject {
+const NOT_A_PROJECT = "That file isn't a Mosaic Creator project.";
+
+export interface ProjectContents {
     settings: ProjectSettings;
-    /** The edited image as a data: URL, if the project had one. */
-    image: string | null;
+    /** The edited image as PNG bytes, if the project has one. */
+    image: Uint8Array | null;
 }
 
-export const parseProject = (text: string): OpenedProject => {
+/**
+ * Bundle a project as a zip: project.json (settings, readable in any text editor), image.png (lossless, opens in
+ * any image viewer) and, if given, the BrickLink wanted list as it stood when saved.
+ */
+export const packProject = ({ settings, image }: ProjectContents, wantedList?: string): Uint8Array => {
+    const files: Zippable = {
+        [PROJECT_FILES.settings]: strToU8(
+            JSON.stringify(
+                { app: PROJECT_APP, version: PROJECT_VERSION, savedAt: new Date().toISOString(), settings },
+                null,
+                2,
+            ),
+        ),
+    };
+    // PNG is already compressed; storing it as-is saves time for nothing lost
+    if (image) files[PROJECT_FILES.image] = [image, { level: 0 }];
+    if (wantedList) files[PROJECT_FILES.wantedList] = strToU8(wantedList);
+    return zipSync(files);
+};
+
+export const unpackProject = (zip: Uint8Array): ProjectContents => {
+    let files: Record<string, Uint8Array>;
+    try {
+        files = unzipSync(zip);
+    } catch {
+        throw new Error(NOT_A_PROJECT);
+    }
+    const settingsFile = files[PROJECT_FILES.settings];
+    if (!settingsFile) throw new Error(NOT_A_PROJECT);
+
     let value: unknown;
     try {
-        value = JSON.parse(text);
+        value = JSON.parse(strFromU8(settingsFile));
     } catch {
-        throw new Error("That file isn't a Mosaic Creator project.");
+        throw new Error(`${PROJECT_FILES.settings} in that zip can't be read.`);
     }
-    if (!isObject(value) || value.app !== PROJECT_APP) throw new Error("That file isn't a Mosaic Creator project.");
+    if (!isObject(value) || value.app !== PROJECT_APP) throw new Error(NOT_A_PROJECT);
     if (typeof value.version === 'number' && value.version > PROJECT_VERSION)
         throw new Error('That project was saved by a newer version of Mosaic Creator.');
-    const image = isString(value.image) && value.image.startsWith('data:image/') ? value.image : null;
-    return { settings: sanitizeSettings(value.settings), image };
+    return { settings: sanitizeSettings(value.settings), image: files[PROJECT_FILES.image] ?? null };
 };
 
 /** File name for a project, safe on Windows and macOS. */
 export const projectFileName = (title: string) =>
-    `${title.replace(/[\\/:*?"<>|]+/g, '').trim() || 'mosaic'}.mosaic.json`;
+    `${title.replace(/[\\/:*?"<>|]+/g, '').trim() || 'mosaic'}.mosaic.zip`;

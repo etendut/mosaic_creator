@@ -1,11 +1,13 @@
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { catalog } from '../data/catalog';
 import {
     DEFAULT_PROJECT,
     MAX_PLATES_ACROSS,
-    parseProject,
+    packProject,
+    PROJECT_FILES,
     projectFileName,
     sanitizeSettings,
-    serializeProject,
+    unpackProject,
     type ProjectSettings,
 } from './project';
 
@@ -20,35 +22,53 @@ const custom: ProjectSettings = {
     metric: 'perceptual',
     swaps: [[85, 86]],
 };
+// the 8-byte PNG signature is enough to check the bytes come back untouched
+const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+const wantedList = '<INVENTORY>\n</INVENTORY>\n';
 
-describe('project files', () => {
-    it('round-trip settings and image', () => {
-        const opened = parseProject(serializeProject(custom, 'data:image/png;base64,AAAA'));
+describe('project zip', () => {
+    it('round-trips settings and image', () => {
+        const opened = unpackProject(packProject({ settings: custom, image: png }, wantedList));
         expect(opened.settings).toEqual(custom);
-        expect(opened.image).toBe('data:image/png;base64,AAAA');
+        expect(opened.image).toEqual(png);
     });
 
-    it('open without an image', () => {
-        expect(parseProject(serializeProject(custom, null)).image).toBeNull();
+    it('holds plain files that open without the app', () => {
+        const files = unzipSync(packProject({ settings: custom, image: png }, wantedList));
+        expect(Object.keys(files).sort()).toEqual(
+            [PROJECT_FILES.image, PROJECT_FILES.settings, PROJECT_FILES.wantedList].sort(),
+        );
+        expect(files[PROJECT_FILES.image]).toEqual(png);
+        expect(strFromU8(files[PROJECT_FILES.wantedList])).toBe(wantedList);
+        // readable, indented JSON
+        const json = strFromU8(files[PROJECT_FILES.settings]);
+        expect(json).toContain('\n  "settings": {');
+        expect(JSON.parse(json).settings.card.title).toBe('Library Day');
     });
 
-    it('reject files that are not projects', () => {
-        expect(() => parseProject('not json')).toThrow("isn't a Mosaic Creator project");
-        expect(() => parseProject('{"name":"Club","colorIds":[1]}')).toThrow("isn't a Mosaic Creator project");
+    it('opens without an image or wanted list', () => {
+        const files = unzipSync(packProject({ settings: custom, image: null }));
+        expect(Object.keys(files)).toEqual([PROJECT_FILES.settings]);
+        expect(unpackProject(packProject({ settings: custom, image: null })).image).toBeNull();
     });
 
-    it('reject projects from a newer version', () => {
-        expect(() => parseProject('{"app":"mosaic-creator","version":99}')).toThrow('newer version');
+    it('rejects files that are not project zips', () => {
+        expect(() => unpackProject(strToU8('{"name":"Club","colorIds":[1]}'))).toThrow(
+            "isn't a Mosaic Creator project",
+        );
+        expect(() => unpackProject(zipSync({ 'photo.png': png }))).toThrow("isn't a Mosaic Creator project");
+        expect(() => unpackProject(zipSync({ 'project.json': strToU8('{"app":"other"}') }))).toThrow(
+            "isn't a Mosaic Creator project",
+        );
     });
 
-    it('ignore an image that is not a data URL', () => {
-        const text = JSON.stringify({
-            app: 'mosaic-creator',
-            version: 1,
-            settings: {},
-            image: 'https://example.com/x.png',
-        });
-        expect(parseProject(text).image).toBeNull();
+    it('explains an unreadable settings file', () => {
+        expect(() => unpackProject(zipSync({ 'project.json': strToU8('{oops') }))).toThrow("can't be read");
+    });
+
+    it('rejects projects from a newer version', () => {
+        const zip = zipSync({ 'project.json': strToU8('{"app":"mosaic-creator","version":99}') });
+        expect(() => unpackProject(zip)).toThrow('newer version');
     });
 });
 
@@ -87,7 +107,7 @@ describe('sanitizeSettings', () => {
 
 describe('projectFileName', () => {
     it('uses the card title, minus characters files cannot have', () => {
-        expect(projectFileName('Library Day: 2026/27?')).toBe('Library Day 202627.mosaic.json');
-        expect(projectFileName('  ')).toBe('mosaic.mosaic.json');
+        expect(projectFileName('Library Day: 2026/27?\\')).toBe('Library Day 202627.mosaic.zip');
+        expect(projectFileName('  ')).toBe('mosaic.mosaic.zip');
     });
 });

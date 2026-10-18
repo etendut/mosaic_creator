@@ -15,8 +15,9 @@ your machine. Supported browsers: Chrome and Edge.
 5. **Parts** — download or copy a BrickLink wanted-list XML.
 6. **Print** — print the building cards. Each card shows the BrickLink colour id on every brick.
 
-Use **Project → Save project** to keep the image and every setting in one `.mosaic.json` file you can reopen or
-share. The browser also remembers your settings (not the image) between visits; **Project → Reset to defaults**
+Use **Project → Save project** to keep everything in one `.mosaic.zip` you can reopen or share. It's an ordinary
+zip: `image.png` is the edited image, `project.json` the settings and `bricklink-wanted-list.xml` the parts, so
+they can be recovered without the app. The browser also remembers your settings (not the image) between visits; **Project → Reset to defaults**
 clears them.
 
 ## Development

@@ -14,8 +14,9 @@ import {
 } from '@mui/material';
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
-import { canvasToDataUrl, loadImage } from '../mosaic/image';
-import { DEFAULT_PROJECT, parseProject, projectFileName, serializeProject } from '../mosaic/project';
+import { toBrickLinkXml } from '../mosaic/bricklinkXml';
+import { canvasToPng, pngToImage } from '../mosaic/image';
+import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '../mosaic/project';
 import type { Mosaic } from '../useMosaic';
 
 interface ProjectMenuProps {
@@ -31,25 +32,27 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
     const [confirmReset, setConfirmReset] = useState(false);
     const [message, setMessage] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
 
-    const save = () => {
+    const save = async () => {
         setAnchor(null);
-        const image = mosaic.image ? canvasToDataUrl(mosaic.image) : null;
-        downloadFile(
-            serializeProject(mosaic.project, image),
-            projectFileName(mosaic.settings.title),
-            'application/json',
-        );
-        setMessage({
-            severity: 'success',
-            text: image ? 'Project saved.' : 'Settings saved. There was no image to include.',
-        });
+        try {
+            const image = mosaic.image ? await canvasToPng(mosaic.image) : null;
+            const wantedList = mosaic.parts.length > 0 ? toBrickLinkXml(mosaic.parts) : undefined;
+            const zip = packProject({ settings: mosaic.project, image }, wantedList);
+            downloadFile(zip, projectFileName(mosaic.settings.title), 'application/zip');
+            setMessage({
+                severity: 'success',
+                text: image ? 'Project saved.' : 'Settings saved. There was no image to include.',
+            });
+        } catch (e) {
+            setMessage({ severity: 'error', text: e instanceof Error ? e.message : String(e) });
+        }
     };
 
     const open = async (file: File | undefined) => {
         if (!file) return;
         try {
-            const project = parseProject(await file.text());
-            const image = project.image ? await loadImage(project.image) : null;
+            const project = unpackProject(new Uint8Array(await file.arrayBuffer()));
+            const image = project.image ? await pngToImage(project.image) : null;
             mosaic.setProject(project.settings);
             if (image) onImageOpened(image);
             setMessage({ severity: 'success', text: `Opened ${file.name}.` });
@@ -76,10 +79,10 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
                         fileInput.current?.click();
                     }}
                 >
-                    <ListItemText primary="Open project…" secondary="Continue from a saved .mosaic.json file" />
+                    <ListItemText primary="Open project…" secondary="Continue from a saved .mosaic.zip file" />
                 </MenuItem>
                 <MenuItem onClick={save}>
-                    <ListItemText primary="Save project" secondary="Image and all settings, in one file" />
+                    <ListItemText primary="Save project" secondary="Image, settings and parts list in one zip" />
                 </MenuItem>
                 <Divider />
                 <MenuItem
@@ -94,7 +97,7 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
             <input
                 ref={fileInput}
                 type="file"
-                accept=".json,application/json"
+                accept=".zip,application/zip"
                 hidden
                 data-testid="project-file"
                 onChange={(e) => {
