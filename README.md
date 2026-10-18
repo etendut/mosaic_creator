@@ -7,7 +7,8 @@ your machine. Supported browsers: Chrome and Edge.
 
 ## Using it
 
-1. Download `mosaic-creator.html` (CI build artifact) and open it in Chrome or Edge.
+1. Open https://etendut.github.io/mosaic_creator/ in Chrome or Edge. To use it offline, save the page (Ctrl+S) and
+   open the saved file; it's one self-contained HTML file.
 2. **Image** — choose or drop a picture, crop/rotate/adjust it, then *Use this image*.
 3. **Bricks** — pick the backing plate, the brick, and how many plates wide the mosaic is.
 4. **Cards** — set the title, messages and card colour.
