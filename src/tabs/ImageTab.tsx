@@ -17,11 +17,13 @@ const NO_ADJUSTMENTS = { brightness: 100, contrast: 100, saturation: 100 };
 
 interface ImageTabProps {
     onApply: (image: HTMLCanvasElement) => void;
+    /** Start from this image, e.g. the one in an opened project. */
+    initialSource?: HTMLImageElement | null;
 }
 
-const ImageTab = ({ onApply }: ImageTabProps) => {
+const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
     const fileInput = useRef<HTMLInputElement>(null);
-    const [source, setSource] = useState<HTMLImageElement | null>(null);
+    const [source, setSource] = useState<HTMLImageElement | null>(initialSource);
     const [error, setError] = useState('');
     const [flipH, setFlipH] = useState(false);
     const [flipV, setFlipV] = useState(false);

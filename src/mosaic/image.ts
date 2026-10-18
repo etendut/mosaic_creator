@@ -49,6 +49,19 @@ export const filterCss = ({
 }: Pick<ImageEdits, 'brightness' | 'contrast' | 'saturation'>) =>
     `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
 
+/** Copy an image onto a new canvas. */
+export const imageToCanvas = (image: HTMLImageElement) => {
+    const canvas = createCanvas(image.width, image.height);
+    context2d(canvas).drawImage(image, 0, 0);
+    return canvas;
+};
+
+/**
+ * Encode an image for a project file. Always lossless PNG: JPEG shifts pixels near colour edges, so a reopened
+ * project would match a few bricks differently from the parts already ordered. PNG also keeps transparency.
+ */
+export const canvasToDataUrl = (canvas: HTMLCanvasElement) => canvas.toDataURL('image/png');
+
 /** Mirror an image. Done as a separate step so the cropper can show the flipped image. */
 export const flipImage = (
     image: CanvasImageSource & { width: number; height: number },

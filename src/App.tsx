@@ -1,5 +1,7 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useState } from 'react';
+import ProjectMenu from './components/ProjectMenu';
+import { imageToCanvas } from './mosaic/image';
 import BricksTab from './tabs/BricksTab';
 import CardsTab from './tabs/CardsTab';
 import ImageTab from './tabs/ImageTab';
@@ -55,6 +57,8 @@ const StepLabel = ({ number, name, state }: { number: number; name: string; stat
 const App = () => {
     const mosaic = useMosaic();
     const [step, setStep] = useState<Step>('Image');
+    // an opened project's image restarts the image step from that image
+    const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement; key: number } | null>(null);
     const hasImage = !!mosaic.grid;
 
     const content = () => {
@@ -118,9 +122,20 @@ const App = () => {
                         />
                     ))}
                 </Tabs>
+                <Box sx={{ flexGrow: 1 }} />
+                <ProjectMenu
+                    mosaic={mosaic}
+                    onImageOpened={(image) => {
+                        mosaic.setImage(imageToCanvas(image));
+                        setOpenedImage({ image, key: Date.now() });
+                        setStep('Bricks');
+                    }}
+                />
             </Box>
             <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
                 <ImageTab
+                    key={openedImage?.key}
+                    initialSource={openedImage?.image}
                     onApply={(image) => {
                         mosaic.setImage(image);
                         setStep('Bricks');
