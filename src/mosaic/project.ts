@@ -151,6 +151,6 @@ export const unpackProject = (zip: Uint8Array): ProjectContents => {
     return { settings: sanitizeSettings(value.settings), image: files[PROJECT_FILES.image] ?? null };
 };
 
-/** File name for a project, safe on Windows and macOS. */
-export const projectFileName = (title: string) =>
-    `${title.replace(/[\\/:*?"<>|]+/g, '').trim() || 'mosaic'}.mosaic.zip`;
+/** File name for a project or a template (settings only), safe on Windows and macOS. */
+export const projectFileName = (title: string, template = false) =>
+    `${title.replace(/[\\/:*?"<>|]+/g, '').trim() || 'mosaic'}${template ? ' template' : ''}.mosaic.zip`;

@@ -17,7 +17,8 @@ your machine. Supported browsers: Chrome and Edge.
 
 Use **Project → Save project** to keep everything in one `.mosaic.zip` you can reopen or share. It's an ordinary
 zip: `image.png` is the edited image, `project.json` the settings and `bricklink-wanted-list.xml` the parts, so
-they can be recovered without the app. The browser also remembers your settings (not the image) between visits; **Project → Reset to defaults**
+they can be recovered without the app. **Save as template** keeps just the settings, so the next mosaic only needs a new
+image: open the template, then choose the image. The browser also remembers your settings (not the image) between visits; **Project → Reset to defaults**
 clears them.
 
 ## Development

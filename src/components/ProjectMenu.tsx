@@ -32,16 +32,17 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
     const [confirmReset, setConfirmReset] = useState(false);
     const [message, setMessage] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
 
-    const save = async () => {
+    /** A template is the settings alone: no image, and so no parts list either. */
+    const save = async (template: boolean) => {
         setAnchor(null);
         try {
-            const image = mosaic.image ? await canvasToPng(mosaic.image) : null;
-            const wantedList = mosaic.parts.length > 0 ? toBrickLinkXml(mosaic.parts) : undefined;
+            const image = !template && mosaic.image ? await canvasToPng(mosaic.image) : null;
+            const wantedList = image && mosaic.parts.length > 0 ? toBrickLinkXml(mosaic.parts) : undefined;
             const zip = packProject({ settings: mosaic.project, image }, wantedList);
-            downloadFile(zip, projectFileName(mosaic.settings.title), 'application/zip');
+            downloadFile(zip, projectFileName(mosaic.settings.title, !image), 'application/zip');
             setMessage({
                 severity: 'success',
-                text: image ? 'Project saved.' : 'Settings saved. There was no image to include.',
+                text: image ? 'Project saved.' : 'Template saved: your settings, without an image.',
             });
         } catch (e) {
             setMessage({ severity: 'error', text: e instanceof Error ? e.message : String(e) });
@@ -55,7 +56,11 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
             const image = project.image ? await pngToImage(project.image) : null;
             mosaic.setProject(project.settings);
             if (image) onImageOpened(image);
-            setMessage({ severity: 'success', text: `Opened ${file.name}.` });
+            const kept = mosaic.image ? ' Your current image is kept.' : ' Choose an image to use it.';
+            setMessage({
+                severity: 'success',
+                text: image ? `Opened ${file.name}.` : `Opened template ${file.name}.${kept}`,
+            });
         } catch (e) {
             setMessage({ severity: 'error', text: e instanceof Error ? e.message : String(e) });
         }
@@ -79,10 +84,19 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
                         fileInput.current?.click();
                     }}
                 >
-                    <ListItemText primary="Open project…" secondary="Continue from a saved .mosaic.zip file" />
+                    <ListItemText
+                        primary="Open project or template…"
+                        secondary="A saved project or template (.mosaic.zip)"
+                    />
                 </MenuItem>
-                <MenuItem onClick={save}>
+                <MenuItem onClick={() => save(false)} disabled={!mosaic.image}>
                     <ListItemText primary="Save project" secondary="Image, settings and parts list in one zip" />
+                </MenuItem>
+                <MenuItem onClick={() => save(true)}>
+                    <ListItemText
+                        primary="Save as template"
+                        secondary="Just your settings, to reuse with a new image"
+                    />
                 </MenuItem>
                 <Divider />
                 <MenuItem

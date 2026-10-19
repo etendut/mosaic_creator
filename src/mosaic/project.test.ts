@@ -110,4 +110,8 @@ describe('projectFileName', () => {
         expect(projectFileName('Library Day: 2026/27?\\')).toBe('Library Day 202627.mosaic.zip');
         expect(projectFileName('  ')).toBe('mosaic.mosaic.zip');
     });
+
+    it('marks templates in the name', () => {
+        expect(projectFileName('Library Day', true)).toBe('Library Day template.mosaic.zip');
+    });
 });
