@@ -17,7 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run test:coverage
       - run: npm run build
       - run: mv dist/index.html dist/mosaic-creator.html
       - uses: actions/upload-artifact@v4
