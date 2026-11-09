@@ -132,12 +132,18 @@ const App = () => {
                     value={step}
                     onChange={(_, value: Step) => setStep(value)}
                     variant="scrollable"
+                    // arrows whenever the steps don't all fit (phones), so a cut-off row can't pass for the whole
+                    // list; each arrow fades out once that end is reached
+                    scrollButtons="auto"
+                    allowScrollButtonsMobile
                     aria-label="Steps"
                     sx={{
                         order: { xs: 3, md: 0 },
                         width: { xs: '100%', md: 'auto' },
                         minHeight: { xs: 48, md: 60 },
                         '& .MuiTab-root': { minHeight: { xs: 48, md: 60 }, paddingInline: { xs: 1.5, md: 2 } },
+                        '& .MuiTabs-scrollButtons': { width: 28, color: tokens.azure },
+                        '& .MuiTabs-scrollButtons.Mui-disabled': { opacity: 0.25 },
                     }}
                 >
                     {STEPS.map((name, i) => (
