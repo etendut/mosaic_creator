@@ -7,6 +7,10 @@ export interface PartLine {
     quantity: number;
 }
 
+/** The mosaic's own brick lines: one per colour used, with its count. */
+export const colorsUsed = (parts: PartLine[], brickPartId: string) =>
+    parts.filter((line) => line.partId === brickPartId);
+
 /** Exact part counts for the mosaic: bricks per colour, one plate per card, plus pins for plates that need them. */
 export const buildPartsList = (
     cards: MosaicCard[],

@@ -1,4 +1,50 @@
-import { CARD_GAP_MM, PAGE_MARGIN_MM, pageLayout, studPxForCard, usesPaperSize } from './layout';
+import {
+    CARD_GAP_MM,
+    LEGEND_ROW_MM,
+    MAP_HEADER_MM,
+    MAP_PAGE_GAP_MM,
+    mapPageLayout,
+    PAGE_MARGIN_MM,
+    pageLayout,
+    studPxForCard,
+    usesPaperSize,
+} from './layout';
+
+describe('mapPageLayout', () => {
+    const fits = (l: ReturnType<typeof mapPageLayout>) => {
+        const used = MAP_HEADER_MM + l.legendRows * LEGEND_ROW_MM + MAP_PAGE_GAP_MM * 2 + l.mapHeightMm;
+        expect(used).toBeLessThanOrEqual(l.contentHeightMm + 1e-9);
+        expect(l.mapWidthMm).toBeLessThanOrEqual(l.contentWidthMm + 1e-9);
+    };
+
+    it('turns the page to match the mosaic', () => {
+        expect(mapPageLayout('A4', { width: 160, height: 96 }, 10).label).toBe('A4 landscape');
+        expect(mapPageLayout('Letter', { width: 96, height: 160 }, 10).label).toBe('Letter portrait');
+    });
+
+    it('fills the height when the mosaic is tall, keeping its shape', () => {
+        const l = mapPageLayout('A4', { width: 96, height: 160 }, 12);
+        fits(l);
+        expect(l.contentHeightMm - MAP_HEADER_MM - l.legendRows * LEGEND_ROW_MM - MAP_PAGE_GAP_MM * 2).toBeCloseTo(
+            l.mapHeightMm,
+        );
+        expect(l.mapWidthMm / l.mapHeightMm).toBeCloseTo(96 / 160);
+    });
+
+    it('fills the width when the mosaic is wide', () => {
+        const l = mapPageLayout('A4', { width: 640, height: 80 }, 40);
+        fits(l);
+        expect(l.mapWidthMm).toBeCloseTo(l.contentWidthMm);
+    });
+
+    it('makes room for a long legend', () => {
+        const few = mapPageLayout('A4', { width: 160, height: 160 }, 5);
+        const many = mapPageLayout('A4', { width: 160, height: 160 }, 60);
+        fits(many);
+        expect(many.legendRows).toBeGreaterThan(few.legendRows);
+        expect(many.mapHeightMm).toBeLessThan(few.mapHeightMm);
+    });
+});
 
 describe('pageLayout', () => {
     it.each([

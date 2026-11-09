@@ -28,15 +28,6 @@ const MosaicPreview = ({ mosaic }: { mosaic: Mosaic }) => {
                 display: 'block',
                 maxWidth: '100%',
                 height: 'auto',
-                // in print, fill the space the parent leaves and scale down to fit it
-                '@media print': {
-                    flex: 1,
-                    minHeight: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    objectPosition: 'left top',
-                },
             }}
         />
     );
