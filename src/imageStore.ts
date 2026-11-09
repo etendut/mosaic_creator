@@ -40,8 +40,9 @@ let latest = 0;
 export const recallImage = async (): Promise<Uint8Array | null> => {
     if (!available()) return null;
     try {
-        const png = await run('readonly', (store) => store.get(KEY));
-        return png instanceof Uint8Array ? png : null;
+        const png: unknown = await run('readonly', (store) => store.get(KEY));
+        // isView rather than instanceof: the stored bytes can come back from another realm's Uint8Array
+        return ArrayBuffer.isView(png) ? new Uint8Array(png.buffer, png.byteOffset, png.byteLength) : null;
     } catch {
         return null;
     }

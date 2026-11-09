@@ -26,7 +26,8 @@ on this device only; **Project → Reset to defaults** clears the settings and *
 ```sh
 npm install
 npm run dev        # dev server
-npm test           # unit tests (Vitest)
+npm test           # tests (Vitest)
+npm run test:coverage  # tests with coverage; fails below 80% (CI runs this)
 npm run lint
 npm run typecheck
 npm run build      # dist/index.html, a single self-contained file
@@ -37,7 +38,9 @@ npm run build      # dist/index.html, a single self-contained file
   Don't hand-edit; to refresh it, download Colors, Codes and Parts as XML from
   https://www.bricklink.com/catalogDownload.asp into `temp/bricklink/` and run
   `node scripts/build-catalog.mjs temp/bricklink`. The part list lives at the top of that script.
-- `src/tabs/`, `src/components/` — the UI.
+- `src/tabs/`, `src/components/` — the UI, tested through the whole app with Testing Library.
+- `src/test/` — test setup. jsdom has no canvas, image decoding or IndexedDB, so `fakes.ts` stands in for them
+  (a canvas holding a known picture, images that load, fake-indexeddb) and the real app code runs on top.
 
 ## Licence
 
