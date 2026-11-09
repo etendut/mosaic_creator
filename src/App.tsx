@@ -1,7 +1,8 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ProjectMenu from './components/ProjectMenu';
-import { imageToCanvas } from './mosaic/image';
+import { recallImage } from './imageStore';
+import { imageToCanvas, pngToImage } from './mosaic/image';
 import BricksTab from './tabs/BricksTab';
 import CardsTab from './tabs/CardsTab';
 import ImageTab from './tabs/ImageTab';
@@ -58,8 +59,30 @@ const App = () => {
     const mosaic = useMosaic();
     const [step, setStep] = useState<Step>('Image');
     // an opened project's image restarts the image step from that image
-    const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement; key: number } | null>(null);
+    const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement | null; key: number } | null>(null);
     const hasImage = !!mosaic.grid;
+    // set once the user picks or opens an image, so a slow restore of the last one can't replace it
+    const imageChosen = useRef(false);
+
+    /** Load an image into every step: the mosaic, and the image step to edit it again. */
+    const showImage = (image: HTMLImageElement, remember = true) => {
+        mosaic.setImage(imageToCanvas(image), { remember });
+        setOpenedImage({ image, key: Date.now() });
+        setStep('Bricks');
+    };
+
+    // pick up where the last visit left off
+    useEffect(() => {
+        recallImage()
+            .then((png) => (png ? pngToImage(png) : null))
+            .then((image) => {
+                if (image && !imageChosen.current) showImage(image, false);
+            })
+            .catch(() => {
+                // a stored image that no longer decodes is simply not restored
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on start
+    }, []);
 
     const content = () => {
         // ImageTab stays mounted (below) so the crop/edit state survives switching steps
@@ -126,9 +149,14 @@ const App = () => {
                 <ProjectMenu
                     mosaic={mosaic}
                     onImageOpened={(image) => {
-                        mosaic.setImage(imageToCanvas(image));
-                        setOpenedImage({ image, key: Date.now() });
-                        setStep('Bricks');
+                        imageChosen.current = true;
+                        showImage(image);
+                    }}
+                    onForgetImage={() => {
+                        imageChosen.current = true;
+                        mosaic.setImage(null);
+                        setOpenedImage({ image: null, key: Date.now() });
+                        setStep('Image');
                     }}
                 />
             </Box>
@@ -137,6 +165,7 @@ const App = () => {
                     key={openedImage?.key}
                     initialSource={openedImage?.image}
                     onApply={(image) => {
+                        imageChosen.current = true;
                         mosaic.setImage(image);
                         setStep('Bricks');
                     }}
