@@ -17,6 +17,7 @@ import {
 import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
 import { tokens } from '../theme';
+import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
 
 /** Large print jobs are split into batches; Chrome gets slow rendering hundreds of card pages at once. */
@@ -73,6 +74,8 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const batches = chunk(pages, PAGES_PER_BATCH);
     const currentBatch = Math.min(batch, Math.max(0, batches.length - 1));
     const studPx = studPxForCard(mmToPx(layout.cardWidthMm), mmToPx(layout.cardHeightMm), cellsPerSide * brick.size);
+    // pages are shown at print size, shrunk on screens narrower than a page (with its 1px border each side)
+    const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.pageWidthMm) + 2);
 
     return (
         <Box sx={{ padding: 2, '@media print': { padding: 0 } }}>
@@ -138,33 +141,35 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 )}
             </Stack>
 
-            <Stage sx={{ overflowX: 'auto' }}>
-                {batches[currentBatch]?.map((page, i) => (
-                    <Sheet key={i} layout={layout}>
-                        {page.kind === 'map' ? (
-                            <MapPage mosaic={mosaic} layout={mapLayout} />
-                        ) : (
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: `repeat(${layout.columns}, ${layout.cardWidthMm}mm)`,
-                                    gridAutoRows: `${layout.cardHeightMm}mm`,
-                                    gap: `${CARD_GAP_MM}mm`,
-                                }}
-                            >
-                                {page.cards.map((card) => (
-                                    <BuildingCard
-                                        key={card.id}
-                                        card={card}
-                                        settings={settings}
-                                        brick={brick}
-                                        studPx={studPx}
-                                    />
-                                ))}
-                            </Box>
-                        )}
-                    </Sheet>
-                ))}
+            <Stage ref={measureStage}>
+                <Box sx={{ zoom: fitScale, '@media print': { zoom: 1 } }}>
+                    {batches[currentBatch]?.map((page, i) => (
+                        <Sheet key={i} layout={layout}>
+                            {page.kind === 'map' ? (
+                                <MapPage mosaic={mosaic} layout={mapLayout} />
+                            ) : (
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: `repeat(${layout.columns}, ${layout.cardWidthMm}mm)`,
+                                        gridAutoRows: `${layout.cardHeightMm}mm`,
+                                        gap: `${CARD_GAP_MM}mm`,
+                                    }}
+                                >
+                                    {page.cards.map((card) => (
+                                        <BuildingCard
+                                            key={card.id}
+                                            card={card}
+                                            settings={settings}
+                                            brick={brick}
+                                            studPx={studPx}
+                                        />
+                                    ))}
+                                </Box>
+                            )}
+                        </Sheet>
+                    ))}
+                </Box>
             </Stage>
         </Box>
     );

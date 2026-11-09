@@ -20,7 +20,7 @@ export const Stage = ({ sx, ...props }: BoxProps) => (
             {
                 ...studTexture,
                 borderRadius: 2.5,
-                padding: 3,
+                padding: { xs: 1.5, sm: 3 },
                 '@media print': { background: 'none', padding: 0, borderRadius: 0 },
             },
             ...(Array.isArray(sx) ? sx : [sx]),

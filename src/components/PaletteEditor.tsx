@@ -2,8 +2,10 @@ import {
     Alert,
     Box,
     Button,
+    FormControlLabel,
     MenuItem,
     Stack,
+    Switch,
     TextField,
     ToggleButton,
     ToggleButtonGroup,
@@ -34,6 +36,7 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
     const { brick, preset, setPreset, allowedColors, toggleColor, setCustomPalette, maxColors, setMaxColors } = mosaic;
     const fileInput = useRef<HTMLInputElement>(null);
     const [message, setMessage] = useState<{ severity: 'error' | 'info'; text: string } | null>(null);
+    const [showNames, setShowNames] = useState(false);
     const allowed = new Set(allowedColors.map((c) => c.id));
     const presetIsEmpty = preset !== 'custom' && presetColors(preset, brick.colors).length === 0;
 
@@ -92,9 +95,18 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                 </Alert>
             )}
             <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ paddingBottom: 1 }}>
-                    {allowed.size} of {brick.colors.length} colours on. Click a colour to turn it on or off.
-                </Typography>
+                <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', paddingBottom: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {allowed.size} of {brick.colors.length} colours on. Click a colour to turn it on or off.
+                    </Typography>
+                    <FormControlLabel
+                        label="Names"
+                        control={
+                            <Switch size="small" checked={showNames} onChange={(e) => setShowNames(e.target.checked)} />
+                        }
+                        sx={{ flexShrink: 0, marginRight: 0 }}
+                    />
+                </Stack>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {brick.colors.map((c) => (
                         <ColorSwatch
@@ -102,6 +114,7 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                             color={c}
                             disabled={!allowed.has(c.id)}
                             title={`${c.name} (${allowed.has(c.id) ? 'on' : 'off'})`}
+                            showName={showNames}
                             onClick={() => toggleColor(c.id)}
                         />
                     ))}

@@ -109,14 +109,20 @@ const App = () => {
                     zIndex: 10,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
-                    paddingInline: 3,
+                    // on phones the steps get their own full-width row below the title
+                    flexWrap: { xs: 'wrap', md: 'nowrap' },
+                    columnGap: 4,
+                    paddingInline: { xs: 2, md: 3 },
                     backgroundColor: tokens.tray,
                     borderBottom: `1px solid ${tokens.groove}`,
                     displayPrint: 'none',
                 }}
             >
-                <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', flexShrink: 0 }}>
+                <Stack
+                    direction="row"
+                    spacing={1.25}
+                    sx={{ alignItems: 'center', flexShrink: 0, minHeight: { xs: 52, md: 'auto' } }}
+                >
                     <Mark />
                     <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
                         Mosaic Creator
@@ -127,7 +133,12 @@ const App = () => {
                     onChange={(_, value: Step) => setStep(value)}
                     variant="scrollable"
                     aria-label="Steps"
-                    sx={{ minHeight: 60, '& .MuiTab-root': { minHeight: 60 } }}
+                    sx={{
+                        order: { xs: 3, md: 0 },
+                        width: { xs: '100%', md: 'auto' },
+                        minHeight: { xs: 48, md: 60 },
+                        '& .MuiTab-root': { minHeight: { xs: 48, md: 60 }, paddingInline: { xs: 1.5, md: 2 } },
+                    }}
                 >
                     {STEPS.map((name, i) => (
                         <Tab

@@ -76,7 +76,7 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                         </Typography>
                         <MosaicSummary mosaic={mosaic} />
                     </Box>
-                    <Button variant="contained" onClick={() => window.print()}>
+                    <Button variant="contained" onClick={() => window.print()} sx={{ flexShrink: 0 }}>
                         Print map
                     </Button>
                 </Stack>
