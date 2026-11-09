@@ -123,14 +123,70 @@ export const resolveSwaps = (swaps: ReadonlyMap<number, number>) => {
     return resolved;
 };
 
-export interface SavedPalette {
-    name: string;
-    colorIds: number[];
+/** One colour in a palette file. Either field may be missing in a hand-written file; `id` wins when both are given. */
+export interface SavedPaletteColor {
+    id?: number;
+    name?: string;
 }
 
+/** A palette read from a file, before it is matched against a brick's colours. */
+export interface SavedPalette {
+    name: string;
+    colors: SavedPaletteColor[];
+}
+
+/**
+ * The palette file: readable names and hex next to each BrickLink id. `colorIds` repeats the ids so the file stays
+ * readable by builds that only know the original `{ name, colorIds }` format.
+ */
+export const paletteFile = (name: string, brickPartId: string, colors: PaletteColor[]) => ({
+    name,
+    brick: brickPartId,
+    colors: colors.map(({ id, name, hex }) => ({ id, name, hex })),
+    colorIds: colors.map((c) => c.id),
+});
+
+const savedColor = (entry: unknown): SavedPaletteColor | null => {
+    if (Number.isInteger(entry)) return { id: entry as number };
+    if (typeof entry !== 'object' || entry === null) return null;
+    const { id, name } = entry as Record<string, unknown>;
+    const color: SavedPaletteColor = {};
+    if (Number.isInteger(id)) color.id = id as number;
+    if (typeof name === 'string' && name.trim()) color.name = name.trim();
+    return color.id === undefined && color.name === undefined ? null : color;
+};
+
+/** Reads a palette file in the current format (`colors`) or the original one (`colorIds`). */
 export const parseSavedPalette = (text: string): SavedPalette => {
     const value = JSON.parse(text);
-    if (!Array.isArray(value?.colorIds) || !value.colorIds.every((id: unknown) => Number.isInteger(id)))
-        throw new Error('Not a palette file');
-    return { name: String(value.name ?? 'Palette'), colorIds: value.colorIds };
+    const list: unknown = Array.isArray(value?.colors) ? value.colors : value?.colorIds;
+    if (!Array.isArray(list)) throw new Error('Not a palette file');
+    const colors = list.map(savedColor);
+    if (colors.some((c) => c === null)) throw new Error('Not a palette file');
+    return { name: String(value.name ?? 'Palette'), colors: colors as SavedPaletteColor[] };
+};
+
+/**
+ * Matches a saved palette to the colours a brick comes in: by id, or by name (ignoring case) when there is no id.
+ * `missing` labels the colours the brick doesn't come in, by name where the file gives one.
+ */
+export const resolveSavedPalette = (palette: SavedPalette, available: PaletteColor[]) => {
+    const byId = new Map(available.map((c) => [c.id, c]));
+    const byName = new Map(available.map((c) => [c.name.toLowerCase(), c]));
+    const ids: number[] = [];
+    const missing: string[] = [];
+    for (const entry of palette.colors) {
+        const match = entry.id !== undefined ? byId.get(entry.id) : byName.get(entry.name!.toLowerCase());
+        if (!match) missing.push(entry.name ?? `colour ${entry.id}`);
+        else if (!ids.includes(match.id)) ids.push(match.id);
+    }
+    return { ids, missing };
+};
+
+/** "A", "A and B", "A, B and C", or "A, B, C, D and 3 more" past `max` names. */
+export const listNames = (names: string[], max = 5) => {
+    if (names.length <= 1) return names.join('');
+    const shown = names.length > max ? names.slice(0, max - 1) : names.slice(0, -1);
+    const last = names.length > max ? `${names.length - shown.length} more` : names[names.length - 1];
+    return `${shown.join(', ')} and ${last}`;
 };

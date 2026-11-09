@@ -3,8 +3,11 @@ import {
     applySwaps,
     isSolidColor,
     limitColors,
+    listNames,
+    paletteFile,
     parseSavedPalette,
     presetColors,
+    resolveSavedPalette,
     resolveSwaps,
     selectPalette,
 } from './palette';
@@ -132,12 +135,67 @@ describe('resolveSwaps', () => {
 });
 
 describe('parseSavedPalette', () => {
-    it('reads a saved palette', () => {
-        expect(parseSavedPalette('{"name":"Club","colorIds":[1,11]}')).toEqual({ name: 'Club', colorIds: [1, 11] });
+    it('reads the original format', () => {
+        expect(parseSavedPalette('{"name":"Club","colorIds":[1,11]}')).toEqual({
+            name: 'Club',
+            colors: [{ id: 1 }, { id: 11 }],
+        });
+    });
+
+    it('reads the named format, preferring colors over colorIds', () => {
+        const file = paletteFile('Club', '3005', [WHITE, BLACK]);
+        expect(file.colors).toEqual([
+            { id: 1, name: 'White', hex: '#FFFFFF' },
+            { id: 11, name: 'Black', hex: '#212121' },
+        ]);
+        expect(parseSavedPalette(JSON.stringify({ ...file, colorIds: [5] }))).toEqual({
+            name: 'Club',
+            colors: [
+                { id: 1, name: 'White' },
+                { id: 11, name: 'Black' },
+            ],
+        });
+    });
+
+    it('reads hand-written entries with only a name', () => {
+        expect(parseSavedPalette('{"colors":[{"name":" red "}]}')).toEqual({
+            name: 'Palette',
+            colors: [{ name: 'red' }],
+        });
     });
 
     it('rejects other files', () => {
         expect(() => parseSavedPalette('{"colorIds":["x"]}')).toThrow('Not a palette file');
+        expect(() => parseSavedPalette('{"colors":[{"hex":"#FFFFFF"}]}')).toThrow('Not a palette file');
+        expect(() => parseSavedPalette('{"name":"x"}')).toThrow('Not a palette file');
         expect(() => parseSavedPalette('not json')).toThrow();
+    });
+});
+
+describe('resolveSavedPalette', () => {
+    it('matches by id, then by name ignoring case, and names what is missing', () => {
+        const palette = {
+            name: 'Club',
+            colors: [{ id: 1, name: 'Renamed White' }, { name: 'black' }, { id: 12, name: 'Trans-Clear' }, { id: 999 }],
+        };
+        expect(resolveSavedPalette(palette, [WHITE, BLACK, RED])).toEqual({
+            ids: [1, 11],
+            missing: ['Trans-Clear', 'colour 999'],
+        });
+    });
+
+    it('round-trips an exported palette', () => {
+        const text = JSON.stringify(paletteFile('Club', '3005', [RED, LBG]));
+        expect(resolveSavedPalette(parseSavedPalette(text), [WHITE, RED, LBG])).toEqual({ ids: [5, 86], missing: [] });
+    });
+});
+
+describe('listNames', () => {
+    it('joins names into a sentence', () => {
+        expect(listNames([])).toBe('');
+        expect(listNames(['A'])).toBe('A');
+        expect(listNames(['A', 'B'])).toBe('A and B');
+        expect(listNames(['A', 'B', 'C'])).toBe('A, B and C');
+        expect(listNames(['A', 'B', 'C', 'D', 'E', 'F', 'G'])).toBe('A, B, C, D and 3 more');
     });
 });

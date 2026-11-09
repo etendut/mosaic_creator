@@ -12,7 +12,14 @@ import {
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
 import type { ColorMetric } from '../mosaic/color';
-import { parseSavedPalette, presetColors, type PalettePreset, type SavedPalette } from '../mosaic/palette';
+import {
+    listNames,
+    paletteFile,
+    parseSavedPalette,
+    presetColors,
+    resolveSavedPalette,
+    type PalettePreset,
+} from '../mosaic/palette';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
 
@@ -31,22 +38,24 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
     const presetIsEmpty = preset !== 'custom' && presetColors(preset, brick.colors).length === 0;
 
     const save = () => {
-        const palette: SavedPalette = { name: mosaic.settings.title, colorIds: allowedColors.map((c) => c.id) };
-        downloadFile(JSON.stringify(palette, null, 2), `${palette.name || 'palette'}.palette.json`, 'application/json');
+        const name = mosaic.settings.title;
+        const file = paletteFile(name, brick.partId, allowedColors);
+        downloadFile(JSON.stringify(file, null, 2), `${name || 'palette'}.palette.json`, 'application/json');
     };
 
     const load = async (file: File | undefined) => {
         if (!file) return;
         try {
             const palette = parseSavedPalette(await file.text());
-            const available = new Set(brick.colors.map((c) => c.id));
-            const missing = palette.colorIds.filter((id) => !available.has(id)).length;
-            setCustomPalette(palette.colorIds.filter((id) => available.has(id)));
+            const { ids, missing } = resolveSavedPalette(palette, brick.colors);
+            if (ids.length === 0) throw new Error(`None of the colours in "${palette.name}" come in ${brick.name}.`);
+            setCustomPalette(ids);
+            const verb = missing.length === 1 ? "doesn't" : "don't";
             setMessage(
-                missing > 0
+                missing.length > 0
                     ? {
                           severity: 'info',
-                          text: `Loaded "${palette.name}". ${missing} of its colours don't come in this brick.`,
+                          text: `Loaded "${palette.name}". ${listNames(missing)} ${verb} come in ${brick.name}.`,
                       }
                     : null,
             );
