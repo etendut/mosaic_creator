@@ -86,20 +86,30 @@ export interface MapPageLayout {
     mapHeightMm: number;
 }
 
+type Page = Pick<PageLayout, 'label' | 'pageWidthMm' | 'pageHeightMm'>;
+
+/** A page of the paper size turned to match the mosaic: landscape when it is wider than tall. */
+export const pageForMosaic = (paperSize: PaperSize, mosaic: { width: number; height: number }): Page => {
+    const landscape = mosaic.width >= mosaic.height;
+    const { width, height } = SHEETS[paperSize];
+    return {
+        label: `${paperSize} ${landscape ? 'landscape' : 'portrait'}`,
+        pageWidthMm: landscape ? height : width,
+        pageHeightMm: landscape ? width : height,
+    };
+};
+
 /**
- * The one-page card map: header, colour legend, then the map as large as fits. Landscape when the mosaic is wider
- * than tall. Every size is worked out here in mm rather than left to flexbox, because mobile print engines don't
- * reliably stretch a canvas to fill leftover space.
+ * The one-page card map on `page`: header, colour legend, then the map as large as fits. Every size is worked out
+ * here in mm rather than left to flexbox, because mobile print engines don't reliably stretch a canvas to fill
+ * leftover space.
  */
 export const mapPageLayout = (
-    paperSize: PaperSize | Sheet,
+    page: Page,
     mosaic: { width: number; height: number },
     colorCount: number,
 ): MapPageLayout => {
-    const landscape = mosaic.width >= mosaic.height;
-    const { width, height } = SHEETS[paperSize];
-    const pageWidthMm = landscape ? height : width;
-    const pageHeightMm = landscape ? width : height;
+    const { label, pageWidthMm, pageHeightMm } = page;
     const contentWidthMm = pageWidthMm - PAGE_MARGIN_MM * 2;
     const contentHeightMm = pageHeightMm - PAGE_MARGIN_MM * 2 - MAP_PAGE_SLACK_MM;
 
@@ -111,7 +121,7 @@ export const mapPageLayout = (
     const aspect = mosaic.height > 0 ? mosaic.width / mosaic.height : 1;
     const mapWidthMm = Math.max(0, Math.min(contentWidthMm, mapSpaceMm * aspect));
     return {
-        label: `${paperSize} ${landscape ? 'landscape' : 'portrait'}`,
+        label,
         pageWidthMm,
         pageHeightMm,
         contentWidthMm,

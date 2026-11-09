@@ -83,7 +83,7 @@ describe('sanitizeSettings', () => {
             ...custom,
             brickId: 'no-such-part',
             platesAcross: MAX_PLATES_ACROSS + 1,
-            card: { ...custom.card, backgroundColor: 'green', paperSize: 'A3' },
+            card: { ...custom.card, backgroundColor: 'green', paperSize: 'A3', includeMapPage: 'yes' },
             metric: 'fancy',
             customIds: [1, 'x', -2, 11],
             swaps: [[85, 86], [1], ['a', 2]],
@@ -92,6 +92,7 @@ describe('sanitizeSettings', () => {
         expect(settings.platesAcross).toBe(DEFAULT_PROJECT.platesAcross);
         expect(settings.card.backgroundColor).toBe(DEFAULT_PROJECT.card.backgroundColor);
         expect(settings.card.paperSize).toBe(DEFAULT_PROJECT.card.paperSize);
+        expect(settings.card.includeMapPage).toBe(true);
         expect(settings.card.title).toBe('Library Day');
         expect(settings.metric).toBe('rgb');
         expect(settings.customIds).toEqual([1, 11]);

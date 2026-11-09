@@ -8,15 +8,16 @@ import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
 import { Stage, Tray } from '../components/Tray';
 import { ControlSection, Workspace } from '../components/Workspace';
-import { mapPageLayout } from '../mosaic/layout';
+import { mapPageLayout, pageForMosaic } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
 
 const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const { brick, plate, platesAcross, setPlatesAcross, cardGrid, grid, settings } = mosaic;
+    const shape = grid ?? { width: 1, height: 1 };
     const mapLayout = mapPageLayout(
-        settings.paperSize,
-        grid ?? { width: 1, height: 1 },
+        pageForMosaic(settings.paperSize, shape),
+        shape,
         colorsUsed(mosaic.parts, brick.partId).length,
     );
 
