@@ -1,5 +1,6 @@
 import { Box, Chip, ListSubheader, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
+import { colorsUsed } from '../mosaic/partsList';
 import type { PaletteColor } from '../mosaic/types';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
@@ -8,7 +9,7 @@ import ColorSwatch from './ColorSwatch';
 const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
     const { brick, parts, swaps, setSwap } = mosaic;
     const [swapping, setSwapping] = useState<{ anchor: HTMLElement; color: PaletteColor } | null>(null);
-    const used = parts.filter((line) => line.partId === brick.partId);
+    const used = colorsUsed(parts, brick.partId);
     const colorById = new Map(brick.colors.map((c) => [c.id, c]));
 
     const pick = (to: PaletteColor) => {
@@ -20,7 +21,7 @@ const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
         <Box>
             <Typography variant="body2" sx={{ paddingBottom: 1 }}>
                 {used.length} colours used
-                <Box component="span" sx={{ color: 'text.secondary', displayPrint: 'none' }}>
+                <Box component="span" sx={{ color: 'text.secondary' }}>
                     {' '}
                     (click one to swap it for another colour)
                 </Box>
@@ -38,7 +39,7 @@ const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
                 ))}
             </Box>
             {swaps.size > 0 && (
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, displayPrint: 'none' }}>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
                     {[...swaps].map(([fromId, to]) => (
                         <Chip
                             key={fromId}

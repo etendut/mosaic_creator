@@ -12,7 +12,7 @@ export const Workspace = ({ controls, children }: { controls: ReactNode; childre
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', md: '340px minmax(0, 1fr)' },
             gap: 2,
-            padding: 2,
+            padding: { xs: 1, sm: 2 },
             alignItems: 'start',
             '@media print': { display: 'block', padding: 0 },
         }}
@@ -21,6 +21,8 @@ export const Workspace = ({ controls, children }: { controls: ReactNode; childre
             component="aside"
             sx={{
                 padding: 0,
+                // on phones the result comes first and the controls follow it
+                order: { xs: 2, md: 0 },
                 position: { md: 'sticky' },
                 top: { md: HEADER_PX + 16 },
                 maxHeight: { md: `calc(100dvh - ${HEADER_PX + 32}px)` },

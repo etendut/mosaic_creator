@@ -9,10 +9,12 @@ interface ColorSwatchProps {
     disabled?: boolean;
     onClick?: (event: MouseEvent<HTMLElement>) => void;
     title?: string;
+    /** Show the colour name after the id, for screens without hover tooltips. */
+    showName?: boolean;
 }
 
 /** A colour chip labelled with its BrickLink colour id, matching the numbers printed on the cards. */
-const ColorSwatch = ({ color, disabled, onClick, title }: ColorSwatchProps) => (
+const ColorSwatch = ({ color, disabled, onClick, title, showName }: ColorSwatchProps) => (
     <Box
         component={onClick ? ButtonBase : 'div'}
         onClick={onClick}
@@ -25,6 +27,10 @@ const ColorSwatch = ({ color, disabled, onClick, title }: ColorSwatchProps) => (
             justifyContent: 'center',
             minWidth: 36,
             height: 24,
+            paddingInline: showName ? 1 : 0,
+            whiteSpace: 'nowrap',
+            // big enough to tap when it does something
+            ...(onClick && { '@media (pointer: coarse)': { minWidth: 44, height: 36 } }),
             border: '1px solid black',
             backgroundColor: color.hex,
             color: contrastTextColor(color.hex),
@@ -33,7 +39,7 @@ const ColorSwatch = ({ color, disabled, onClick, title }: ColorSwatchProps) => (
             textDecoration: disabled ? 'line-through' : 'none',
         }}
     >
-        {color.id}
+        {showName ? `${color.id} ${color.name}` : color.id}
     </Box>
 );
 

@@ -1,11 +1,23 @@
-import { Alert, Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
+import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { useState, type ReactNode } from 'react';
 import BuildingCard from '../components/BuildingCard';
+import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
 import { Stage } from '../components/Tray';
-import { CARD_GAP_MM, mmToPx, PAGE_MARGIN_MM, pageLayout, studPxForCard, usesPaperSize } from '../mosaic/layout';
+import {
+    CARD_GAP_MM,
+    mapPageLayout,
+    mmToPx,
+    PAGE_MARGIN_MM,
+    pageLayout,
+    studPxForCard,
+    usesPaperSize,
+    type PageLayout,
+} from '../mosaic/layout';
+import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
 import { tokens } from '../theme';
+import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
 
 /** Large print jobs are split into batches; Chrome gets slow rendering hundreds of card pages at once. */
@@ -14,15 +26,56 @@ const PAGES_PER_BATCH = 20;
 const chunk = <T,>(items: T[], size: number) =>
     Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, i * size + size));
 
+/** One sheet of paper: on screen with its margin drawn, in print one page with the @page margin around it. */
+const Sheet = ({ layout, children }: { layout: PageLayout; children: ReactNode }) => (
+    <Box
+        sx={{
+            width: `${layout.pageWidthMm}mm`,
+            height: `${layout.pageHeightMm}mm`,
+            padding: `${PAGE_MARGIN_MM}mm`,
+            marginInline: 'auto',
+            marginBottom: 3,
+            border: `1px solid ${tokens.groove}`,
+            backgroundColor: 'white',
+            '@media print': {
+                width: `${layout.pageWidthMm - PAGE_MARGIN_MM * 2}mm`,
+                height: `${layout.pageHeightMm - PAGE_MARGIN_MM * 2}mm`,
+                padding: 0,
+                margin: 0,
+                border: 0,
+                breakInside: 'avoid',
+                '&:not(:last-of-type)': { breakAfter: 'page' },
+            },
+        }}
+    >
+        {children}
+    </Box>
+);
+
+type Page = { kind: 'map' } | { kind: 'cards'; cards: MosaicCard[] };
+
 const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { cards, settings, updateSettings, brick, plate, cellsPerSide } = mosaic;
+    const { cards, settings, updateSettings, brick, plate, cellsPerSide, grid } = mosaic;
     const [batch, setBatch] = useState(0);
 
     const layout = pageLayout(plate.size, settings.paperSize);
-    const pages = chunk<MosaicCard>(cards, layout.cardsPerPage);
+    const cardPages = chunk<MosaicCard>(cards, layout.cardsPerPage);
+    // the map page is the same size and orientation as the cards: mixing page sizes in one print job needs named
+    // @page rules, which mobile print engines don't reliably support
+    const mapLayout = mapPageLayout(
+        layout,
+        grid ?? { width: 1, height: 1 },
+        colorsUsed(mosaic.parts, brick.partId).length,
+    );
+    const pages: Page[] = [
+        ...(settings.includeMapPage ? [{ kind: 'map' } as const] : []),
+        ...cardPages.map((c) => ({ kind: 'cards', cards: c }) as const),
+    ];
     const batches = chunk(pages, PAGES_PER_BATCH);
     const currentBatch = Math.min(batch, Math.max(0, batches.length - 1));
     const studPx = studPxForCard(mmToPx(layout.cardWidthMm), mmToPx(layout.cardHeightMm), cellsPerSide * brick.size);
+    // pages are shown at print size, shrunk on screens narrower than a page (with its 1px border each side)
+    const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.pageWidthMm) + 2);
 
     return (
         <Box sx={{ padding: 2, '@media print': { padding: 0 } }}>
@@ -34,7 +87,8 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             Building cards
                         </Typography>
                         <Typography color="text.secondary">
-                            {cards.length} cards on {pages.length} pages, {layout.cardsPerPage} per {layout.label} page.
+                            {cards.length} cards on {cardPages.length} pages, {layout.cardsPerPage} per {layout.label}{' '}
+                            page{settings.includeMapPage ? ', after a map page' : ''}.
                         </Typography>
                     </Box>
                     {usesPaperSize(plate.size) && (
@@ -50,6 +104,15 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             <MenuItem value="Letter">Letter</MenuItem>
                         </TextField>
                     )}
+                    <FormControlLabel
+                        label="Map page"
+                        control={
+                            <Checkbox
+                                checked={settings.includeMapPage}
+                                onChange={(e) => updateSettings({ includeMapPage: e.target.checked })}
+                            />
+                        }
+                    />
                     {batches.length > 1 && (
                         <TextField
                             select
@@ -78,50 +141,35 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 )}
             </Stack>
 
-            <Stage sx={{ overflowX: 'auto' }}>
-                {batches[currentBatch]?.map((pageCards, i) => (
-                    <Box
-                        key={i}
-                        sx={{
-                            // on screen show the page with its margin; in print the @page margin takes over
-                            width: `${layout.pageWidthMm}mm`,
-                            height: `${layout.pageHeightMm}mm`,
-                            padding: `${PAGE_MARGIN_MM}mm`,
-                            marginInline: 'auto',
-                            marginBottom: 3,
-                            border: `1px solid ${tokens.groove}`,
-                            backgroundColor: 'white',
-                            '@media print': {
-                                width: `${layout.pageWidthMm - PAGE_MARGIN_MM * 2}mm`,
-                                height: `${layout.pageHeightMm - PAGE_MARGIN_MM * 2}mm`,
-                                padding: 0,
-                                margin: 0,
-                                border: 0,
-                                breakInside: 'avoid',
-                                '&:not(:last-of-type)': { breakAfter: 'page' },
-                            },
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: `repeat(${layout.columns}, ${layout.cardWidthMm}mm)`,
-                                gridAutoRows: `${layout.cardHeightMm}mm`,
-                                gap: `${CARD_GAP_MM}mm`,
-                            }}
-                        >
-                            {pageCards.map((card) => (
-                                <BuildingCard
-                                    key={card.id}
-                                    card={card}
-                                    settings={settings}
-                                    brick={brick}
-                                    studPx={studPx}
-                                />
-                            ))}
-                        </Box>
-                    </Box>
-                ))}
+            <Stage ref={measureStage}>
+                <Box sx={{ zoom: fitScale, '@media print': { zoom: 1 } }}>
+                    {batches[currentBatch]?.map((page, i) => (
+                        <Sheet key={i} layout={layout}>
+                            {page.kind === 'map' ? (
+                                <MapPage mosaic={mosaic} layout={mapLayout} />
+                            ) : (
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: `repeat(${layout.columns}, ${layout.cardWidthMm}mm)`,
+                                        gridAutoRows: `${layout.cardHeightMm}mm`,
+                                        gap: `${CARD_GAP_MM}mm`,
+                                    }}
+                                >
+                                    {page.cards.map((card) => (
+                                        <BuildingCard
+                                            key={card.id}
+                                            card={card}
+                                            settings={settings}
+                                            brick={brick}
+                                            studPx={studPx}
+                                        />
+                                    ))}
+                                </Box>
+                            )}
+                        </Sheet>
+                    ))}
+                </Box>
             </Stage>
         </Box>
     );

@@ -147,7 +147,14 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                 {adjustment('saturation', 'Saturation')}
             </ControlSection>
             <Stack spacing={1} sx={{ padding: 2 }}>
-                <Button variant="contained" size="large" onClick={apply} disabled={!area}>
+                {/* on phones this button sits right under the image instead; see below */}
+                <Button
+                    variant="contained"
+                    size="large"
+                    onClick={apply}
+                    disabled={!area}
+                    sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+                >
                     Use this image
                 </Button>
                 <Stack direction="row" spacing={1}>
@@ -197,7 +204,8 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                 <Stage
                     sx={{
                         position: 'relative',
-                        height: 'calc(100dvh - 93px)',
+                        // on phones leave room to see the controls below start
+                        height: { xs: '62dvh', md: 'calc(100dvh - 93px)' },
                         minHeight: 360,
                         padding: 0,
                         overflow: 'hidden',
@@ -232,6 +240,18 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                         </Stack>
                     )}
                 </Stage>
+                {displayUrl && (
+                    <Button
+                        variant="contained"
+                        size="large"
+                        fullWidth
+                        onClick={apply}
+                        disabled={!area}
+                        sx={{ display: { xs: 'inline-flex', md: 'none' }, marginTop: 1 }}
+                    >
+                        Use this image
+                    </Button>
+                )}
             </Workspace>
         </Box>
     );

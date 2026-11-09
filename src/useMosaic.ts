@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { catalog } from './data/catalog';
+import { forgetImage, rememberImage } from './imageStore';
 import { cardGridSize, cellsPerCard, compileMosaicCards } from './mosaic/cards';
 import type { ColorMetric } from './mosaic/color';
 import { shrinkToBricks } from './mosaic/image';
@@ -32,7 +33,7 @@ const remember = (settings: ProjectSettings) => {
 
 /** All app state plus everything derived from it. */
 export const useMosaic = () => {
-    const [image, setImage] = useState<HTMLCanvasElement | null>(null);
+    const [image, setImageState] = useState<HTMLCanvasElement | null>(null);
     const [project, setProject] = useState<ProjectSettings>(recall);
     const { brickId, plateId, platesAcross, card: settings, preset, maxColors, metric } = project;
 
@@ -89,6 +90,14 @@ export const useMosaic = () => {
             else next.set(from, to);
             return { ...p, swaps: [...next] };
         });
+
+    /** Use a new image (or none). It is remembered for the next visit unless it came from there. */
+    const setImage = (next: HTMLCanvasElement | null, { remember = true } = {}) => {
+        setImageState(next);
+        if (!remember) return;
+        if (next) rememberImage(next);
+        else forgetImage();
+    };
 
     return {
         image,

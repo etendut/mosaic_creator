@@ -1,7 +1,8 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ProjectMenu from './components/ProjectMenu';
-import { imageToCanvas } from './mosaic/image';
+import { recallImage } from './imageStore';
+import { imageToCanvas, pngToImage } from './mosaic/image';
 import BricksTab from './tabs/BricksTab';
 import CardsTab from './tabs/CardsTab';
 import ImageTab from './tabs/ImageTab';
@@ -58,8 +59,30 @@ const App = () => {
     const mosaic = useMosaic();
     const [step, setStep] = useState<Step>('Image');
     // an opened project's image restarts the image step from that image
-    const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement; key: number } | null>(null);
+    const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement | null; key: number } | null>(null);
     const hasImage = !!mosaic.grid;
+    // set once the user picks or opens an image, so a slow restore of the last one can't replace it
+    const imageChosen = useRef(false);
+
+    /** Load an image into every step: the mosaic, and the image step to edit it again. */
+    const showImage = (image: HTMLImageElement, remember = true) => {
+        mosaic.setImage(imageToCanvas(image), { remember });
+        setOpenedImage({ image, key: Date.now() });
+        setStep('Bricks');
+    };
+
+    // pick up where the last visit left off
+    useEffect(() => {
+        recallImage()
+            .then((png) => (png ? pngToImage(png) : null))
+            .then((image) => {
+                if (image && !imageChosen.current) showImage(image, false);
+            })
+            .catch(() => {
+                // a stored image that no longer decodes is simply not restored
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on start
+    }, []);
 
     const content = () => {
         // ImageTab stays mounted (below) so the crop/edit state survives switching steps
@@ -86,14 +109,20 @@ const App = () => {
                     zIndex: 10,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
-                    paddingInline: 3,
+                    // on phones the steps get their own full-width row below the title
+                    flexWrap: { xs: 'wrap', md: 'nowrap' },
+                    columnGap: 4,
+                    paddingInline: { xs: 2, md: 3 },
                     backgroundColor: tokens.tray,
                     borderBottom: `1px solid ${tokens.groove}`,
                     displayPrint: 'none',
                 }}
             >
-                <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', flexShrink: 0 }}>
+                <Stack
+                    direction="row"
+                    spacing={1.25}
+                    sx={{ alignItems: 'center', flexShrink: 0, minHeight: { xs: 52, md: 'auto' } }}
+                >
                     <Mark />
                     <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
                         Mosaic Creator
@@ -104,7 +133,12 @@ const App = () => {
                     onChange={(_, value: Step) => setStep(value)}
                     variant="scrollable"
                     aria-label="Steps"
-                    sx={{ minHeight: 60, '& .MuiTab-root': { minHeight: 60 } }}
+                    sx={{
+                        order: { xs: 3, md: 0 },
+                        width: { xs: '100%', md: 'auto' },
+                        minHeight: { xs: 48, md: 60 },
+                        '& .MuiTab-root': { minHeight: { xs: 48, md: 60 }, paddingInline: { xs: 1.5, md: 2 } },
+                    }}
                 >
                     {STEPS.map((name, i) => (
                         <Tab
@@ -126,9 +160,14 @@ const App = () => {
                 <ProjectMenu
                     mosaic={mosaic}
                     onImageOpened={(image) => {
-                        mosaic.setImage(imageToCanvas(image));
-                        setOpenedImage({ image, key: Date.now() });
-                        setStep('Bricks');
+                        imageChosen.current = true;
+                        showImage(image);
+                    }}
+                    onForgetImage={() => {
+                        imageChosen.current = true;
+                        mosaic.setImage(null);
+                        setOpenedImage({ image: null, key: Date.now() });
+                        setStep('Image');
                     }}
                 />
             </Box>
@@ -137,6 +176,7 @@ const App = () => {
                     key={openedImage?.key}
                     initialSource={openedImage?.image}
                     onApply={(image) => {
+                        imageChosen.current = true;
                         mosaic.setImage(image);
                         setStep('Bricks');
                     }}

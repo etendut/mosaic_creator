@@ -80,4 +80,6 @@ export interface CardSettings {
     bottomMessage: string;
     backgroundColor: string;
     paperSize: PaperSize;
+    /** Print a page with the whole map and colour legend before the cards. */
+    includeMapPage: boolean;
 }

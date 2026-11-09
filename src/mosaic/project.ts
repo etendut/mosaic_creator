@@ -27,6 +27,7 @@ export const DEFAULT_CARD: CardSettings = {
     bottomMessage: 'Then hand it to one of the volunteers.\nStand back and watch the magic',
     backgroundColor: '#4CAF50',
     paperSize: 'A4',
+    includeMapPage: true,
 };
 
 export const DEFAULT_PROJECT: ProjectSettings = {
@@ -54,6 +55,7 @@ const oneOf =
     (v: unknown): v is T =>
         options.includes(v as T);
 const isString = (v: unknown): v is string => typeof v === 'string';
+const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean';
 
 /**
  * Turn anything (a project file, the browser's memory, a hand-edited file) into valid settings. Each field that is
@@ -83,6 +85,7 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
                 d.card.backgroundColor,
             ),
             paperSize: pick(card.paperSize, oneOf<PaperSize>('A4', 'Letter'), d.card.paperSize),
+            includeMapPage: pick(card.includeMapPage, isBoolean, d.card.includeMapPage),
         },
         preset: pick(v.preset, oneOf<PalettePreset>('solid', 'all', 'greyscale', 'custom'), d.preset),
         customIds: Array.isArray(v.customIds) ? v.customIds.filter(isId) : d.customIds,

@@ -5,6 +5,7 @@ import { ControlSection, Workspace } from '../components/Workspace';
 import { mmToPx, pageLayout, studPxForCard } from '../mosaic/layout';
 import type { CardSettings } from '../mosaic/types';
 import { tokens } from '../theme';
+import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
 
 const TEXT_FIELDS: { key: keyof CardSettings; label: string; multiline?: boolean }[] = [
@@ -18,6 +19,7 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const { settings, updateSettings, cards, brick, plate, cellsPerSide } = mosaic;
     const layout = pageLayout(plate.size, settings.paperSize);
     const [firstCard] = cards;
+    const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.cardWidthMm));
 
     const controls = (
         <>
@@ -68,12 +70,20 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 Card preview
             </Typography>
             <Typography color="text.secondary" sx={{ paddingBottom: 2 }}>
-                Card {firstCard?.id} at print size. {cards.length} cards print {layout.cardsPerPage} to a page on{' '}
+                Card {firstCard?.id} as it prints. {cards.length} cards print {layout.cardsPerPage} to a page on{' '}
                 {layout.label}.
             </Typography>
-            <Stage sx={{ display: 'flex', justifyContent: 'center', overflowX: 'auto' }}>
+            <Stage ref={measureStage} sx={{ display: 'flex', justifyContent: 'center' }}>
                 {firstCard && (
-                    <Box sx={{ width: `${layout.cardWidthMm}mm`, height: `${layout.cardHeightMm}mm`, flexShrink: 0 }}>
+                    <Box
+                        sx={{
+                            width: `${layout.cardWidthMm}mm`,
+                            height: `${layout.cardHeightMm}mm`,
+                            flexShrink: 0,
+                            // shrunk to fit a phone screen; full size wherever it fits
+                            zoom: fitScale,
+                        }}
+                    >
                         <BuildingCard
                             card={firstCard}
                             settings={settings}

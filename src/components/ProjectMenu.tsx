@@ -23,10 +23,12 @@ interface ProjectMenuProps {
     mosaic: Mosaic;
     /** Called with the image from an opened project, so the app can show it and move on to the bricks step. */
     onImageOpened: (image: HTMLImageElement) => void;
+    /** Drop the image, including the copy this browser remembers. */
+    onForgetImage: () => void;
 }
 
 /** Save the whole project to a file, open one, or go back to the default settings. */
-const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
+const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps) => {
     const fileInput = useRef<HTMLInputElement>(null);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [confirmReset, setConfirmReset] = useState(false);
@@ -106,6 +108,16 @@ const ProjectMenu = ({ mosaic, onImageOpened }: ProjectMenuProps) => {
                     }}
                 >
                     <ListItemText primary="Reset to defaults" secondary="Clears the settings this browser remembers" />
+                </MenuItem>
+                <MenuItem
+                    disabled={!mosaic.image}
+                    onClick={() => {
+                        setAnchor(null);
+                        onForgetImage();
+                        setMessage({ severity: 'success', text: 'Image cleared. This browser no longer keeps it.' });
+                    }}
+                >
+                    <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
                 </MenuItem>
             </Menu>
             <input

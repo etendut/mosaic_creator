@@ -2,8 +2,10 @@ import {
     Alert,
     Box,
     Button,
+    FormControlLabel,
     MenuItem,
     Stack,
+    Switch,
     TextField,
     ToggleButton,
     ToggleButtonGroup,
@@ -12,7 +14,14 @@ import {
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
 import type { ColorMetric } from '../mosaic/color';
-import { parseSavedPalette, presetColors, type PalettePreset, type SavedPalette } from '../mosaic/palette';
+import {
+    listNames,
+    paletteFile,
+    parseSavedPalette,
+    presetColors,
+    resolveSavedPalette,
+    type PalettePreset,
+} from '../mosaic/palette';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
 
@@ -27,26 +36,29 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
     const { brick, preset, setPreset, allowedColors, toggleColor, setCustomPalette, maxColors, setMaxColors } = mosaic;
     const fileInput = useRef<HTMLInputElement>(null);
     const [message, setMessage] = useState<{ severity: 'error' | 'info'; text: string } | null>(null);
+    const [showNames, setShowNames] = useState(false);
     const allowed = new Set(allowedColors.map((c) => c.id));
     const presetIsEmpty = preset !== 'custom' && presetColors(preset, brick.colors).length === 0;
 
     const save = () => {
-        const palette: SavedPalette = { name: mosaic.settings.title, colorIds: allowedColors.map((c) => c.id) };
-        downloadFile(JSON.stringify(palette, null, 2), `${palette.name || 'palette'}.palette.json`, 'application/json');
+        const name = mosaic.settings.title;
+        const file = paletteFile(name, brick.partId, allowedColors);
+        downloadFile(JSON.stringify(file, null, 2), `${name || 'palette'}.palette.json`, 'application/json');
     };
 
     const load = async (file: File | undefined) => {
         if (!file) return;
         try {
             const palette = parseSavedPalette(await file.text());
-            const available = new Set(brick.colors.map((c) => c.id));
-            const missing = palette.colorIds.filter((id) => !available.has(id)).length;
-            setCustomPalette(palette.colorIds.filter((id) => available.has(id)));
+            const { ids, missing } = resolveSavedPalette(palette, brick.colors);
+            if (ids.length === 0) throw new Error(`None of the colours in "${palette.name}" come in ${brick.name}.`);
+            setCustomPalette(ids);
+            const verb = missing.length === 1 ? "doesn't" : "don't";
             setMessage(
-                missing > 0
+                missing.length > 0
                     ? {
                           severity: 'info',
-                          text: `Loaded "${palette.name}". ${missing} of its colours don't come in this brick.`,
+                          text: `Loaded "${palette.name}". ${listNames(missing)} ${verb} come in ${brick.name}.`,
                       }
                     : null,
             );
@@ -83,9 +95,18 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                 </Alert>
             )}
             <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ paddingBottom: 1 }}>
-                    {allowed.size} of {brick.colors.length} colours on. Click a colour to turn it on or off.
-                </Typography>
+                <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', paddingBottom: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {allowed.size} of {brick.colors.length} colours on. Click a colour to turn it on or off.
+                    </Typography>
+                    <FormControlLabel
+                        label="Names"
+                        control={
+                            <Switch size="small" checked={showNames} onChange={(e) => setShowNames(e.target.checked)} />
+                        }
+                        sx={{ flexShrink: 0, marginRight: 0 }}
+                    />
+                </Stack>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {brick.colors.map((c) => (
                         <ColorSwatch
@@ -93,6 +114,7 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                             color={c}
                             disabled={!allowed.has(c.id)}
                             title={`${c.name} (${allowed.has(c.id) ? 'on' : 'off'})`}
+                            showName={showNames}
                             onClick={() => toggleColor(c.id)}
                         />
                     ))}

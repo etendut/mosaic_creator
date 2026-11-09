@@ -4,17 +4,22 @@ import MosaicPreview from '../components/MosaicPreview';
 import MosaicSummary from '../components/MosaicSummary';
 import PaletteEditor from '../components/PaletteEditor';
 import { BrickPicker, PlatePicker } from '../components/PartPickers';
+import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
 import { Stage, Tray } from '../components/Tray';
 import { ControlSection, Workspace } from '../components/Workspace';
-import { PAGE_MARGIN_MM } from '../mosaic/layout';
+import { mapPageLayout, pageForMosaic } from '../mosaic/layout';
+import { colorsUsed } from '../mosaic/partsList';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
 
-/** Printable height of an A4 landscape page. */
-const MAP_PRINT_HEIGHT_MM = 210 - PAGE_MARGIN_MM * 2;
-
 const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { brick, plate, platesAcross, setPlatesAcross, cardGrid } = mosaic;
+    const { brick, plate, platesAcross, setPlatesAcross, cardGrid, grid, settings } = mosaic;
+    const shape = grid ?? { width: 1, height: 1 };
+    const mapLayout = mapPageLayout(
+        pageForMosaic(settings.paperSize, shape),
+        shape,
+        colorsUsed(mosaic.parts, brick.partId).length,
+    );
 
     const setWidth = (value: number) =>
         setPlatesAcross(Math.max(1, Math.min(MAX_PLATES_ACROSS, Math.round(value) || 1)));
@@ -58,14 +63,12 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <Workspace controls={controls}>
-            <PrintPageStyle size="A4 landscape" />
-            <Stack
-                spacing={2}
-                sx={{
-                    // the printed map is one page: the preview shrinks to whatever height the text above leaves
-                    '@media print': { height: `${MAP_PRINT_HEIGHT_MM}mm`, overflow: 'hidden' },
-                }}
-            >
+            <PrintPageStyle size={`${mapLayout.pageWidthMm}mm ${mapLayout.pageHeightMm}mm`} />
+            {/* print gets its own page layout, sized in mm; see MapPage */}
+            <Box sx={{ display: 'none', '@media print': { display: 'block' } }}>
+                <MapPage mosaic={mosaic} layout={mapLayout} />
+            </Box>
+            <Stack spacing={2} sx={{ displayPrint: 'none' }}>
                 <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="h2" gutterBottom>
@@ -73,20 +76,14 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                         </Typography>
                         <MosaicSummary mosaic={mosaic} />
                     </Box>
-                    <Button variant="contained" onClick={() => window.print()} sx={{ displayPrint: 'none' }}>
+                    <Button variant="contained" onClick={() => window.print()} sx={{ flexShrink: 0 }}>
                         Print map
                     </Button>
                 </Stack>
-                <Tray sx={{ '@media print': { border: 0, padding: 0 } }}>
+                <Tray>
                     <ColorsUsed mosaic={mosaic} />
                 </Tray>
-                <Stage
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        '@media print': { flex: 1, minHeight: 0, display: 'flex', justifyContent: 'flex-start' },
-                    }}
-                >
+                <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
                     <MosaicPreview mosaic={mosaic} />
                 </Stage>
             </Stack>
