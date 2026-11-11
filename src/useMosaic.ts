@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { catalog } from './data/catalog';
 import { forgetImage, rememberImage } from './imageStore';
-import { cardGridSize, cellsPerCard, compileMosaicCards } from './mosaic/cards';
+import { cardColorCounts, cardGridSize, cellsPerCard, compileMosaicCards } from './mosaic/cards';
+import { cardLayout } from './mosaic/layout';
 import type { ColorMetric } from './mosaic/color';
 import { shrinkToBricks } from './mosaic/image';
 import { applySwaps, limitColors, resolveSwaps, selectPalette, type PalettePreset } from './mosaic/palette';
@@ -72,6 +73,19 @@ export const useMosaic = () => {
     const cards = useMemo(() => (grid ? compileMosaicCards(grid, cellsPerSide) : []), [grid, cellsPerSide]);
     const parts = useMemo(() => buildPartsList(cards, brick, plate, catalog.pin), [cards, brick, plate]);
     const cardGrid = grid ? cardGridSize(grid, cellsPerSide) : { columns: 0, rows: 0 };
+    const maxCardColors = useMemo(
+        () => cards.reduce((most, card) => Math.max(most, cardColorCounts(card).length), 0),
+        [cards],
+    );
+    /** How cards print with the given card settings; the bag list reserves room for the busiest card. */
+    const layoutFor = (card: CardSettings) =>
+        cardLayout({
+            plateStuds: plate.size,
+            brickStuds: brick.size,
+            paperSize: card.paperSize,
+            size: card.cardSize,
+            content: { ...card, bagListColors: card.bagList ? maxCardColors : 0 },
+        });
 
     const updateSettings = (change: Partial<CardSettings>) =>
         setProject((p) => ({ ...p, card: { ...p.card, ...change } }));
@@ -130,6 +144,9 @@ export const useMosaic = () => {
         cardGrid,
         cards,
         parts,
+        /** How the cards print with the current settings. */
+        layout: layoutFor(settings),
+        layoutFor,
     };
 };
 

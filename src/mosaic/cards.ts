@@ -1,4 +1,4 @@
-import type { Cell, MosaicCard, PixelGrid } from './types';
+import type { Cell, MosaicCard, PaletteColor, PixelGrid } from './types';
 
 /** Spreadsheet-style label for a 1-based index: 1 → A, 26 → Z, 27 → AA. */
 export const rowLabel = (n: number): string => {
@@ -7,6 +7,19 @@ export const rowLabel = (n: number): string => {
         label = String.fromCharCode(65 + ((rest - 1) % 26)) + label;
     }
     return label;
+};
+
+/** The bricks one card needs, per colour: most first, then by colour id. */
+export const cardColorCounts = (card: MosaicCard) => {
+    const counts = new Map<number, { color: PaletteColor; count: number }>();
+    for (const row of card.rows)
+        for (const cell of row) {
+            if (!cell) continue;
+            const entry = counts.get(cell.id);
+            if (entry) entry.count++;
+            else counts.set(cell.id, { color: cell, count: 1 });
+        }
+    return [...counts.values()].sort((a, b) => b.count - a.count || a.color.id - b.color.id);
 };
 
 /** How many mosaic cells (bricks) fit along one side of a card. */

@@ -73,6 +73,9 @@ export interface MosaicCard {
 
 export type PaperSize = 'A4' | 'Letter';
 
+/** Real size: cells the size of the brick, so bricks can be laid on the card. Compact: more cards per page. */
+export type CardSize = 'real' | 'compact';
+
 export interface CardSettings {
     title: string;
     clubEvent: string;
@@ -82,4 +85,7 @@ export interface CardSettings {
     paperSize: PaperSize;
     /** Print a page with the whole map and colour legend before the cards. */
     includeMapPage: boolean;
+    cardSize: CardSize;
+    /** List how many bricks of each colour a card needs, for packing a bag per card. */
+    bagList: boolean;
 }
