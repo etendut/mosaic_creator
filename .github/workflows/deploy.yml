@@ -1,24 +1,23 @@
 name: Deploy to GitHub Pages
 
-# Publishes the single-file build to https://<owner>.github.io/<repo>/ on every push to main.
-# Needs Settings → Pages → Source set to "GitHub Actions" (and a public repo on a free plan).
+# Publishes the single-file build to https://<owner>.github.io/<repo>/ on every push to main, by committing it to the
+# gh-pages branch. Needs Settings → Pages → Source set to "Deploy from a branch", gh-pages, / (root).
+# PR previews live in pr-preview/ on the same branch (see preview.yml), so a deploy leaves that folder alone.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# one deploy at a time; a newer push supersedes a queued one, but never cancels a deploy in progress
+# shared with preview.yml: both push to gh-pages, one at a time, and never cancel a push in progress
 concurrency:
-  group: pages
+  group: gh-pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,17 +28,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      # serve files as they are, without a Jekyll build
+      - run: touch dist/.nojekyll
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          branch: gh-pages
+          folder: dist
+          clean-exclude: pr-preview/
