@@ -8,15 +8,15 @@ const AboutDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) 
         <DialogContent>
             <Stack spacing={1.5}>
                 <Typography>
-                    Turns a picture into a LEGO mosaic, with numbered building cards to print for a group build and a
-                    BrickLink wanted list for the parts.
+                    Mosaic Creator turns your picture into a LEGO mosaic. You print numbered building cards for a group
+                    build and order the parts with a BrickLink wanted list.
                 </Typography>
                 <Typography>
-                    It runs entirely in your browser. Your images never leave this device; the settings and last image
-                    are remembered in this browser only.
+                    The app runs in your browser, so your images stay on this device. The browser keeps your settings
+                    and last image for next time.
                 </Typography>
                 <Typography>
-                    Version{' '}
+                    You&apos;re using version{' '}
                     {COMMIT_URL ? (
                         <Link href={COMMIT_URL} target="_blank" rel="noreferrer" sx={{ fontFamily: 'monospace' }}>
                             {VERSION}
@@ -24,11 +24,11 @@ const AboutDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) 
                     ) : (
                         VERSION
                     )}
-                    . Source code, and somewhere to report problems or ask for features, on{' '}
+                    . Report a problem or ask for a feature on{' '}
                     <Link href={REPO_URL} target="_blank" rel="noreferrer">
                         GitHub
                     </Link>
-                    . MIT licence.
+                    , where the source code lives under the MIT licence.
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                     LEGO® is a trademark of the LEGO Group, which does not sponsor, authorize or endorse this project.

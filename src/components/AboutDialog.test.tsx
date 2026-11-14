@@ -15,7 +15,7 @@ describe('About', () => {
             'href',
             expect.stringMatching(new RegExp(`/commit/${version.textContent}[0-9a-f]{32}$`)),
         );
-        expect(within(dialog).getByText(/never leave this device/)).toBeInTheDocument();
+        expect(within(dialog).getByText(/your images stay on this device/)).toBeInTheDocument();
 
         await user.click(within(dialog).getByRole('button', { name: 'Close' }));
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
