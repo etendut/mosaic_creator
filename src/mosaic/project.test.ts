@@ -21,6 +21,7 @@ const custom: ProjectSettings = {
     maxColors: 6,
     metric: 'perceptual',
     swaps: [[85, 86]],
+    sparesPercent: 10,
 };
 // the 8-byte PNG signature is enough to check the bytes come back untouched
 const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -107,6 +108,12 @@ describe('sanitizeSettings', () => {
         expect(settings.customIds).toEqual([1, 11]);
         expect(settings.swaps).toEqual([[85, 86]]);
         expect(settings.plateId).toBe(custom.plateId);
+    });
+
+    it('keeps spares to a whole percentage up to 100', () => {
+        expect(sanitizeSettings({ sparesPercent: 15 }).sparesPercent).toBe(15);
+        for (const bad of [-5, 2.5, 101, '10', null])
+            expect(sanitizeSettings({ sparesPercent: bad }).sparesPercent).toBe(0);
     });
 
     it('treats a missing or zero colour limit as no limit', () => {

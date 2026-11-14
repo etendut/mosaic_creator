@@ -39,7 +39,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
         setAnchor(null);
         try {
             const image = !template && mosaic.image ? await canvasToPng(mosaic.image) : null;
-            const wantedList = image && mosaic.parts.length > 0 ? toBrickLinkXml(mosaic.parts) : undefined;
+            const wantedList = image && mosaic.order.length > 0 ? toBrickLinkXml(mosaic.order) : undefined;
             const zip = packProject({ settings: mosaic.project, image }, wantedList);
             downloadFile(zip, projectFileName(mosaic.settings.title, !image), 'application/zip');
             setMessage({
