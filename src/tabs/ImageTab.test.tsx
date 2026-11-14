@@ -22,11 +22,18 @@ describe('Image step', () => {
         expect(screen.getByRole('heading', { name: 'Adjust' })).toBeInTheDocument();
     });
 
+    it('starts with one card to choose an image, and no controls until there is one', async () => {
+        renderApp();
+        expect(screen.getByRole('button', { name: 'Choose an image' })).toBeInTheDocument();
+        expect(screen.getByText(/Your image stays on this device/)).toBeInTheDocument();
+        expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    });
+
     it('says so when a file is not an image, and keeps the image it had', async () => {
         const user = renderApp();
         await chooseImage(user, 'broken.png');
         expect(await screen.findByText('Could not load that image')).toBeInTheDocument();
-        expect(screen.getByText('Drop an image here')).toBeInTheDocument();
+        expect(screen.getByText('Start with a picture')).toBeInTheDocument();
 
         await chooseImage(user);
         await screen.findByTestId('cropper');
@@ -39,7 +46,7 @@ describe('Image step', () => {
     it('ignores a cancelled file picker', async () => {
         const user = renderApp();
         await user.upload(screen.getByTestId('image-file'), []);
-        expect(screen.getByText('Drop an image here')).toBeInTheDocument();
+        expect(screen.getByText('Start with a picture')).toBeInTheDocument();
     });
 
     it('edits the frame and colours, and resets the edits', async () => {
