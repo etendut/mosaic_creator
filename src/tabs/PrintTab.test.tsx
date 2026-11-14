@@ -9,7 +9,7 @@ describe('Print step', () => {
     it('prints a map page, then the cards', async () => {
         const user = await startMosaic();
         await goTo(user, 'Print');
-        expect(screen.getByText(/per A4 portrait page, after a map page/)).toBeInTheDocument();
+        expect(screen.getByText(/8 per A4 landscape page, after a map page/)).toBeInTheDocument();
         expect(screen.getByRole('list', { name: 'Colours used' })).toBeInTheDocument();
         await user.click(screen.getByRole('button', { name: 'Print cards' }));
         expect(window.print).toHaveBeenCalled();
@@ -28,7 +28,7 @@ describe('Print step', () => {
         await goTo(user, 'Print');
         await user.click(screen.getByRole('combobox', { name: 'Paper' }));
         await user.click(screen.getByRole('option', { name: 'Letter' }));
-        expect(screen.getByText(/per Letter portrait page/)).toBeInTheDocument();
+        expect(screen.getByText(/per Letter landscape page/)).toBeInTheDocument();
     });
 
     it('splits big jobs into batches of pages', async () => {

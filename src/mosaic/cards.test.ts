@@ -1,9 +1,33 @@
-import { cardGridSize, cellsPerCard, compileMosaicCards, rowLabel } from './cards';
+import { cardColorCounts, cardGridSize, cellsPerCard, compileMosaicCards, rowLabel } from './cards';
 import type { Cell, PixelGrid } from './types';
 
 const B = { id: 11, name: 'Black', hex: '#212121', type: 'Solid' as const };
 const W = { id: 1, name: 'White', hex: '#FFFFFF', type: 'Solid' as const };
 const grid = (rows: Cell[][]): PixelGrid => ({ width: rows[0].length, height: rows.length, rows });
+
+describe('cardColorCounts', () => {
+    it("counts a card's bricks per colour, most first, then by id, skipping empty cells", () => {
+        const a = { id: 5, name: 'Red', hex: '#B30006', type: 'Solid' as const };
+        const b = { id: 1, name: 'White', hex: '#FFFFFF', type: 'Solid' as const };
+        const c = { id: 11, name: 'Black', hex: '#212121', type: 'Solid' as const };
+        const card = {
+            id: 'A1',
+            brickCount: 6,
+            rows: [
+                [a, b, null],
+                [c, a, b],
+                [a, null, null],
+            ],
+        };
+        const counts = cardColorCounts(card);
+        expect(counts.map((x) => [x.color.id, x.count])).toEqual([
+            [5, 3],
+            [1, 2],
+            [11, 1],
+        ]);
+        expect(counts.reduce((sum, x) => sum + x.count, 0)).toBe(card.brickCount);
+    });
+});
 
 describe('rowLabel', () => {
     it('labels like spreadsheet columns', () => {

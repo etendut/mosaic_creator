@@ -2,7 +2,7 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { catalog, DEFAULT_BRICK_ID, DEFAULT_PLATE_ID } from '../data/catalog';
 import type { ColorMetric } from './color';
 import type { PalettePreset } from './palette';
-import type { CardSettings, PaperSize } from './types';
+import type { CardSettings, CardSize, PaperSize } from './types';
 
 export const MAX_PLATES_ACROSS = 40;
 
@@ -28,6 +28,9 @@ export const DEFAULT_CARD: CardSettings = {
     backgroundColor: '#4CAF50',
     paperSize: 'A4',
     includeMapPage: true,
+    cardSize: 'real',
+    // off by default: it costs space, e.g. 8×8 real size cards fit 4 to a page with it instead of 8
+    bagList: false,
 };
 
 export const DEFAULT_PROJECT: ProjectSettings = {
@@ -86,6 +89,8 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
             ),
             paperSize: pick(card.paperSize, oneOf<PaperSize>('A4', 'Letter'), d.card.paperSize),
             includeMapPage: pick(card.includeMapPage, isBoolean, d.card.includeMapPage),
+            cardSize: pick(card.cardSize, oneOf<CardSize>('real', 'compact'), d.card.cardSize),
+            bagList: pick(card.bagList, isBoolean, d.card.bagList),
         },
         preset: pick(v.preset, oneOf<PalettePreset>('solid', 'all', 'greyscale', 'custom'), d.preset),
         customIds: Array.isArray(v.customIds) ? v.customIds.filter(isId) : d.customIds,

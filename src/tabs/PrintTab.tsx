@@ -4,16 +4,7 @@ import BuildingCard from '../components/BuildingCard';
 import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
 import { Stage } from '../components/Tray';
-import {
-    CARD_GAP_MM,
-    mapPageLayout,
-    mmToPx,
-    PAGE_MARGIN_MM,
-    pageLayout,
-    studPxForCard,
-    usesPaperSize,
-    type PageLayout,
-} from '../mosaic/layout';
+import { CARD_GAP_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
 import { tokens } from '../theme';
@@ -55,10 +46,9 @@ const Sheet = ({ layout, children }: { layout: PageLayout; children: ReactNode }
 type Page = { kind: 'map' } | { kind: 'cards'; cards: MosaicCard[] };
 
 const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { cards, settings, updateSettings, brick, plate, cellsPerSide, grid } = mosaic;
+    const { cards, settings, updateSettings, brick, grid, layout } = mosaic;
     const [batch, setBatch] = useState(0);
 
-    const layout = pageLayout(plate.size, settings.paperSize);
     const cardPages = chunk<MosaicCard>(cards, layout.cardsPerPage);
     // the map page is the same size and orientation as the cards: mixing page sizes in one print job needs named
     // @page rules, which mobile print engines don't reliably support
@@ -73,7 +63,6 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     ];
     const batches = chunk(pages, PAGES_PER_BATCH);
     const currentBatch = Math.min(batch, Math.max(0, batches.length - 1));
-    const studPx = studPxForCard(mmToPx(layout.cardWidthMm), mmToPx(layout.cardHeightMm), cellsPerSide * brick.size);
     // pages are shown at print size, shrunk on screens narrower than a page (with its 1px border each side)
     const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.pageWidthMm) + 2);
 
@@ -87,11 +76,12 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             Building cards
                         </Typography>
                         <Typography color="text.secondary">
-                            {cards.length} cards on {cardPages.length} pages, {layout.cardsPerPage} per {layout.label}{' '}
-                            page{settings.includeMapPage ? ', after a map page' : ''}.
+                            {cards.length} cards on {cardPages.length} {cardPages.length === 1 ? 'page' : 'pages'},{' '}
+                            {layout.cardsPerPage} per {layout.label} page
+                            {settings.includeMapPage ? ', after a map page' : ''}.
                         </Typography>
                     </Box>
-                    {usesPaperSize(plate.size) && (
+                    {layout.usesPaper && (
                         <TextField
                             select
                             size="small"
@@ -162,7 +152,7 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                             card={card}
                                             settings={settings}
                                             brick={brick}
-                                            studPx={studPx}
+                                            layout={layout}
                                         />
                                     ))}
                                 </Box>
