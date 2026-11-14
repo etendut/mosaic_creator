@@ -103,7 +103,7 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
         <>
             <ControlSection title="Frame">
                 <Typography variant="body2" color="text.secondary">
-                    Drag the image to move it, scroll to zoom.
+                    Frame the part of the picture you want in the mosaic. Drag to move it; scroll or pinch to zoom.
                 </Typography>
                 <TextField
                     select
@@ -167,14 +167,7 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                 </Stack>
             </Stack>
         </>
-    ) : (
-        <ControlSection title="Start with an image">
-            <Typography variant="body2" color="text.secondary">
-                A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics. The image stays on
-                this computer.
-            </Typography>
-        </ControlSection>
-    );
+    ) : null;
 
     return (
         <Box
@@ -228,14 +221,18 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                         <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
                             <Tray sx={{ padding: 4, textAlign: 'center', maxWidth: 380 }}>
                                 <Typography variant="h2" component="p" gutterBottom>
-                                    Drop an image here
+                                    Start with a picture
                                 </Typography>
                                 <Typography color="text.secondary" sx={{ paddingBottom: 2.5 }}>
-                                    or pick one from this computer
+                                    Drop one here, or choose one from this device.
                                 </Typography>
                                 <Button variant="contained" size="large" onClick={chooseFile}>
                                     Choose an image
                                 </Button>
+                                <Typography variant="body2" color="text.secondary" sx={{ paddingTop: 2.5 }}>
+                                    A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics.
+                                    Your image stays on this device.
+                                </Typography>
                             </Tray>
                         </Stack>
                     )}
