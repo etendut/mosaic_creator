@@ -7,13 +7,12 @@ import PaletteEditor from '../components/PaletteEditor';
 import { BrickPicker, PlatePicker } from '../components/PartPickers';
 import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
-import { CleanUpControls, TouchUpToolbar } from '../components/TouchUp';
+import { TouchUpToolbar } from '../components/TouchUp';
 import { Stage, Tray } from '../components/Tray';
 import { ControlSection, Workspace } from '../components/Workspace';
 import { mapPageLayout, pageForMosaic } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
-import { toolFor, type TouchUpMode } from '../mosaic/touchUp';
-import type { PaletteColor } from '../mosaic/types';
+import { brushFor, DEFAULT_TOUCH_UP, type TouchUpState } from '../mosaic/touchUp';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
 
 const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
@@ -21,10 +20,9 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const shape = grid ?? { width: 1, height: 1 };
     const used = colorsUsed(mosaic.parts, brick.partId);
     const mapLayout = mapPageLayout(pageForMosaic(settings.paperSize, shape), shape, used.length);
-    const [mode, setMode] = useState<TouchUpMode>('view');
-    const [chosenColor, setChosenColor] = useState<PaletteColor | null>(null);
+    const [touchUp, setTouchUp] = useState<TouchUpState>(DEFAULT_TOUCH_UP);
     // until one is chosen, paint with the most used colour
-    const paintColor = chosenColor ?? used[0]?.color ?? null;
+    const toolbar = { ...touchUp, color: touchUp.color ?? used[0]?.color ?? null };
 
     const setWidth = (value: number) =>
         setPlatesAcross(Math.max(1, Math.min(MAX_PLATES_ACROSS, Math.round(value) || 1)));
@@ -63,9 +61,6 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
             <ControlSection title="Colours">
                 <PaletteEditor mosaic={mosaic} />
             </ControlSection>
-            <ControlSection title="Touch up">
-                <CleanUpControls mosaic={mosaic} />
-            </ControlSection>
         </>
     );
 
@@ -93,13 +88,15 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 </Tray>
                 <TouchUpToolbar
                     mosaic={mosaic}
-                    mode={mode}
-                    onModeChange={setMode}
-                    color={paintColor}
-                    onColorChange={setChosenColor}
+                    state={toolbar}
+                    onChange={(change) => setTouchUp((t) => ({ ...t, ...change }))}
                 />
                 <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <MosaicPreview mosaic={mosaic} tool={toolFor(mode, paintColor)} />
+                    <MosaicPreview
+                        mosaic={mosaic}
+                        tool={brushFor(toolbar)}
+                        showGrid={toolbar.before ? mosaic.untouchedGrid : null}
+                    />
                 </Stage>
             </Stack>
         </Workspace>

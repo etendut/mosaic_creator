@@ -1,4 +1,13 @@
-import { addEdits, applyTouchUps, findStrays, fitsGrid, toolFor, type Edit } from './touchUp';
+import {
+    addEdits,
+    applyTouchUps,
+    brushCells,
+    brushFor,
+    DEFAULT_TOUCH_UP,
+    findStrays,
+    fitsGrid,
+    type Edit,
+} from './touchUp';
 import type { Cell, PaletteColor, PixelGrid } from './types';
 
 const color = (id: number, hex: string): PaletteColor => ({ id, name: `c${id}`, hex, type: 'Solid' });
@@ -103,11 +112,44 @@ describe('findStrays', () => {
     });
 });
 
-describe('toolFor', () => {
-    it('paints with the colour, erases with no brick, and does nothing when viewing', () => {
-        expect(toolFor('paint', B)).toEqual({ colorId: 11 });
-        expect(toolFor('paint', null)).toBeNull();
-        expect(toolFor('erase', B)).toEqual({ colorId: null });
-        expect(toolFor('view', B)).toBeNull();
+describe('brushes', () => {
+    const big = { width: 10, height: 10 };
+    const draw = (cells: { x: number; y: number }[], size: number) =>
+        Array.from({ length: size }, (_, y) =>
+            Array.from({ length: size }, (_, x) => (cells.some((c) => c.x === x && c.y === y) ? '#' : '.')).join(''),
+        );
+
+    it('cover size × size bricks around the pointer, square or round', () => {
+        expect(brushCells(4, 4, { size: 1, shape: 'round' }, big)).toEqual([{ x: 4, y: 4 }]);
+        expect(brushCells(4, 4, { size: 3, shape: 'square' }, big)).toHaveLength(9);
+        expect(draw(brushCells(1, 1, { size: 3, shape: 'round' }, big), 3)).toEqual(['.#.', '###', '.#.']);
+        expect(draw(brushCells(2, 2, { size: 5, shape: 'round' }, big), 5)).toEqual([
+            '.###.',
+            '#####',
+            '#####',
+            '#####',
+            '.###.',
+        ]);
+        // even sizes reach down and right of the pointer
+        expect(brushCells(4, 4, { size: 2, shape: 'round' }, big)).toEqual([
+            { x: 4, y: 4 },
+            { x: 5, y: 4 },
+            { x: 4, y: 5 },
+            { x: 5, y: 5 },
+        ]);
+    });
+
+    it('stop at the edge of the mosaic', () => {
+        expect(brushCells(0, 0, { size: 3, shape: 'square' }, big)).toHaveLength(4);
+        expect(brushCells(9, 9, { size: 5, shape: 'square' }, big)).toHaveLength(9);
+    });
+
+    it('paint with the colour, erase with no brick, and do nothing when viewing or comparing', () => {
+        const brush = { size: 3, shape: 'round' as const };
+        expect(brushFor({ ...DEFAULT_TOUCH_UP, ...brush, mode: 'paint', color: B })).toEqual({ colorId: 11, ...brush });
+        expect(brushFor({ ...DEFAULT_TOUCH_UP, mode: 'paint' })).toBeNull();
+        expect(brushFor({ ...DEFAULT_TOUCH_UP, ...brush, mode: 'erase' })).toEqual({ colorId: null, ...brush });
+        expect(brushFor({ ...DEFAULT_TOUCH_UP, mode: 'view', color: B })).toBeNull();
+        expect(brushFor({ ...DEFAULT_TOUCH_UP, mode: 'erase', before: true })).toBeNull();
     });
 });

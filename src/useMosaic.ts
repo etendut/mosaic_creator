@@ -198,6 +198,8 @@ export const useMosaic = () => {
         swaps: swapColors,
         setSwap,
         grid,
+        /** The grid before touch-ups, for comparing. */
+        untouchedGrid: swapped,
         touchUps: project.touchUps,
         /** Touch-ups saved for a different size of mosaic, so not shown. */
         hiddenTouchUps: !!project.touchUps && !!grid && !fitsGrid(project.touchUps, grid),

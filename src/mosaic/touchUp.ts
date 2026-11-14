@@ -3,14 +3,64 @@ import type { Cell, PaletteColor, PixelGrid } from './types';
 
 export type TouchUpMode = 'view' | 'paint' | 'erase';
 
-/** What a click or drag on the map does: paint bricks one colour, or remove them (`colorId: null`). */
+export type BrushShape = 'round' | 'square';
+
+/** Brush sizes on offer, in bricks across. */
+export const BRUSH_SIZES = [1, 2, 3, 4, 5, 7, 9];
+
+/** What a click or drag on the map does: paint bricks one colour, or remove them (`colorId: null`), with a brush. */
 export interface BrickTool {
     colorId: number | null;
+    size: number;
+    shape: BrushShape;
 }
 
-/** The tool for a touch-up mode and paint colour; null when the map only shows the mosaic. */
-export const toolFor = (mode: TouchUpMode, color: PaletteColor | null): BrickTool | null =>
-    mode === 'erase' ? { colorId: null } : mode === 'paint' && color ? { colorId: color.id } : null;
+/** Everything the touch-up toolbar sets: what a click on the map does, with which colour and brush, and before/after. */
+export interface TouchUpState {
+    mode: TouchUpMode;
+    /** Null until chosen; the map then paints with the most used colour. */
+    color: PaletteColor | null;
+    size: number;
+    shape: BrushShape;
+    /** Show the mosaic as it was before touch-ups (and don't paint). */
+    before: boolean;
+}
+
+export const DEFAULT_TOUCH_UP: TouchUpState = { mode: 'view', color: null, size: 1, shape: 'square', before: false };
+
+/** The brush for the toolbar's state; null when the map only shows the mosaic. */
+export const brushFor = ({ mode, color, size, shape, before }: TouchUpState): BrickTool | null => {
+    if (before) return null;
+    if (mode === 'erase') return { colorId: null, size, shape };
+    if (mode === 'paint' && color) return { colorId: color.id, size, shape };
+    return null;
+};
+
+/**
+ * The bricks a brush covers when it's over brick (x, y), clipped to the grid. A square brush covers `size` × `size`
+ * bricks; a round one drops the bricks outside a circle, so size 3 is a plus and size 5 a rounded square. For even
+ * sizes, (x, y) is the brick up and left of the centre.
+ */
+export const brushCells = (
+    x: number,
+    y: number,
+    { size, shape }: Pick<BrickTool, 'size' | 'shape'>,
+    grid: Pick<PixelGrid, 'width' | 'height'>,
+) => {
+    const centre = (size - 1) / 2;
+    const reach = (centre + 0.25) ** 2;
+    const start = Math.floor(centre);
+    const cells: { x: number; y: number }[] = [];
+    for (let j = 0; j < size; j++) {
+        for (let i = 0; i < size; i++) {
+            if (shape === 'round' && (i - centre) ** 2 + (j - centre) ** 2 > reach) continue;
+            const cx = x + i - start;
+            const cy = y + j - start;
+            if (cx >= 0 && cy >= 0 && cx < grid.width && cy < grid.height) cells.push({ x: cx, y: cy });
+        }
+    }
+    return cells;
+};
 
 /** One touched-up brick: its column, row, and the colour id it becomes (`null` for no brick). */
 export type Edit = [x: number, y: number, colorId: number | null];

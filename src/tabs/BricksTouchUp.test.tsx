@@ -23,23 +23,33 @@ const map = () => {
     };
 };
 
-const touchedUp = (n: number) => screen.getByText(`${n} brick${n === 1 ? '' : 's'} touched up.`);
+const toolbar = () => within(screen.getByRole('toolbar', { name: 'Touch up' }));
+const tool = (name: string | RegExp) => toolbar().getByRole('button', { name });
+const touchedUp = (n: number) => screen.getByText(new RegExp(`\\b${n} bricks? touched up\\.`));
+const noneTouchedUp = () => expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
 
 const paintWith = async (user: User, name: string) => {
-    await user.click(screen.getByRole('button', { name: /^Paint colour/ }));
+    await user.click(tool(/^Paint colour/));
     await user.click(within(screen.getByRole('menu')).getByText(name));
 };
 
-describe('Touching up bricks', () => {
+const brush = async (user: User, size: number, shape: 'Round' | 'Square') => {
+    await user.click(toolbar().getByRole('combobox', { name: 'Brush size' }));
+    await user.click(screen.getByRole('option', { name: `${size} × ${size}` }));
+    await user.click(tool(`${shape} brush`));
+};
+
+describe('Touch-up toolbar', () => {
     it('paints single bricks, drags to paint several, and undoes a drag in one step', async () => {
         const user = await startMosaic();
         const m = map();
         // viewing: clicks do nothing
+        expect(tool('View')).toHaveAttribute('aria-pressed', 'true');
         m.click(4, 4);
-        expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
+        noneTouchedUp();
 
         await paintWith(user, 'Black');
-        expect(screen.getByRole('button', { name: 'Paint' })).toHaveAttribute('aria-pressed', 'true');
+        expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText(/make bricks Black/)).toBeInTheDocument();
         m.click(4, 4);
         expect(touchedUp(1)).toBeInTheDocument();
@@ -56,67 +66,104 @@ describe('Touching up bricks', () => {
         m.move(9, 4);
         expect(touchedUp(4)).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'Undo' }));
+        await user.click(tool('Undo'));
         expect(touchedUp(1)).toBeInTheDocument();
-        await user.click(screen.getByRole('button', { name: 'Undo' }));
-        expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-        await user.click(screen.getByRole('button', { name: 'Redo' }));
-        await user.click(screen.getByRole('button', { name: 'Redo' }));
+        await user.click(tool('Undo'));
+        noneTouchedUp();
+        expect(tool('Undo')).toBeDisabled();
+        await user.click(tool('Redo'));
+        await user.click(tool('Redo'));
         expect(touchedUp(4)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled();
+        expect(tool('Redo')).toBeDisabled();
 
         // painting a brick its own colour changes nothing
         m.click(4, 4);
         expect(touchedUp(4)).toBeInTheDocument();
     });
 
-    it('erases bricks, outlines the brick under the mouse, and clears touch-ups', async () => {
+    it('paints with bigger, round or square brushes', async () => {
+        const user = await startMosaic();
+        await paintWith(user, 'Black');
+        await brush(user, 3, 'Square');
+        map().click(5, 5);
+        expect(touchedUp(9)).toBeInTheDocument();
+        expect(screen.getByTitle('Black: 9')).toBeInTheDocument();
+
+        await brush(user, 3, 'Round');
+        expect(tool('Round brush')).toHaveAttribute('aria-pressed', 'true');
+        map().click(10, 5);
+        expect(touchedUp(14)).toBeInTheDocument();
+
+        // the outline shows the whole brush under the mouse
+        map().move(10, 5, 'mouse');
+        expect(screen.getByTestId('brush-outline')).toHaveStyle({ width: `${(3 / 32) * 100}%` });
+    });
+
+    it('erases bricks, outlines the brush under the mouse, and clears touch-ups', async () => {
         const user = await startMosaic();
         const m = map();
-        await user.click(screen.getByRole('button', { name: 'Erase' }));
+        await user.click(tool('Eraser'));
         expect(screen.getByText(/remove bricks/)).toBeInTheDocument();
         m.click(2, 2);
         m.click(2, 3);
         expect(touchedUp(2)).toBeInTheDocument();
 
         m.move(5, 5, 'mouse');
-        expect(screen.getByTestId('brick-outline')).toBeInTheDocument();
+        expect(screen.getByTestId('brush-outline')).toBeInTheDocument();
         fireEvent.pointerLeave(screen.getByLabelText(/^Card map/));
-        expect(screen.queryByTestId('brick-outline')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('brush-outline')).not.toBeInTheDocument();
         // off the map
         m.move(999, 5, 'mouse');
-        expect(screen.queryByTestId('brick-outline')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('brush-outline')).not.toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'Clear touch-ups' }));
-        expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
-        await user.click(screen.getByRole('button', { name: 'Undo' }));
+        await user.click(tool('Clear all touch-ups'));
+        noneTouchedUp();
+        await user.click(tool('Undo'));
         expect(touchedUp(2)).toBeInTheDocument();
+    });
+
+    it('compares before and after, without painting while showing before', async () => {
+        const user = await startMosaic();
+        expect(tool('Before / after')).toBeDisabled();
+        await paintWith(user, 'Black');
+        map().click(4, 4);
+
+        await user.click(tool('Before / after'));
+        expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByText(/Showing the mosaic before touch-ups/)).toBeInTheDocument();
+        map().click(8, 8);
+        expect(touchedUp(1)).toBeInTheDocument();
+
+        // picking a tool goes back to editing
+        await user.click(tool('Eraser'));
+        expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('cleans up stray bricks, after saying how many will change', async () => {
         const user = await startMosaic();
+        await user.click(tool('Clean up stray bricks'));
         expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Clean up' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
+        await user.keyboard('{Escape}');
 
         await paintWith(user, 'Black');
         map().click(4, 4);
         expect(screen.getByTitle('Black: 1')).toBeInTheDocument();
+
+        await user.click(tool('Clean up stray bricks'));
         expect(screen.getByText('1 brick would change.')).toBeInTheDocument();
-
-        await user.click(screen.getByRole('combobox', { name: 'Clean up' }));
+        await user.click(screen.getByRole('combobox', { name: 'Strays' }));
         await user.click(screen.getByRole('option', { name: 'Single bricks and pairs' }));
-        await user.click(screen.getByRole('button', { name: 'Clean up' }));
+        await user.click(screen.getByRole('button', { name: 'Apply' }));
         expect(screen.queryByTitle('Black: 1')).not.toBeInTheDocument();
-        expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'Undo' }));
+        await user.click(tool('Undo'));
         expect(screen.getByTitle('Black: 1')).toBeInTheDocument();
     });
 
     it('hides touch-ups made at another size until the size comes back', async () => {
         const user = await startMosaic();
-        await user.click(screen.getByRole('button', { name: 'Erase' }));
+        await user.click(tool('Eraser'));
         map().click(2, 2);
         // set straight to a value: the field snaps an empty value to 1, so clearing and typing gives 15, not 5
         const setAcross = (n: number) =>
@@ -125,12 +172,13 @@ describe('Touching up bricks', () => {
             });
         setAcross(5);
         expect(screen.getByText(/You touched up 1 brick on a \d+ × \d+ mosaic/)).toBeInTheDocument();
+        expect(tool('Before / after')).toBeDisabled();
 
         setAcross(4);
         expect(touchedUp(1)).toBeInTheDocument();
 
         setAcross(5);
-        await user.click(screen.getByRole('button', { name: 'Clear' }));
-        expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
+        await user.click(tool('Clear all touch-ups'));
+        expect(screen.queryByText(/You touched up/)).not.toBeInTheDocument();
     });
 });

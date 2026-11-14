@@ -1,7 +1,8 @@
 import { Box } from '@mui/material';
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { drawPreview } from '../mosaic/image';
-import type { BrickTool, Edit } from '../mosaic/touchUp';
+import { brushCells, type BrickTool, type Edit } from '../mosaic/touchUp';
+import type { PixelGrid } from '../mosaic/types';
 import type { Mosaic } from '../useMosaic';
 
 /** Target on-screen width of the preview; the canvas is scaled down with CSS if the window is narrower. */
@@ -11,14 +12,17 @@ interface MosaicPreviewProps {
     mosaic: Mosaic;
     /** Set to paint on the map; without it the map only shows the mosaic. */
     tool?: BrickTool | null;
+    /** Draw this grid instead of the mosaic's, e.g. the one before touch-ups. */
+    showGrid?: PixelGrid | null;
 }
 
-const MosaicPreview = ({ mosaic, tool = null }: MosaicPreviewProps) => {
-    const { grid, brick, plate, cellsPerSide, editBricks } = mosaic;
+const MosaicPreview = ({ mosaic, tool = null, showGrid }: MosaicPreviewProps) => {
+    const { brick, plate, cellsPerSide, editBricks } = mosaic;
+    const grid = showGrid ?? mosaic.grid;
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
-    // during a drag: the last brick painted, and whether this drag has changed anything yet (its first change starts
-    // a new undo step, the rest join it)
+    // during a drag: the last brick the pointer was over, and whether this drag has changed anything yet (its first
+    // change starts a new undo step, the rest join it)
     const stroke = useRef<{ last: string; started: boolean } | null>(null);
 
     useEffect(() => {
@@ -40,15 +44,26 @@ const MosaicPreview = ({ mosaic, tool = null }: MosaicPreviewProps) => {
         return x >= 0 && y >= 0 && x < grid.width && y < grid.height ? { x, y } : null;
     };
 
-    const paint = (cell: { x: number; y: number }) => {
+    const paint = (at: { x: number; y: number }) => {
         if (!tool || !grid || !stroke.current) return;
-        const key = `${cell.x},${cell.y}`;
+        const key = `${at.x},${at.y}`;
         if (stroke.current.last === key) return;
         stroke.current.last = key;
-        if ((grid.rows[cell.y][cell.x]?.id ?? null) === tool.colorId) return;
-        const edit: Edit = [cell.x, cell.y, tool.colorId];
-        editBricks([edit], { newStep: !stroke.current.started });
+        const edits = brushCells(at.x, at.y, tool, grid)
+            .filter(({ x, y }) => (grid.rows[y][x]?.id ?? null) !== tool.colorId)
+            .map(({ x, y }): Edit => [x, y, tool.colorId]);
+        if (edits.length === 0) return;
+        editBricks(edits, { newStep: !stroke.current.started });
         stroke.current.started = true;
+    };
+
+    // the outline of the brush, round or square, around the bricks it covers
+    const outline = tool && hover && grid && brushCells(hover.x, hover.y, { ...tool, shape: 'square' }, grid);
+    const box = outline?.length && {
+        left: Math.min(...outline.map((c) => c.x)),
+        top: Math.min(...outline.map((c) => c.y)),
+        right: Math.max(...outline.map((c) => c.x)) + 1,
+        bottom: Math.max(...outline.map((c) => c.y)) + 1,
     };
 
     return (
@@ -83,15 +98,16 @@ const MosaicPreview = ({ mosaic, tool = null }: MosaicPreviewProps) => {
                     cursor: tool ? 'crosshair' : 'default',
                 }}
             />
-            {tool && hover && grid && (
+            {box && grid && (
                 <Box
-                    data-testid="brick-outline"
+                    data-testid="brush-outline"
                     sx={{
                         position: 'absolute',
-                        left: `${(hover.x / grid.width) * 100}%`,
-                        top: `${(hover.y / grid.height) * 100}%`,
-                        width: `${100 / grid.width}%`,
-                        height: `${100 / grid.height}%`,
+                        left: `${(box.left / grid.width) * 100}%`,
+                        top: `${(box.top / grid.height) * 100}%`,
+                        width: `${((box.right - box.left) / grid.width) * 100}%`,
+                        height: `${((box.bottom - box.top) / grid.height) * 100}%`,
+                        borderRadius: tool!.shape === 'round' && tool!.size > 2 ? '50%' : 0,
                         outline: '2px solid white',
                         boxShadow: '0 0 0 3px rgba(0, 0, 0, 0.6)',
                         pointerEvents: 'none',
