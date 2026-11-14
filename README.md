@@ -33,6 +33,10 @@ npm run typecheck
 npm run build      # dist/index.html, a single self-contained file
 ```
 
+Pushes to `main` deploy to GitHub Pages through the `gh-pages` branch. Each pull request gets a preview at
+`https://etendut.github.io/mosaic_creator/pr-preview/pr-<number>/`, linked in a comment on the PR and removed when
+the PR closes. Previews share the live site's origin, so they see the same saved settings and image.
+
 - `src/mosaic/` — pure logic: colour matching, quantisation, cards, print layout, parts list, BrickLink XML.
 - `src/data/catalog.json` — the bricks, plates and colours the app uses, trimmed from BrickLink's catalog download.
   Don't hand-edit; to refresh it, download Colors, Codes and Parts as XML from
