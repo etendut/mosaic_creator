@@ -20,13 +20,24 @@ const MosaicSummary = ({ mosaic }: { mosaic: Mosaic }) => {
     ];
 
     return (
-        <Box component="dl" sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 4, rowGap: 1, margin: 0 }}>
+        <Box
+            component="dl"
+            sx={{
+                // two by two on phones, one row otherwise
+                display: 'grid',
+                gridTemplateColumns: { xs: 'repeat(2, auto)', sm: 'repeat(4, auto)' },
+                justifyContent: 'start',
+                columnGap: 4,
+                rowGap: 1,
+                margin: 0,
+            }}
+        >
             {items.map(([label, value]) => (
                 <Box key={label}>
                     <Typography component="dt" variant="body2" sx={{ color: tokens.muted }}>
                         {label}
                     </Typography>
-                    <Typography component="dd" variant="subtitle1" sx={{ margin: 0 }}>
+                    <Typography component="dd" variant="subtitle1" sx={{ margin: 0, whiteSpace: 'nowrap' }}>
                         {value}
                     </Typography>
                 </Box>

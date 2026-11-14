@@ -72,17 +72,25 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 <MapPage mosaic={mosaic} layout={mapLayout} />
             </Box>
             <Stack spacing={2} sx={{ displayPrint: 'none' }}>
-                <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
-                    <Box sx={{ flexGrow: 1 }}>
+                <Box>
+                    {/* the button shares only the title's line, so the text and numbers below get the full width */}
+                    <Stack
+                        direction="row"
+                        spacing={2}
+                        sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}
+                    >
                         <Typography variant="h2" gutterBottom>
                             Card map
                         </Typography>
-                        <MosaicSummary mosaic={mosaic} />
-                    </Box>
-                    <Button variant="contained" onClick={() => window.print()} sx={{ flexShrink: 0 }}>
-                        Print map
-                    </Button>
-                </Stack>
+                        <Button variant="contained" onClick={() => window.print()} sx={{ flexShrink: 0 }}>
+                            Print map
+                        </Button>
+                    </Stack>
+                    <Typography color="text.secondary" sx={{ marginBottom: 1.5 }}>
+                        Your picture in bricks. Each square is one card, built on one plate.
+                    </Typography>
+                    <MosaicSummary mosaic={mosaic} />
+                </Box>
                 <Tray>
                     <ColorsUsed mosaic={mosaic} />
                 </Tray>
