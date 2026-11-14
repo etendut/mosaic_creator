@@ -2,6 +2,7 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { catalog, DEFAULT_BRICK_ID, DEFAULT_PLATE_ID } from '../data/catalog';
 import type { ColorMetric } from './color';
 import type { PalettePreset } from './palette';
+import type { Dithering } from './quantize';
 import type { CardSettings, CardSize, PaperSize } from './types';
 
 export const MAX_PLATES_ACROSS = 40;
@@ -17,6 +18,7 @@ export interface ProjectSettings {
     customIds: number[];
     maxColors: number | null;
     metric: ColorMetric;
+    dithering: Dithering;
     /** [colour id, id of the colour to use instead] */
     swaps: [number, number][];
     /** Extra bricks to buy, as a whole percentage of each colour (0 to MAX_SPARES_PERCENT). */
@@ -45,6 +47,7 @@ export const DEFAULT_PROJECT: ProjectSettings = {
     customIds: [],
     maxColors: null,
     metric: 'rgb',
+    dithering: 'none',
     swaps: [],
     sparesPercent: 0,
 };
@@ -100,6 +103,7 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
         customIds: Array.isArray(v.customIds) ? v.customIds.filter(isId) : d.customIds,
         maxColors: isId(v.maxColors) && v.maxColors > 0 ? v.maxColors : null,
         metric: pick(v.metric, oneOf<ColorMetric>('rgb', 'perceptual'), d.metric),
+        dithering: pick(v.dithering, oneOf<Dithering>('none', 'smooth', 'pattern'), d.dithering),
         swaps: Array.isArray(v.swaps)
             ? v.swaps.filter((s): s is [number, number] => Array.isArray(s) && s.length === 2 && s.every(isId))
             : d.swaps,

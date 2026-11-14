@@ -8,7 +8,7 @@ import { shrinkToBricks } from './mosaic/image';
 import { applySwaps, limitColors, resolveSwaps, selectPalette, type PalettePreset } from './mosaic/palette';
 import { buildPartsList, withSpares } from './mosaic/partsList';
 import { DEFAULT_PROJECT, sanitizeSettings, type ProjectSettings } from './mosaic/project';
-import { quantize } from './mosaic/quantize';
+import { quantize, type Dithering } from './mosaic/quantize';
 import type { CardSettings } from './mosaic/types';
 
 export { MAX_PLATES_ACROSS } from './mosaic/project';
@@ -36,7 +36,7 @@ const remember = (settings: ProjectSettings) => {
 export const useMosaic = () => {
     const [image, setImageState] = useState<HTMLCanvasElement | null>(null);
     const [project, setProject] = useState<ProjectSettings>(recall);
-    const { brickId, plateId, platesAcross, card: settings, preset, maxColors, metric } = project;
+    const { brickId, plateId, platesAcross, card: settings, preset, maxColors, metric, dithering } = project;
 
     useEffect(() => remember(project), [project]);
 
@@ -60,7 +60,10 @@ export const useMosaic = () => {
         () => (small && maxColors ? limitColors(small, allowedColors, maxColors, metric) : allowedColors),
         [small, allowedColors, maxColors, metric],
     );
-    const matched = useMemo(() => (small ? quantize(small, palette, metric) : null), [small, palette, metric]);
+    const matched = useMemo(
+        () => (small ? quantize(small, palette, metric, dithering) : null),
+        [small, palette, metric, dithering],
+    );
     const swapColors = useMemo(() => {
         const byId = new Map(brick.colors.map((c) => [c.id, c]));
         return new Map(
@@ -142,6 +145,8 @@ export const useMosaic = () => {
         setMaxColors: (n: number | null) => update({ maxColors: n }),
         metric,
         setMetric: (m: ColorMetric) => update({ metric: m }),
+        dithering,
+        setDithering: (d: Dithering) => update({ dithering: d }),
         swaps: swapColors,
         setSwap,
         grid,

@@ -20,6 +20,7 @@ const custom: ProjectSettings = {
     customIds: [1, 11, 85],
     maxColors: 6,
     metric: 'perceptual',
+    dithering: 'smooth',
     swaps: [[85, 86]],
     sparesPercent: 10,
 };
@@ -93,6 +94,7 @@ describe('sanitizeSettings', () => {
                 bagList: 1,
             },
             metric: 'fancy',
+            dithering: 'sparkly',
             customIds: [1, 'x', -2, 11],
             swaps: [[85, 86], [1], ['a', 2]],
         });
@@ -105,6 +107,7 @@ describe('sanitizeSettings', () => {
         expect(settings.card.bagList).toBe(false);
         expect(settings.card.title).toBe('Library Day');
         expect(settings.metric).toBe('rgb');
+        expect(settings.dithering).toBe('none');
         expect(settings.customIds).toEqual([1, 11]);
         expect(settings.swaps).toEqual([[85, 86]]);
         expect(settings.plateId).toBe(custom.plateId);

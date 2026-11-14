@@ -14,6 +14,7 @@ import {
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
 import type { ColorMetric } from '../mosaic/color';
+import type { Dithering } from '../mosaic/quantize';
 import {
     listNames,
     paletteFile,
@@ -24,6 +25,12 @@ import {
 } from '../mosaic/palette';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
+
+const DITHERING_HELP: Record<Dithering, string> = {
+    none: 'Each brick takes its closest colour. Best for logos and flat art.',
+    smooth: 'Mixes colours to soften bands in photos and gradients.',
+    pattern: 'Mixes colours in a regular grid.',
+};
 
 const PRESETS: { value: Exclude<PalettePreset, 'custom'>; label: string }[] = [
     { value: 'solid', label: 'Solid only' },
@@ -145,6 +152,18 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                     <MenuItem value="perceptual">Perceptual</MenuItem>
                 </TextField>
             </Stack>
+            <TextField
+                select
+                size="small"
+                label="Dithering"
+                value={mosaic.dithering}
+                onChange={(e) => mosaic.setDithering(e.target.value as Dithering)}
+                helperText={DITHERING_HELP[mosaic.dithering]}
+            >
+                <MenuItem value="none">None</MenuItem>
+                <MenuItem value="smooth">Smooth</MenuItem>
+                <MenuItem value="pattern">Pattern</MenuItem>
+            </TextField>
             {message && (
                 <Alert severity={message.severity} onClose={() => setMessage(null)}>
                     {message.text}
