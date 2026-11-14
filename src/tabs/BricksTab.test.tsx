@@ -88,6 +88,24 @@ describe('Bricks step', () => {
         expect(screen.getByRole('combobox', { name: 'Colour matching' })).toHaveTextContent('Perceptual');
     });
 
+    it('dithers photos when asked', async () => {
+        const user = await startMosaic();
+        const dithering = () => screen.getByRole('combobox', { name: 'Dithering' });
+        expect(dithering()).toHaveTextContent('None');
+        expect(screen.getByText(/Best for logos and flat art/)).toBeInTheDocument();
+
+        for (const [option, help] of [
+            ['Smooth', /soften bands in photos/],
+            ['Pattern', /regular grid/],
+        ] as const) {
+            await user.click(dithering());
+            await user.click(screen.getByRole('option', { name: option }));
+            expect(dithering()).toHaveTextContent(option);
+            expect(screen.getByText(help)).toBeInTheDocument();
+        }
+        expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).dithering).toBe('pattern');
+    });
+
     it('saves the palette with colour names', async () => {
         const user = await startMosaic();
         await user.click(screen.getByRole('button', { name: 'Save palette' }));
