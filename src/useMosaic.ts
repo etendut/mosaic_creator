@@ -9,11 +9,15 @@ import { applySwaps, limitColors, resolveSwaps, selectPalette, type PalettePrese
 import { buildPartsList, withSpares } from './mosaic/partsList';
 import { DEFAULT_PROJECT, sanitizeSettings, type ProjectSettings } from './mosaic/project';
 import { quantize, type Dithering } from './mosaic/quantize';
+import { addEdits, applyTouchUps, fitsGrid, type Edit, type TouchUps } from './mosaic/touchUp';
 import type { CardSettings } from './mosaic/types';
 
 export { MAX_PLATES_ACROSS } from './mosaic/project';
 
 const STORAGE_KEY = 'mosaic-creator:settings';
+
+/** How many touch-up steps Undo can go back. */
+export const UNDO_LIMIT = 50;
 
 // Browser storage can be missing or blocked (private windows, locked-down machines); the app works without it.
 const recall = (): ProjectSettings => {
@@ -36,6 +40,11 @@ const remember = (settings: ProjectSettings) => {
 export const useMosaic = () => {
     const [image, setImageState] = useState<HTMLCanvasElement | null>(null);
     const [project, setProject] = useState<ProjectSettings>(recall);
+    // touch-ups before (past) and after (future) the current ones, for undo and redo; not saved
+    const [history, setHistory] = useState<{ past: (TouchUps | null)[]; future: (TouchUps | null)[] }>({
+        past: [],
+        future: [],
+    });
     const { brickId, plateId, platesAcross, card: settings, preset, maxColors, metric, dithering } = project;
 
     useEffect(() => remember(project), [project]);
@@ -72,7 +81,11 @@ export const useMosaic = () => {
             ),
         );
     }, [project.swaps, brick.colors]);
-    const grid = useMemo(() => (matched ? applySwaps(matched, swapColors) : null), [matched, swapColors]);
+    const swapped = useMemo(() => (matched ? applySwaps(matched, swapColors) : null), [matched, swapColors]);
+    const grid = useMemo(
+        () => (swapped ? applyTouchUps(swapped, project.touchUps, brick.colors) : null),
+        [swapped, project.touchUps, brick.colors],
+    );
     const cards = useMemo(() => (grid ? compileMosaicCards(grid, cellsPerSide) : []), [grid, cellsPerSide]);
     const parts = useMemo(() => buildPartsList(cards, brick, plate, catalog.pin), [cards, brick, plate]);
     const order = useMemo(
@@ -112,6 +125,38 @@ export const useMosaic = () => {
             return { ...p, swaps: [...next] };
         });
 
+    /**
+     * Touch up bricks on the current grid. A new step (a click, the start of a drag, a clean-up) can be undone on its
+     * own; the rest of a drag joins the step it started.
+     */
+    const editBricks = (edits: Edit[], { newStep = true } = {}) => {
+        if (!grid) return;
+        if (newStep) setHistory((h) => ({ past: [...h.past, project.touchUps].slice(-UNDO_LIMIT), future: [] }));
+        setProject((p) => ({ ...p, touchUps: addEdits(p.touchUps, grid, edits) }));
+    };
+    /** Move the current touch-ups onto one history stack, taking the top of the other. */
+    const step = (from: 'past' | 'future') =>
+        setHistory((h) => {
+            const to = from === 'past' ? 'future' : 'past';
+            return { ...h, [from]: h[from].slice(0, -1), [to]: [...h[to], project.touchUps] } as typeof h;
+        });
+    const undo = () => {
+        const previous = history.past.at(-1);
+        if (previous === undefined) return;
+        step('past');
+        update({ touchUps: previous });
+    };
+    const redo = () => {
+        const next = history.future.at(-1);
+        if (next === undefined) return;
+        step('future');
+        update({ touchUps: next });
+    };
+    const clearTouchUps = () => {
+        setHistory((h) => ({ past: [...h.past, project.touchUps].slice(-UNDO_LIMIT), future: [] }));
+        update({ touchUps: null });
+    };
+
     /** Use a new image (or none). It is remembered for the next visit unless it came from there. */
     const setImage = (next: HTMLCanvasElement | null, { remember = true } = {}) => {
         setImageState(next);
@@ -126,7 +171,10 @@ export const useMosaic = () => {
         /** The saveable settings, for project files. */
         project,
         /** Replace all settings, e.g. from an opened project or a reset. */
-        setProject: (settings: ProjectSettings) => setProject(sanitizeSettings(settings)),
+        setProject: (settings: ProjectSettings) => {
+            setHistory({ past: [], future: [] });
+            setProject(sanitizeSettings(settings));
+        },
         brick,
         setBrickId: (id: string) => update({ brickId: id }),
         plate,
@@ -150,6 +198,15 @@ export const useMosaic = () => {
         swaps: swapColors,
         setSwap,
         grid,
+        touchUps: project.touchUps,
+        /** Touch-ups saved for a different size of mosaic, so not shown. */
+        hiddenTouchUps: !!project.touchUps && !!grid && !fitsGrid(project.touchUps, grid),
+        editBricks,
+        clearTouchUps,
+        canUndo: history.past.length > 0,
+        canRedo: history.future.length > 0,
+        undo,
+        redo,
         cardGrid,
         cards,
         /** Exact counts, as the cards show them. */
