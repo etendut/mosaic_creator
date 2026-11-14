@@ -131,9 +131,11 @@ export const TouchUpToolbar = ({ mosaic, state, onChange }: ToolbarProps) => {
           ? `Click or drag on the map to make bricks ${state.color?.name ?? 'the paint colour'}.`
           : state.mode === 'erase'
             ? 'Click or drag on the map to remove bricks.'
-            : state.mode === 'pick'
-              ? `Click a brick on the map to use its colour for the brush. Picked: ${state.color?.name ?? 'none'}.`
-              : null;
+            : state.mode === 'view'
+              ? 'Choose the brush or eraser, then click or drag on the map.'
+              : state.mode === 'pick'
+                ? `Click a brick on the map to use its colour for the brush. Picked: ${state.color?.name ?? 'none'}.`
+                : null;
     // the colour matters to the brush and the eyedropper; size and shape to the brush and the eraser
     const editing = !state.before;
     const showColor = editing && (state.mode === 'paint' || state.mode === 'pick');
