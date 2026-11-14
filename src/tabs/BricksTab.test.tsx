@@ -1,5 +1,5 @@
-import { screen, within } from '@testing-library/react';
-import { startMosaic } from '../test/app';
+import { screen, waitFor, within } from '@testing-library/react';
+import { goTo, startMosaic, type User } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -10,6 +10,10 @@ const colorsOn = () =>
             .getByText(/colours on/)
             .textContent!.split(' ')[0],
     );
+
+/** Open a section of the colour settings that starts closed: "Choose colours" or "More colour options". */
+const reveal = (user: User, section: 'Choose colours' | 'More colour options') =>
+    user.click(screen.getByRole('button', { name: new RegExp(`^${section}`) }));
 
 describe('Bricks step', () => {
     it('changes the plate size, keeping its colour when that size comes in it', async () => {
@@ -61,6 +65,7 @@ describe('Bricks step', () => {
         await user.click(screen.getByRole('button', { name: 'Greyscale' }));
         expect(colorsOn()).toBeLessThan(solid);
 
+        await reveal(user, 'Choose colours');
         await user.click(screen.getByRole('button', { name: 'White (on)' }));
         expect(screen.getByRole('button', { name: 'White (off)' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Custom' })).toBeDisabled();
@@ -70,6 +75,7 @@ describe('Bricks step', () => {
 
     it('shows colour names on request, for touch screens', async () => {
         const user = await startMosaic();
+        await reveal(user, 'Choose colours');
         expect(within(palette()).queryByText('1 White')).not.toBeInTheDocument();
         await user.click(screen.getByRole('switch', { name: 'Names' }));
         expect(within(palette()).getByText('1 White')).toBeInTheDocument();
@@ -77,6 +83,7 @@ describe('Bricks step', () => {
 
     it('limits the number of colours and changes how they are matched', async () => {
         const user = await startMosaic();
+        await reveal(user, 'More colour options');
         const max = screen.getByRole('spinbutton', { name: 'Max colours' });
         await user.type(max, '2');
         expect(screen.getByText(/^2 colours used/)).toBeInTheDocument();
@@ -90,6 +97,7 @@ describe('Bricks step', () => {
 
     it('dithers photos when asked', async () => {
         const user = await startMosaic();
+        await reveal(user, 'More colour options');
         const dithering = () => screen.getByRole('combobox', { name: 'Dithering' });
         expect(dithering()).toHaveTextContent('None');
         expect(screen.getByText(/Best for logos and flat art/)).toBeInTheDocument();
@@ -106,8 +114,34 @@ describe('Bricks step', () => {
         expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).dithering).toBe('pattern');
     });
 
+    it('keeps the colour grid and advanced options closed until asked, and says when options are changed', async () => {
+        const user = await startMosaic();
+        expect(screen.queryByRole('button', { name: /^White \(/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('combobox', { name: 'Dithering' })).not.toBeInTheDocument();
+        const more = () => screen.getByRole('button', { name: /^More colour options/ });
+        expect(more()).toHaveAttribute('aria-expanded', 'false');
+        expect(more()).toHaveTextContent(/^More colour options$/);
+
+        await user.click(more());
+        expect(more()).toHaveAttribute('aria-expanded', 'true');
+        await user.type(screen.getByRole('spinbutton', { name: 'Max colours' }), '4');
+        await user.click(screen.getByRole('combobox', { name: 'Dithering' }));
+        await user.click(screen.getByRole('option', { name: 'Smooth' }));
+        await user.click(more());
+        expect(more()).toHaveTextContent('(2 changed)');
+        await waitFor(() => expect(screen.queryByRole('combobox', { name: 'Dithering' })).not.toBeInTheDocument());
+
+        // a custom palette is made in the colour grid, so it opens by itself
+        await reveal(user, 'Choose colours');
+        await user.click(screen.getByRole('button', { name: 'White (on)' }));
+        await goTo(user, 'Cards');
+        await goTo(user, 'Bricks');
+        expect(screen.getByRole('button', { name: /^Choose colours/ })).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('saves the palette with colour names', async () => {
         const user = await startMosaic();
+        await reveal(user, 'More colour options');
         await user.click(screen.getByRole('button', { name: 'Save palette' }));
         expect(downloads.at(-1)!.name).toBe('Mosaic Creator.palette.json');
         const file = JSON.parse(await lastDownloadText());
