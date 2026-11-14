@@ -3,6 +3,7 @@ import { catalog, DEFAULT_BRICK_ID, DEFAULT_PLATE_ID } from '../data/catalog';
 import type { ColorMetric } from './color';
 import type { PalettePreset } from './palette';
 import type { Dithering } from './quantize';
+import type { Edit, TouchUps } from './touchUp';
 import type { CardSettings, CardSize, PaperSize } from './types';
 
 export const MAX_PLATES_ACROSS = 40;
@@ -23,6 +24,8 @@ export interface ProjectSettings {
     swaps: [number, number][];
     /** Extra bricks to buy, as a whole percentage of each colour (0 to MAX_SPARES_PERCENT). */
     sparesPercent: number;
+    /** Bricks changed by hand on the Bricks step. */
+    touchUps: TouchUps | null;
 }
 
 export const DEFAULT_CARD: CardSettings = {
@@ -50,6 +53,7 @@ export const DEFAULT_PROJECT: ProjectSettings = {
     dithering: 'none',
     swaps: [],
     sparesPercent: 0,
+    touchUps: null,
 };
 
 const PROJECT_APP = 'mosaic-creator';
@@ -66,6 +70,24 @@ const oneOf =
         options.includes(v as T);
 const isString = (v: unknown): v is string => typeof v === 'string';
 const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean';
+
+/** Touch-ups from a file: a positive size, and edits inside it to a colour id or to no brick. */
+const sanitizeTouchUps = (value: unknown): TouchUps | null => {
+    if (!isObject(value) || !Array.isArray(value.edits)) return null;
+    const { width, height } = value;
+    if (!isId(width) || !isId(height) || width === 0 || height === 0) return null;
+    const edits = value.edits.filter(
+        (e): e is Edit =>
+            Array.isArray(e) &&
+            e.length === 3 &&
+            isId(e[0]) &&
+            isId(e[1]) &&
+            e[0] < width &&
+            e[1] < height &&
+            (e[2] === null || isId(e[2])),
+    );
+    return edits.length > 0 ? { width, height, edits } : null;
+};
 
 /**
  * Turn anything (a project file, the browser's memory, a hand-edited file) into valid settings. Each field that is
@@ -109,6 +131,7 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
             : d.swaps,
         sparesPercent:
             isId(v.sparesPercent) && v.sparesPercent <= MAX_SPARES_PERCENT ? v.sparesPercent : d.sparesPercent,
+        touchUps: sanitizeTouchUps(v.touchUps),
     };
 };
 

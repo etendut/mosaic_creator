@@ -23,6 +23,14 @@ const custom: ProjectSettings = {
     dithering: 'smooth',
     swaps: [[85, 86]],
     sparesPercent: 10,
+    touchUps: {
+        width: 4,
+        height: 4,
+        edits: [
+            [0, 0, 11],
+            [3, 2, null],
+        ],
+    },
 };
 // the 8-byte PNG signature is enough to check the bytes come back untouched
 const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -111,6 +119,22 @@ describe('sanitizeSettings', () => {
         expect(settings.customIds).toEqual([1, 11]);
         expect(settings.swaps).toEqual([[85, 86]]);
         expect(settings.plateId).toBe(custom.plateId);
+    });
+
+    it('keeps only touch-ups with a size and edits inside it', () => {
+        const touchUps = (value: unknown) => sanitizeSettings({ touchUps: value }).touchUps;
+        expect(
+            touchUps({ width: 2, height: 2, edits: [[1, 1, 5], [2, 0, 5], [0, 0, 'x'], [0, 1, null], [1]] }),
+        ).toEqual({
+            width: 2,
+            height: 2,
+            edits: [
+                [1, 1, 5],
+                [0, 1, null],
+            ],
+        });
+        for (const bad of [null, 'x', { width: 0, height: 2, edits: [[0, 0, 1]] }, { width: 2, height: 2, edits: [] }])
+            expect(touchUps(bad)).toBeNull();
     });
 
     it('keeps spares to a whole percentage up to 100', () => {

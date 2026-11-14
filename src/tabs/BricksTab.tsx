@@ -1,4 +1,5 @@
 import { Box, Button, Slider, Stack, TextField, Typography } from '@mui/material';
+import { useState } from 'react';
 import ColorsUsed from '../components/ColorsUsed';
 import MosaicPreview from '../components/MosaicPreview';
 import MosaicSummary from '../components/MosaicSummary';
@@ -6,20 +7,22 @@ import PaletteEditor from '../components/PaletteEditor';
 import { BrickPicker, PlatePicker } from '../components/PartPickers';
 import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
+import { TouchUpToolbar } from '../components/TouchUp';
 import { Stage, Tray } from '../components/Tray';
 import { ControlSection, Workspace } from '../components/Workspace';
 import { mapPageLayout, pageForMosaic } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
+import { brushFor, DEFAULT_TOUCH_UP, type TouchUpState } from '../mosaic/touchUp';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
 
 const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const { brick, plate, platesAcross, setPlatesAcross, cardGrid, grid, settings } = mosaic;
     const shape = grid ?? { width: 1, height: 1 };
-    const mapLayout = mapPageLayout(
-        pageForMosaic(settings.paperSize, shape),
-        shape,
-        colorsUsed(mosaic.parts, brick.partId).length,
-    );
+    const used = colorsUsed(mosaic.parts, brick.partId);
+    const mapLayout = mapPageLayout(pageForMosaic(settings.paperSize, shape), shape, used.length);
+    const [touchUp, setTouchUp] = useState<TouchUpState>(DEFAULT_TOUCH_UP);
+    // until one is chosen, paint with the most used colour
+    const toolbar = { ...touchUp, color: touchUp.color ?? used[0]?.color ?? null };
 
     const setWidth = (value: number) =>
         setPlatesAcross(Math.max(1, Math.min(MAX_PLATES_ACROSS, Math.round(value) || 1)));
@@ -83,8 +86,23 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 <Tray>
                     <ColorsUsed mosaic={mosaic} />
                 </Tray>
+                <TouchUpToolbar
+                    mosaic={mosaic}
+                    state={toolbar}
+                    onChange={(change) => setTouchUp((t) => ({ ...t, ...change }))}
+                />
                 <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <MosaicPreview mosaic={mosaic} />
+                    <MosaicPreview
+                        mosaic={mosaic}
+                        tool={brushFor(toolbar)}
+                        showGrid={toolbar.before ? mosaic.untouchedGrid : null}
+                        // the eyedropper takes the brick's colour for the brush and stays on, like the other tools
+                        onPick={
+                            toolbar.mode === 'pick' && !toolbar.before
+                                ? (cell) => cell && setTouchUp((t) => ({ ...t, color: cell }))
+                                : null
+                        }
+                    />
                 </Stage>
             </Stack>
         </Workspace>
