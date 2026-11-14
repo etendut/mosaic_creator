@@ -18,6 +18,8 @@ import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import { canvasToPng, pngToImage } from '../mosaic/image';
 import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '../mosaic/project';
 import type { Mosaic } from '../useMosaic';
+import { VERSION } from '../version';
+import AboutDialog from './AboutDialog';
 
 interface ProjectMenuProps {
     mosaic: Mosaic;
@@ -32,6 +34,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
     const fileInput = useRef<HTMLInputElement>(null);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [confirmReset, setConfirmReset] = useState(false);
+    const [about, setAbout] = useState(false);
     const [message, setMessage] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
 
     /** A template is the settings alone: no image, and so no parts list either. */
@@ -119,6 +122,15 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                 >
                     <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
                 </MenuItem>
+                <Divider />
+                <MenuItem
+                    onClick={() => {
+                        setAnchor(null);
+                        setAbout(true);
+                    }}
+                >
+                    <ListItemText primary="About" secondary={`Version ${VERSION}`} />
+                </MenuItem>
             </Menu>
             <input
                 ref={fileInput}
@@ -146,6 +158,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                     </Button>
                 </DialogActions>
             </Dialog>
+            <AboutDialog open={about} onClose={() => setAbout(false)} />
             <Snackbar
                 open={!!message}
                 autoHideDuration={message?.severity === 'error' ? null : 4000}
