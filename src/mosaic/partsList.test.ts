@@ -1,6 +1,6 @@
 import { toBrickLinkXml } from './bricklinkXml';
 import { compileMosaicCards } from './cards';
-import { buildPartsList } from './partsList';
+import { buildPartsList, sparesFor, withSpares } from './partsList';
 import type { BrickOption, PinOption, PlateOption } from './types';
 
 const B = { id: 11, name: 'Black', hex: '#212121', type: 'Solid' as const };
@@ -52,6 +52,31 @@ describe('buildPartsList', () => {
 
     it('is empty with no cards', () => {
         expect(buildPartsList([], brick, plate, pin)).toEqual([]);
+    });
+});
+
+describe('spares', () => {
+    it('rounds up, so every line gets at least one', () => {
+        expect(sparesFor(30, 10)).toBe(3);
+        expect(sparesFor(31, 10)).toBe(4);
+        expect(sparesFor(2, 5)).toBe(1);
+        expect(sparesFor(200, 0)).toBe(0);
+    });
+
+    it('adds at least the percentage to every brick and pin line, but not the plates', () => {
+        const exact = buildPartsList(cards, brick, { ...plate, pinsPerPlate: 4 }, pin);
+        const order = withSpares(exact, 10, plate.partId);
+        order.forEach((line, i) => {
+            if (line.partId === plate.partId) expect(line).toMatchObject({ quantity: exact[i].quantity, spares: 0 });
+            else expect(line.quantity).toBeGreaterThanOrEqual(Math.ceil(exact[i].quantity * 1.1));
+            expect(line.quantity).toBe(exact[i].quantity + line.spares!);
+        });
+        expect(order.map((l) => l.spares)).toEqual([1, 1, 0, 1]);
+    });
+
+    it('changes nothing at 0%', () => {
+        const exact = buildPartsList(cards, brick, plate, pin);
+        expect(withSpares(exact, 0, plate.partId).map((l) => l.quantity)).toEqual(exact.map((l) => l.quantity));
     });
 });
 

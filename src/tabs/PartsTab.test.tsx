@@ -34,6 +34,50 @@ describe('Parts step', () => {
         expect(screen.queryByRole('link', { name: 'wanted list upload' })).not.toBeInTheDocument();
     });
 
+    it('adds spares to the parts list and wanted list, but not to the cards', async () => {
+        const user = await startMosaic();
+        const number = (text: string | null) => Number(text!.match(/^[\d,]+/)![0].replace(/,/g, ''));
+        const quantities = () =>
+            within(screen.getByRole('table'))
+                .getAllByRole('row')
+                .slice(1)
+                .map((row) => number(within(row).getAllByRole('cell')[1].textContent));
+        const legend = async () => {
+            await goTo(user, 'Print');
+            const text = screen.getByRole('list', { name: 'Colours used' }).textContent;
+            await goTo(user, 'Parts');
+            return text;
+        };
+        const exactLegend = await legend();
+        const exact = quantities();
+        expect(screen.getByText(/Exact counts, no spares added/)).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: '10%' }));
+        expect(screen.getByText(/Includes [\d,]+ spares: 10% extra of each brick colour/)).toBeInTheDocument();
+        // the plates (their part row and colour row) stay exact; every other row grows by at least 10%
+        const grown = quantities();
+        expect(grown.filter((n, i) => n === exact[i])).toHaveLength(2);
+        grown.forEach((n, i) => n !== exact[i] && expect(n).toBeGreaterThanOrEqual(Math.ceil((exact[i] * 11) / 10)));
+        expect(screen.getAllByText(/incl\. \d+ spares?/).length).toBeGreaterThan(0);
+
+        await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));
+        const xml = await lastDownloadText();
+        const xmlTotal = [...xml.matchAll(/<MINQTY>(\d+)/g)].reduce((t, m) => t + Number(m[1]), 0);
+        expect(xmlTotal).toBe(number(screen.getByText(/parts in \d+ lots/).textContent));
+
+        // the cards and the map page keep exact counts
+        expect(await legend()).toBe(exactLegend);
+
+        await user.click(screen.getByRole('button', { name: 'Custom' }));
+        const field = screen.getByRole('spinbutton', { name: 'Spares %' });
+        await user.clear(field);
+        await user.type(field, '25');
+        expect(screen.getByText(/25% extra of each brick colour/)).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'None' }));
+        expect(screen.getByText(/Exact counts, no spares added/)).toBeInTheDocument();
+        expect(quantities()).toEqual(exact);
+    });
+
     it('names the file "mosaic" when the title is empty', async () => {
         const user = await startMosaic();
         await goTo(user, 'Cards');

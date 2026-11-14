@@ -9,6 +9,9 @@ import {
     TableCell,
     TableHead,
     TableRow,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
 } from '@mui/material';
 import { Fragment, useState } from 'react';
@@ -19,6 +22,7 @@ import { catalog } from '../data/catalog';
 import { downloadFile } from '../download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import type { PartLine } from '../mosaic/partsList';
+import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
 
@@ -31,8 +35,53 @@ const groupByPart = (lines: PartLine[]) => {
     return [...groups.values()];
 };
 
+const SPARES_PRESETS = [0, 5, 10];
+
+/** Spares as a percentage: none, 5%, 10% or any whole number up to MAX_SPARES_PERCENT. */
+const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: number) => void }) => {
+    const [custom, setCustom] = useState(false);
+    const selected = custom || !SPARES_PRESETS.includes(percent) ? 'custom' : percent;
+    return (
+        <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <Typography id="spares-label">Spares</Typography>
+            <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={selected}
+                onChange={(_, value: number | 'custom' | null) => {
+                    if (value === null) return;
+                    setCustom(value === 'custom');
+                    if (value !== 'custom') onChange(value);
+                }}
+                aria-labelledby="spares-label"
+            >
+                {SPARES_PRESETS.map((n) => (
+                    <ToggleButton key={n} value={n}>
+                        {n === 0 ? 'None' : `${n}%`}
+                    </ToggleButton>
+                ))}
+                <ToggleButton value="custom">Custom</ToggleButton>
+            </ToggleButtonGroup>
+            {selected === 'custom' && (
+                <TextField
+                    type="number"
+                    size="small"
+                    label="Spares %"
+                    value={percent}
+                    onChange={(e) => {
+                        const n = Math.round(Number(e.target.value));
+                        if (Number.isFinite(n)) onChange(Math.min(MAX_SPARES_PERCENT, Math.max(0, n)));
+                    }}
+                    slotProps={{ htmlInput: { min: 0, max: MAX_SPARES_PERCENT, step: 1 } }}
+                    sx={{ width: 110 }}
+                />
+            )}
+        </Stack>
+    );
+};
+
 const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { parts, settings, brick, plate } = mosaic;
+    const { order: parts, settings, brick, plate, sparesPercent, setSparesPercent } = mosaic;
 
     const iconFor = (partId: string) => {
         if (partId === brick.partId)
@@ -44,6 +93,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
     };
     const [copied, setCopied] = useState(false);
     const total = parts.reduce((sum, line) => sum + line.quantity, 0);
+    const spares = parts.reduce((sum, line) => sum + (line.spares ?? 0), 0);
     const xml = () => toBrickLinkXml(parts);
 
     const copy = async () => {
@@ -53,13 +103,16 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <Stack spacing={2} sx={{ padding: 2, maxWidth: 960, marginInline: 'auto' }}>
-            <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-end', flexWrap: 'wrap', rowGap: 2 }}>
+            <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <Box sx={{ flexGrow: 1 }}>
                     <Typography variant="h2" gutterBottom>
                         Parts
                     </Typography>
                     <Typography color="text.secondary">
-                        {total.toLocaleString()} parts in {parts.length} lots. Exact counts, no spares added.
+                        {total.toLocaleString()} parts in {parts.length} lots.{' '}
+                        {spares > 0
+                            ? `Includes ${spares.toLocaleString()} spares: ${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates are exact, and the cards still show exact counts.`
+                            : 'Exact counts, no spares added.'}
                     </Typography>
                 </Box>
                 <Button
@@ -72,6 +125,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     Copy XML
                 </Button>
             </Stack>
+            <SparesControl percent={sparesPercent} onChange={setSparesPercent} />
             {copied && (
                 <Alert severity="success" onClose={() => setCopied(false)}>
                     Copied. Paste it into BrickLink&apos;s{' '}
@@ -129,6 +183,17 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                             </TableCell>
                                             <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                                                 {line.quantity.toLocaleString()}
+                                                {!!line.spares && (
+                                                    <Typography
+                                                        component="span"
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                        sx={{ display: 'block', whiteSpace: 'nowrap' }}
+                                                    >
+                                                        incl. {line.spares.toLocaleString()} spare
+                                                        {line.spares === 1 ? '' : 's'}
+                                                    </Typography>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}

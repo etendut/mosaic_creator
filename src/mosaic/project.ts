@@ -5,6 +5,7 @@ import type { PalettePreset } from './palette';
 import type { CardSettings, CardSize, PaperSize } from './types';
 
 export const MAX_PLATES_ACROSS = 40;
+export const MAX_SPARES_PERCENT = 100;
 
 /** Everything about a mosaic except the image: what a project file and the browser's memory hold. */
 export interface ProjectSettings {
@@ -18,6 +19,8 @@ export interface ProjectSettings {
     metric: ColorMetric;
     /** [colour id, id of the colour to use instead] */
     swaps: [number, number][];
+    /** Extra bricks to buy, as a whole percentage of each colour (0 to MAX_SPARES_PERCENT). */
+    sparesPercent: number;
 }
 
 export const DEFAULT_CARD: CardSettings = {
@@ -43,6 +46,7 @@ export const DEFAULT_PROJECT: ProjectSettings = {
     maxColors: null,
     metric: 'rgb',
     swaps: [],
+    sparesPercent: 0,
 };
 
 const PROJECT_APP = 'mosaic-creator';
@@ -99,6 +103,8 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
         swaps: Array.isArray(v.swaps)
             ? v.swaps.filter((s): s is [number, number] => Array.isArray(s) && s.length === 2 && s.every(isId))
             : d.swaps,
+        sparesPercent:
+            isId(v.sparesPercent) && v.sparesPercent <= MAX_SPARES_PERCENT ? v.sparesPercent : d.sparesPercent,
     };
 };
 

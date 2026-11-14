@@ -6,7 +6,7 @@ import { cardLayout } from './mosaic/layout';
 import type { ColorMetric } from './mosaic/color';
 import { shrinkToBricks } from './mosaic/image';
 import { applySwaps, limitColors, resolveSwaps, selectPalette, type PalettePreset } from './mosaic/palette';
-import { buildPartsList } from './mosaic/partsList';
+import { buildPartsList, withSpares } from './mosaic/partsList';
 import { DEFAULT_PROJECT, sanitizeSettings, type ProjectSettings } from './mosaic/project';
 import { quantize } from './mosaic/quantize';
 import type { CardSettings } from './mosaic/types';
@@ -72,6 +72,10 @@ export const useMosaic = () => {
     const grid = useMemo(() => (matched ? applySwaps(matched, swapColors) : null), [matched, swapColors]);
     const cards = useMemo(() => (grid ? compileMosaicCards(grid, cellsPerSide) : []), [grid, cellsPerSide]);
     const parts = useMemo(() => buildPartsList(cards, brick, plate, catalog.pin), [cards, brick, plate]);
+    const order = useMemo(
+        () => withSpares(parts, project.sparesPercent, plate.partId),
+        [parts, project.sparesPercent, plate.partId],
+    );
     const cardGrid = grid ? cardGridSize(grid, cellsPerSide) : { columns: 0, rows: 0 };
     const maxCardColors = useMemo(
         () => cards.reduce((most, card) => Math.max(most, cardColorCounts(card).length), 0),
@@ -143,7 +147,12 @@ export const useMosaic = () => {
         grid,
         cardGrid,
         cards,
+        /** Exact counts, as the cards show them. */
         parts,
+        /** What to buy: the parts plus spares. */
+        order,
+        sparesPercent: project.sparesPercent,
+        setSparesPercent: (n: number) => update({ sparesPercent: n }),
         /** How the cards print with the current settings. */
         layout: layoutFor(settings),
         layoutFor,
