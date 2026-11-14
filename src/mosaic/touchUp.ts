@@ -1,7 +1,8 @@
 import { colorDistance, hexToRgb } from './color';
 import type { Cell, PaletteColor, PixelGrid } from './types';
 
-export type TouchUpMode = 'view' | 'paint' | 'erase';
+/** View the map, paint or erase bricks, or pick the paint colour from a brick (an eyedropper). */
+export type TouchUpMode = 'view' | 'paint' | 'erase' | 'pick';
 
 export type BrushShape = 'round' | 'square';
 

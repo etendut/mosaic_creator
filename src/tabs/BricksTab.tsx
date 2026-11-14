@@ -96,6 +96,12 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                         mosaic={mosaic}
                         tool={brushFor(toolbar)}
                         showGrid={toolbar.before ? mosaic.untouchedGrid : null}
+                        // the eyedropper takes the brick's colour and goes back to the brush; no brick, no change
+                        onPick={
+                            toolbar.mode === 'pick' && !toolbar.before
+                                ? (cell) => cell && setTouchUp((t) => ({ ...t, color: cell, mode: 'paint' }))
+                                : null
+                        }
                     />
                 </Stage>
             </Stack>

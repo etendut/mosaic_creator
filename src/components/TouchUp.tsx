@@ -1,8 +1,9 @@
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import BrushIcon from '@mui/icons-material/Brush';
 import CircleIcon from '@mui/icons-material/Circle';
+import ColorizeIcon from '@mui/icons-material/Colorize';
 import CompareIcon from '@mui/icons-material/Compare';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
 import PanToolIcon from '@mui/icons-material/PanTool';
 import RedoIcon from '@mui/icons-material/Redo';
 import SquareIcon from '@mui/icons-material/Square';
@@ -18,6 +19,7 @@ import {
     Menu,
     MenuItem,
     Popover,
+    Select,
     Stack,
     TextField,
     ToggleButton,
@@ -52,16 +54,27 @@ const ToolButton = ({
     label,
     onClick,
     disabled,
+    pressed,
     children,
 }: {
     label: string;
     onClick: (e: MouseEvent<HTMLElement>) => void;
     disabled?: boolean;
+    /** For an on/off button: whether it's on. */
+    pressed?: boolean;
     children: ReactNode;
 }) => (
     <Tooltip title={label}>
         <span>
-            <IconButton size="small" aria-label={label} onClick={onClick} disabled={disabled}>
+            <IconButton
+                size="small"
+                aria-label={label}
+                aria-pressed={pressed}
+                color={pressed ? 'primary' : 'default'}
+                onClick={onClick}
+                disabled={disabled}
+                sx={pressed ? { backgroundColor: 'action.selected' } : undefined}
+            >
                 {children}
             </IconButton>
         </span>
@@ -72,6 +85,7 @@ const TOOLS: [TouchUpMode, string, ReactNode][] = [
     ['view', 'View', <PanToolIcon key="view" fontSize="small" />],
     ['paint', 'Brush', <BrushIcon key="paint" fontSize="small" />],
     ['erase', 'Eraser', <EraserIcon key="erase" fontSize="small" />],
+    ['pick', 'Eyedropper: pick a colour from the map', <ColorizeIcon key="pick" fontSize="small" />],
 ];
 
 interface ToolbarProps {
@@ -117,7 +131,13 @@ export const TouchUpToolbar = ({ mosaic, state, onChange }: ToolbarProps) => {
           ? `Click or drag on the map to make bricks ${state.color?.name ?? 'the paint colour'}.`
           : state.mode === 'erase'
             ? 'Click or drag on the map to remove bricks.'
-            : null;
+            : state.mode === 'pick'
+              ? 'Click a brick on the map to paint with its colour.'
+              : null;
+    // the colour matters to the brush and the eyedropper; size and shape to the brush and the eraser
+    const editing = !state.before;
+    const showColor = editing && (state.mode === 'paint' || state.mode === 'pick');
+    const showBrush = editing && (state.mode === 'paint' || state.mode === 'erase');
     const status = [hint, touched > 0 && !hiddenTouchUps && `${plural(touched, 'brick')} touched up.`]
         .filter(Boolean)
         .join(' ');
@@ -147,56 +167,9 @@ export const TouchUpToolbar = ({ mosaic, state, onChange }: ToolbarProps) => {
                         </Tooltip>
                     ))}
                 </ToggleButtonGroup>
-                <Tooltip title="Paint colour">
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={(e) => setColorMenu(e.currentTarget)}
-                        aria-label={`Paint colour: ${state.color?.name ?? 'none'}`}
-                        sx={{ gap: 1, textTransform: 'none', minWidth: 0 }}
-                    >
-                        {state.color ? <ColorSwatch color={state.color} /> : 'Colour'}
-                        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                            {state.color?.name}
-                        </Box>
-                    </Button>
-                </Tooltip>
-                <Divider orientation="vertical" flexItem />
-                <TextField
-                    select
-                    size="small"
-                    label="Brush size"
-                    value={state.size}
-                    onChange={(e) => onChange({ size: Number(e.target.value) })}
-                    sx={{ width: 96 }}
-                >
-                    {BRUSH_SIZES.map((n) => (
-                        <MenuItem key={n} value={n}>
-                            {n} × {n}
-                        </MenuItem>
-                    ))}
-                </TextField>
-                <ToggleButtonGroup
-                    exclusive
-                    size="small"
-                    value={state.shape}
-                    onChange={(_, shape: BrushShape | null) => shape && onChange({ shape })}
-                    aria-label="Brush shape"
-                >
-                    <Tooltip title="Round brush">
-                        <ToggleButton value="round" aria-label="Round brush">
-                            <CircleIcon fontSize="small" />
-                        </ToggleButton>
-                    </Tooltip>
-                    <Tooltip title="Square brush">
-                        <ToggleButton value="square" aria-label="Square brush">
-                            <SquareIcon fontSize="small" />
-                        </ToggleButton>
-                    </Tooltip>
-                </ToggleButtonGroup>
                 <Divider orientation="vertical" flexItem />
                 <ToolButton label="Clean up stray bricks" onClick={(e) => setCleanUp(e.currentTarget)}>
-                    <AutoFixHighIcon fontSize="small" />
+                    <FaceRetouchingNaturalIcon fontSize="small" />
                 </ToolButton>
                 <ToolButton label="Undo" onClick={undo} disabled={!canUndo}>
                     <UndoIcon fontSize="small" />
@@ -204,20 +177,14 @@ export const TouchUpToolbar = ({ mosaic, state, onChange }: ToolbarProps) => {
                 <ToolButton label="Redo" onClick={redo} disabled={!canRedo}>
                     <RedoIcon fontSize="small" />
                 </ToolButton>
-                <Tooltip title="Before / after">
-                    <span>
-                        <ToggleButton
-                            size="small"
-                            value="before"
-                            selected={state.before}
-                            onChange={() => onChange({ before: !state.before })}
-                            aria-label="Before / after"
-                            disabled={touched === 0 || hiddenTouchUps}
-                        >
-                            <CompareIcon fontSize="small" />
-                        </ToggleButton>
-                    </span>
-                </Tooltip>
+                <ToolButton
+                    label="Before / after"
+                    pressed={state.before}
+                    onClick={() => onChange({ before: !state.before })}
+                    disabled={touched === 0 || hiddenTouchUps}
+                >
+                    <CompareIcon fontSize="small" />
+                </ToolButton>
                 <ToolButton
                     label="Clear all touch-ups"
                     onClick={() => {
@@ -228,6 +195,61 @@ export const TouchUpToolbar = ({ mosaic, state, onChange }: ToolbarProps) => {
                 >
                     <DeleteSweepIcon fontSize="small" />
                 </ToolButton>
+                {/* options for the current tool only, like a photo editor's options bar */}
+                {(showColor || showBrush) && <Divider orientation="vertical" flexItem />}
+                {showColor && (
+                    <Tooltip title="Paint colour">
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={(e) => setColorMenu(e.currentTarget)}
+                            aria-label={`Paint colour: ${state.color?.name ?? 'none'}`}
+                            sx={{ gap: 1, textTransform: 'none', minWidth: 0 }}
+                        >
+                            {state.color ? <ColorSwatch color={state.color} /> : 'Colour'}
+                            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                                {state.color?.name}
+                            </Box>
+                        </Button>
+                    </Tooltip>
+                )}
+                {showBrush && (
+                    <>
+                        <Tooltip title="Brush size" placement="top">
+                            <Select
+                                size="small"
+                                value={state.size}
+                                onChange={(e) => onChange({ size: Number(e.target.value) })}
+                                SelectDisplayProps={{ 'aria-label': 'Brush size' }}
+                                sx={{ '& .MuiSelect-select': { paddingBlock: '6px' } }}
+                            >
+                                {BRUSH_SIZES.map((n) => (
+                                    <MenuItem key={n} value={n}>
+                                        {n} × {n}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </Tooltip>
+                        <ToggleButtonGroup
+                            exclusive
+                            size="small"
+                            value={state.shape}
+                            onChange={(_, shape: BrushShape | null) => shape && onChange({ shape })}
+                            aria-label="Brush shape"
+                        >
+                            <Tooltip title="Round brush">
+                                <ToggleButton value="round" aria-label="Round brush">
+                                    <CircleIcon fontSize="small" />
+                                </ToggleButton>
+                            </Tooltip>
+                            <Tooltip title="Square brush">
+                                <ToggleButton value="square" aria-label="Square brush">
+                                    <SquareIcon fontSize="small" />
+                                </ToggleButton>
+                            </Tooltip>
+                        </ToggleButtonGroup>
+                    </>
+                )}
             </Stack>
             {status && (
                 <Typography variant="body2" color="text.secondary">

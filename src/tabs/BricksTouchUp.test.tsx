@@ -29,6 +29,7 @@ const touchedUp = (n: number) => screen.getByText(new RegExp(`\\b${n} bricks? to
 const noneTouchedUp = () => expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
 
 const paintWith = async (user: User, name: string) => {
+    if (tool('Brush').getAttribute('aria-pressed') !== 'true') await user.click(tool('Brush'));
     await user.click(tool(/^Paint colour/));
     await user.click(within(screen.getByRole('menu')).getByText(name));
 };
@@ -81,6 +82,26 @@ describe('Touch-up toolbar', () => {
         expect(touchedUp(4)).toBeInTheDocument();
     });
 
+    it('shows the colour and brush options only for the tools that use them', async () => {
+        const user = await startMosaic();
+        const options = () => ({
+            color: toolbar().queryByRole('button', { name: /^Paint colour/ }),
+            size: toolbar().queryByRole('combobox', { name: 'Brush size' }),
+            shape: toolbar().queryByRole('group', { name: 'Brush shape' }),
+        });
+        const shown = () => Object.entries(options()).flatMap(([name, el]) => (el ? [name] : []));
+
+        expect(shown()).toEqual([]);
+        await user.click(tool('Brush'));
+        expect(shown()).toEqual(['color', 'size', 'shape']);
+        await user.click(tool('Eraser'));
+        expect(shown()).toEqual(['size', 'shape']);
+        await user.click(tool('Eyedropper: pick a colour from the map'));
+        expect(shown()).toEqual(['color']);
+        await user.click(tool('View'));
+        expect(shown()).toEqual([]);
+    });
+
     it('paints with bigger, round or square brushes', async () => {
         const user = await startMosaic();
         await paintWith(user, 'Black');
@@ -120,6 +141,34 @@ describe('Touch-up toolbar', () => {
         noneTouchedUp();
         await user.click(tool('Undo'));
         expect(touchedUp(2)).toBeInTheDocument();
+    });
+
+    it('picks the paint colour from a brick with the eyedropper, then goes back to the brush', async () => {
+        const user = await startMosaic();
+        const m = map();
+        await paintWith(user, 'Black');
+        m.click(4, 4);
+        await paintWith(user, 'White');
+        expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: White');
+
+        await user.click(tool('Eyedropper: pick a colour from the map'));
+        expect(screen.getByText(/paint with its colour/)).toBeInTheDocument();
+        expect(screen.getByLabelText(/pick its colour/)).toBeInTheDocument();
+        m.move(4, 4, 'mouse');
+        expect(screen.getByTestId('brush-outline')).toHaveStyle({ width: `${(1 / 32) * 100}%` });
+        m.click(4, 4);
+        expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
+        expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
+        // picking doesn't change any bricks
+        expect(touchedUp(1)).toBeInTheDocument();
+
+        // an empty spot has no colour to pick, so the eyedropper stays on
+        await user.click(tool('Eraser'));
+        m.click(2, 2);
+        await user.click(tool('Eyedropper: pick a colour from the map'));
+        m.click(2, 2);
+        expect(tool('Eyedropper: pick a colour from the map')).toHaveAttribute('aria-pressed', 'true');
+        expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
     });
 
     it('compares before and after, without painting while showing before', async () => {
