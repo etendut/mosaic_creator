@@ -143,32 +143,39 @@ describe('Touch-up toolbar', () => {
         expect(touchedUp(2)).toBeInTheDocument();
     });
 
-    it('picks the paint colour from a brick with the eyedropper, then goes back to the brush', async () => {
+    it('picks the paint colour from a brick with the eyedropper, and stays on it like the other tools', async () => {
         const user = await startMosaic();
         const m = map();
+        const eyedropper = () => tool('Eyedropper: pick a colour from the map');
         await paintWith(user, 'Black');
         m.click(4, 4);
         await paintWith(user, 'White');
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: White');
 
-        await user.click(tool('Eyedropper: pick a colour from the map'));
-        expect(screen.getByText(/paint with its colour/)).toBeInTheDocument();
+        await user.click(eyedropper());
+        expect(screen.getByText(/use its colour for the brush\. Picked: White/)).toBeInTheDocument();
         expect(screen.getByLabelText(/pick its colour/)).toBeInTheDocument();
         m.move(4, 4, 'mouse');
         expect(screen.getByTestId('brush-outline')).toHaveStyle({ width: `${(1 / 32) * 100}%` });
         m.click(4, 4);
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
-        expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByText(/Picked: Black/)).toBeInTheDocument();
+        expect(eyedropper()).toHaveAttribute('aria-pressed', 'true');
         // picking doesn't change any bricks
         expect(touchedUp(1)).toBeInTheDocument();
 
-        // an empty spot has no colour to pick, so the eyedropper stays on
+        // an empty spot has no colour to pick
         await user.click(tool('Eraser'));
         m.click(2, 2);
-        await user.click(tool('Eyedropper: pick a colour from the map'));
+        await user.click(eyedropper());
         m.click(2, 2);
-        expect(tool('Eyedropper: pick a colour from the map')).toHaveAttribute('aria-pressed', 'true');
+        expect(eyedropper()).toHaveAttribute('aria-pressed', 'true');
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
+
+        // the brush then paints with the picked colour
+        await user.click(tool('Brush'));
+        m.click(6, 6);
+        expect(screen.getByTitle('Black: 2')).toBeInTheDocument();
     });
 
     it('compares before and after, without painting while showing before', async () => {
