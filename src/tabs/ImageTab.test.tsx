@@ -19,7 +19,7 @@ describe('Image step', () => {
         await chooseImage(user);
         expect(await screen.findByTestId('cropper')).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Frame' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /^Adjust colours/ })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Adjust' })).toBeInTheDocument();
     });
 
     it('starts with one card to choose an image, and no controls until there is one', async () => {
@@ -58,12 +58,6 @@ describe('Image step', () => {
         await user.click(screen.getByRole('option', { name: 'Square' }));
         expect(screen.getByRole('combobox', { name: 'Crop shape' })).toHaveTextContent('Square');
 
-        // rotating, flipping and colour adjustments start closed, and say when they're changed
-        const section = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
-        expect(screen.queryByRole('slider', { name: 'Rotate' })).not.toBeInTheDocument();
-        await user.click(section('Rotate and flip'));
-        await user.click(section('Adjust colours'));
-
         for (const name of ['Zoom', 'Rotate', 'Brightness', 'Contrast', 'Saturation']) {
             slider(name).focus();
             await user.keyboard('{ArrowRight}');
@@ -76,13 +70,6 @@ describe('Image step', () => {
         expect(screen.getByRole('button', { name: 'Flip horizontal' })).toHaveAttribute('aria-pressed', 'true');
         // a flipped image is shown from a canvas
         expect(screen.getByTestId('cropper').getAttribute('src')).toMatch(/^data:image\/png/);
-
-        await user.click(section('Rotate and flip'));
-        await user.click(section('Adjust colours'));
-        expect(section('Rotate and flip')).toHaveTextContent('(changed)');
-        expect(section('Adjust colours')).toHaveTextContent('(changed)');
-        await user.click(section('Rotate and flip'));
-        await user.click(section('Adjust colours'));
 
         await user.click(screen.getByRole('button', { name: 'Reset edits' }));
         expect(screen.getByRole('button', { name: 'Flip horizontal' })).toHaveAttribute('aria-pressed', 'false');
