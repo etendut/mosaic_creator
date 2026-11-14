@@ -7,7 +7,7 @@ describe('<App />', () => {
     it('starts on the image step', () => {
         render(<App />);
         expect(screen.getByRole('heading', { name: 'Mosaic Creator' })).toBeInTheDocument();
-        expect(screen.getByText('Drop an image here')).toBeVisible();
+        expect(screen.getByText('Start with a picture')).toBeVisible();
         expect(screen.getAllByRole('button', { name: 'Choose an image' })).toHaveLength(1);
     });
 
@@ -41,7 +41,7 @@ describe('<App />', () => {
     it('forgets the image when asked, back to a fresh start', async () => {
         const user = await startMosaic();
         await projectMenu(user, /Forget image/);
-        expect(screen.getByText('Drop an image here')).toBeVisible();
+        expect(screen.getByText('Start with a picture')).toBeVisible();
         expect(screen.getByRole('tab', { name: 'Bricks' })).toBeDisabled();
         expect(await screen.findByText(/no longer keeps it/)).toBeInTheDocument();
     });

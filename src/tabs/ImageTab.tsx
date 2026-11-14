@@ -1,6 +1,7 @@
 import { Alert, Box, Button, MenuItem, Slider, Stack, TextField, ToggleButton, Typography } from '@mui/material';
 import { useMemo, useRef, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
+import Disclosure from '../components/Disclosure';
 import { Stage, Tray } from '../components/Tray';
 import { ControlSection, Workspace } from '../components/Workspace';
 import { applyEdits, filterCss, flipImage, loadImage } from '../mosaic/image';
@@ -98,12 +99,16 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
         );
 
     const chooseFile = () => fileInput.current?.click();
+    const turned = rotation !== 0 || flipH || flipV;
+    const adjusted = Object.entries(NO_ADJUSTMENTS).some(
+        ([k, v]) => adjustments[k as keyof typeof NO_ADJUSTMENTS] !== v,
+    );
 
     const controls = source ? (
         <>
             <ControlSection title="Frame">
                 <Typography variant="body2" color="text.secondary">
-                    Drag the image to move it, scroll to zoom.
+                    Frame the part of the picture you want in the mosaic. Drag to move it; scroll or pinch to zoom.
                 </Typography>
                 <TextField
                     select
@@ -119,32 +124,38 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                     ))}
                 </TextField>
                 {slider('Zoom', zoom, '×', { min: 1, max: 5, step: 0.05 }, setZoom)}
-                {slider('Rotate', rotation, '°', { min: -180, max: 180 }, setRotation)}
-                <Stack direction="row" spacing={1}>
-                    <ToggleButton
-                        size="small"
-                        value="h"
-                        selected={flipH}
-                        onChange={() => setFlipH(!flipH)}
-                        sx={{ flex: 1 }}
-                    >
-                        Flip horizontal
-                    </ToggleButton>
-                    <ToggleButton
-                        size="small"
-                        value="v"
-                        selected={flipV}
-                        onChange={() => setFlipV(!flipV)}
-                        sx={{ flex: 1 }}
-                    >
-                        Flip vertical
-                    </ToggleButton>
-                </Stack>
-            </ControlSection>
-            <ControlSection title="Adjust">
-                {adjustment('brightness', 'Brightness')}
-                {adjustment('contrast', 'Contrast')}
-                {adjustment('saturation', 'Saturation')}
+                <Disclosure label="Rotate and flip" note={turned ? 'changed' : undefined}>
+                    <Stack spacing={1.5}>
+                        {slider('Rotate', rotation, '°', { min: -180, max: 180 }, setRotation)}
+                        <Stack direction="row" spacing={1}>
+                            <ToggleButton
+                                size="small"
+                                value="h"
+                                selected={flipH}
+                                onChange={() => setFlipH(!flipH)}
+                                sx={{ flex: 1 }}
+                            >
+                                Flip horizontal
+                            </ToggleButton>
+                            <ToggleButton
+                                size="small"
+                                value="v"
+                                selected={flipV}
+                                onChange={() => setFlipV(!flipV)}
+                                sx={{ flex: 1 }}
+                            >
+                                Flip vertical
+                            </ToggleButton>
+                        </Stack>
+                    </Stack>
+                </Disclosure>
+                <Disclosure label="Adjust colours" note={adjusted ? 'changed' : undefined}>
+                    <Stack spacing={1}>
+                        {adjustment('brightness', 'Brightness')}
+                        {adjustment('contrast', 'Contrast')}
+                        {adjustment('saturation', 'Saturation')}
+                    </Stack>
+                </Disclosure>
             </ControlSection>
             <Stack spacing={1} sx={{ padding: 2 }}>
                 {/* on phones this button sits right under the image instead; see below */}
@@ -167,14 +178,7 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                 </Stack>
             </Stack>
         </>
-    ) : (
-        <ControlSection title="Start with an image">
-            <Typography variant="body2" color="text.secondary">
-                A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics. The image stays on
-                this computer.
-            </Typography>
-        </ControlSection>
-    );
+    ) : null;
 
     return (
         <Box
@@ -228,14 +232,18 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                         <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
                             <Tray sx={{ padding: 4, textAlign: 'center', maxWidth: 380 }}>
                                 <Typography variant="h2" component="p" gutterBottom>
-                                    Drop an image here
+                                    Start with a picture
                                 </Typography>
                                 <Typography color="text.secondary" sx={{ paddingBottom: 2.5 }}>
-                                    or pick one from this computer
+                                    Drop one here, or choose one from this device.
                                 </Typography>
                                 <Button variant="contained" size="large" onClick={chooseFile}>
                                     Choose an image
                                 </Button>
+                                <Typography variant="body2" color="text.secondary" sx={{ paddingTop: 2.5 }}>
+                                    A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics.
+                                    Your image stays on this device.
+                                </Typography>
                             </Tray>
                         </Stack>
                     )}

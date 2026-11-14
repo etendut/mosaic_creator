@@ -5,33 +5,38 @@ import { Tray } from './Tray';
 
 const HEADER_PX = 61;
 
-/** A step's layout: a column of controls beside the stage where the result is shown. */
+/**
+ * A step's layout: a column of controls beside the stage where the result is shown. With no controls (e.g. before
+ * there's an image) the stage takes the full width.
+ */
 export const Workspace = ({ controls, children }: { controls: ReactNode; children: ReactNode }) => (
     <Box
         sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '340px minmax(0, 1fr)' },
+            gridTemplateColumns: { xs: '1fr', md: controls ? '340px minmax(0, 1fr)' : '1fr' },
             gap: 2,
             padding: { xs: 1, sm: 2 },
             alignItems: 'start',
             '@media print': { display: 'block', padding: 0 },
         }}
     >
-        <Tray
-            component="aside"
-            sx={{
-                padding: 0,
-                // on phones the result comes first and the controls follow it
-                order: { xs: 2, md: 0 },
-                position: { md: 'sticky' },
-                top: { md: HEADER_PX + 16 },
-                maxHeight: { md: `calc(100dvh - ${HEADER_PX + 32}px)` },
-                overflowY: 'auto',
-                displayPrint: 'none',
-            }}
-        >
-            {controls}
-        </Tray>
+        {controls && (
+            <Tray
+                component="aside"
+                sx={{
+                    padding: 0,
+                    // on phones the result comes first and the controls follow it
+                    order: { xs: 2, md: 0 },
+                    position: { md: 'sticky' },
+                    top: { md: HEADER_PX + 16 },
+                    maxHeight: { md: `calc(100dvh - ${HEADER_PX + 32}px)` },
+                    overflowY: 'auto',
+                    displayPrint: 'none',
+                }}
+            >
+                {controls}
+            </Tray>
+        )}
         <Box sx={{ minWidth: 0 }}>{children}</Box>
     </Box>
 );

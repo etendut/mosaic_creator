@@ -19,14 +19,21 @@ describe('Image step', () => {
         await chooseImage(user);
         expect(await screen.findByTestId('cropper')).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Frame' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Adjust' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^Adjust colours/ })).toBeInTheDocument();
+    });
+
+    it('starts with one card to choose an image, and no controls until there is one', async () => {
+        renderApp();
+        expect(screen.getByRole('button', { name: 'Choose an image' })).toBeInTheDocument();
+        expect(screen.getByText(/Your image stays on this device/)).toBeInTheDocument();
+        expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
     });
 
     it('says so when a file is not an image, and keeps the image it had', async () => {
         const user = renderApp();
         await chooseImage(user, 'broken.png');
         expect(await screen.findByText('Could not load that image')).toBeInTheDocument();
-        expect(screen.getByText('Drop an image here')).toBeInTheDocument();
+        expect(screen.getByText('Start with a picture')).toBeInTheDocument();
 
         await chooseImage(user);
         await screen.findByTestId('cropper');
@@ -39,7 +46,7 @@ describe('Image step', () => {
     it('ignores a cancelled file picker', async () => {
         const user = renderApp();
         await user.upload(screen.getByTestId('image-file'), []);
-        expect(screen.getByText('Drop an image here')).toBeInTheDocument();
+        expect(screen.getByText('Start with a picture')).toBeInTheDocument();
     });
 
     it('edits the frame and colours, and resets the edits', async () => {
@@ -50,6 +57,12 @@ describe('Image step', () => {
         await user.click(screen.getByRole('combobox', { name: 'Crop shape' }));
         await user.click(screen.getByRole('option', { name: 'Square' }));
         expect(screen.getByRole('combobox', { name: 'Crop shape' })).toHaveTextContent('Square');
+
+        // rotating, flipping and colour adjustments start closed, and say when they're changed
+        const section = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
+        expect(screen.queryByRole('slider', { name: 'Rotate' })).not.toBeInTheDocument();
+        await user.click(section('Rotate and flip'));
+        await user.click(section('Adjust colours'));
 
         for (const name of ['Zoom', 'Rotate', 'Brightness', 'Contrast', 'Saturation']) {
             slider(name).focus();
@@ -63,6 +76,13 @@ describe('Image step', () => {
         expect(screen.getByRole('button', { name: 'Flip horizontal' })).toHaveAttribute('aria-pressed', 'true');
         // a flipped image is shown from a canvas
         expect(screen.getByTestId('cropper').getAttribute('src')).toMatch(/^data:image\/png/);
+
+        await user.click(section('Rotate and flip'));
+        await user.click(section('Adjust colours'));
+        expect(section('Rotate and flip')).toHaveTextContent('(changed)');
+        expect(section('Adjust colours')).toHaveTextContent('(changed)');
+        await user.click(section('Rotate and flip'));
+        await user.click(section('Adjust colours'));
 
         await user.click(screen.getByRole('button', { name: 'Reset edits' }));
         expect(screen.getByRole('button', { name: 'Flip horizontal' })).toHaveAttribute('aria-pressed', 'false');
