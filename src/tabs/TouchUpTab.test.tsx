@@ -1,5 +1,5 @@
 import { fireEvent, screen, within } from '@testing-library/react';
-import { goTo, startMosaic, type User } from '../test/app';
+import { goTo, info, startMosaic, type User } from '../test/app';
 
 /**
  * The map canvas, laid out so each brick is 10 px square on screen (jsdom does no layout), and a way to press, move
@@ -30,8 +30,9 @@ const blackBricks = (): number =>
     (JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps?.edits ?? []).filter(
         (e: unknown[]) => e[2] === 11,
     ).length;
-const touchedUp = (n: number) => screen.getByText(new RegExp(`\\b${n} bricks? touched up\\.`));
-const noneTouchedUp = () => expect(screen.queryByText(/touched up/)).not.toBeInTheDocument();
+/** The touched-up count, from the step's Info. */
+const touchedUp = (n: number) => expect(info('Touched up')).toBe(`${n} brick${n === 1 ? '' : 's'}`);
+const noneTouchedUp = () => touchedUp(0);
 
 const paintWith = async (user: User, name: string) => {
     if (tool('Brush').getAttribute('aria-pressed') !== 'true') await user.click(tool('Brush'));
@@ -75,7 +76,6 @@ describe('Touch up step', () => {
         expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
         // the brush is on from the start
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/^Click or drag on the map to make bricks/)).toBeInTheDocument();
     });
 
     it('is where touch-ups are made; the Bricks step shows them on its map and says how many', async () => {
@@ -86,7 +86,7 @@ describe('Touch up step', () => {
         map().click(4, 4);
         await goTo(user, 'Bricks');
         expect(screen.queryByRole('toolbar', { name: 'Touch up' })).not.toBeInTheDocument();
-        expect(screen.getByText(/with 2 bricks touched up on the Touch up step/)).toBeInTheDocument();
+        expect(info('Touched up')).toBe('2 bricks');
         // the colours used, and so the cards and parts, follow the touched-up bricks
         expect(screen.getByTitle('Black: 1')).toBeInTheDocument();
     });
@@ -96,9 +96,9 @@ describe('Touch up step', () => {
         const m = map();
         await paintWith(user, 'Black');
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/make bricks Black/)).toBeInTheDocument();
+        expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
         m.click(4, 4);
-        expect(touchedUp(1)).toBeInTheDocument();
+        touchedUp(1);
         // the painted brick is saved with the settings
         expect(blackBricks()).toBe(1);
         expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps.edits).toEqual([[4, 4, 11]]);
@@ -110,21 +110,21 @@ describe('Touch up step', () => {
         m.up();
         // moving without pressing doesn't paint
         m.move(9, 4);
-        expect(touchedUp(4)).toBeInTheDocument();
+        touchedUp(4);
 
         await user.click(tool('Undo'));
-        expect(touchedUp(1)).toBeInTheDocument();
+        touchedUp(1);
         await user.click(tool('Undo'));
         noneTouchedUp();
         expect(tool('Undo')).toBeDisabled();
         await user.click(tool('Redo'));
         await user.click(tool('Redo'));
-        expect(touchedUp(4)).toBeInTheDocument();
+        touchedUp(4);
         expect(tool('Redo')).toBeDisabled();
 
         // painting a brick its own colour changes nothing
         m.click(4, 4);
-        expect(touchedUp(4)).toBeInTheDocument();
+        touchedUp(4);
     });
 
     it('keeps the brush palette in view for every tool', async () => {
@@ -142,13 +142,13 @@ describe('Touch up step', () => {
         await paintWith(user, 'Black');
         await brush(user, 3, 'Square');
         map().click(5, 5);
-        expect(touchedUp(9)).toBeInTheDocument();
+        touchedUp(9);
         expect(blackBricks()).toBe(9);
 
         await brush(user, 3, 'Round');
         expect(tool('Round brush')).toHaveAttribute('aria-pressed', 'true');
         map().click(10, 5);
-        expect(touchedUp(14)).toBeInTheDocument();
+        touchedUp(14);
 
         // the outline shows the whole brush under the mouse
         map().move(10, 5, 'mouse');
@@ -159,10 +159,10 @@ describe('Touch up step', () => {
         const user = await startTouchUp();
         const m = map();
         await user.click(tool('Eraser'));
-        expect(screen.getByText(/remove bricks/)).toBeInTheDocument();
+        expect(tool('Eraser')).toHaveAttribute('aria-pressed', 'true');
         m.click(2, 2);
         m.click(2, 3);
-        expect(touchedUp(2)).toBeInTheDocument();
+        touchedUp(2);
 
         m.move(5, 5, 'mouse');
         expect(screen.getByTestId('brush-outline')).toBeInTheDocument();
@@ -175,7 +175,7 @@ describe('Touch up step', () => {
         await user.click(tool('Clear all touch-ups'));
         noneTouchedUp();
         await user.click(tool('Undo'));
-        expect(touchedUp(2)).toBeInTheDocument();
+        touchedUp(2);
     });
 
     it('picks the paint colour from a brick with the eyedropper, and stays on it like the other tools', async () => {
@@ -188,16 +188,15 @@ describe('Touch up step', () => {
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: White');
 
         await user.click(eyedropper());
-        expect(screen.getByText(/use its colour for the brush\. Picked: White/)).toBeInTheDocument();
+        expect(tool('Eyedropper')).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByLabelText(/pick its colour/)).toBeInTheDocument();
         m.move(4, 4, 'mouse');
         expect(screen.getByTestId('brush-outline')).toHaveStyle({ width: `${(1 / 32) * 100}%` });
         m.click(4, 4);
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
-        expect(screen.getByText(/Picked: Black/)).toBeInTheDocument();
         expect(eyedropper()).toHaveAttribute('aria-pressed', 'true');
         // picking doesn't change any bricks
-        expect(touchedUp(1)).toBeInTheDocument();
+        touchedUp(1);
 
         // an empty spot has no colour to pick
         await user.click(tool('Eraser'));
@@ -221,9 +220,8 @@ describe('Touch up step', () => {
 
         await user.click(tool('Before / after'));
         expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/Showing the mosaic before touch-ups/)).toBeInTheDocument();
         map().click(8, 8);
-        expect(touchedUp(1)).toBeInTheDocument();
+        touchedUp(1);
 
         // picking a tool goes back to editing
         await user.click(tool('Eraser'));
@@ -299,7 +297,7 @@ describe('Touch up step', () => {
 
         // painting still lands on the brick under the pointer
         map().click(4, 4);
-        expect(touchedUp(1)).toBeInTheDocument();
+        touchedUp(1);
     });
 
     it('on touch: a tap or a drag paints, and two fingers pinch and pan without painting', async () => {
@@ -320,13 +318,13 @@ describe('Touch up step', () => {
         fireEvent.pointerDown(canvas, touch(1, 4, 4));
         noneTouchedUp();
         fireEvent.pointerUp(canvas, touch(1, 4, 4));
-        expect(touchedUp(1)).toBeInTheDocument();
+        touchedUp(1);
 
         // a finger that moves paints from where it went down
         fireEvent.pointerDown(canvas, touch(2, 6, 6));
         fireEvent.pointerMove(canvas, touch(2, 7, 6));
         fireEvent.pointerUp(canvas, touch(2, 7, 6));
-        expect(touchedUp(3)).toBeInTheDocument();
+        touchedUp(3);
 
         // two fingers spreading apart zoom in, and paint nothing
         fireEvent.pointerDown(canvas, touch(3, 10, 10));
@@ -335,7 +333,7 @@ describe('Touch up step', () => {
         fireEvent.pointerUp(canvas, touch(4, 16, 10));
         fireEvent.pointerUp(canvas, touch(3, 10, 10));
         expect(Number(frame.dataset.zoom)).toBeGreaterThan(1);
-        expect(touchedUp(3)).toBeInTheDocument();
+        touchedUp(3);
     });
 
     it('hides touch-ups made at another size until the size comes back, and says so on both steps', async () => {
@@ -357,7 +355,7 @@ describe('Touch up step', () => {
 
         await goTo(user, 'Bricks');
         setAcross(4);
-        expect(screen.getByText(/with 1 brick touched up on the Touch up step/)).toBeInTheDocument();
+        expect(info('Touched up')).toBe('1 brick');
 
         setAcross(5);
         await goTo(user, 'Touch up');

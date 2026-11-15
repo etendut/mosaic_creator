@@ -116,16 +116,3 @@ export const touchUpActions = (
     ];
     return { history, tools, cleaning, clearing };
 };
-
-/** The status line: what a click on the map does now. */
-export const touchUpHint = (state: TouchUpState) => {
-    if (state.before) return 'Showing the mosaic before touch-ups. Turn off Before / after to keep editing.';
-    switch (state.mode) {
-        case 'erase':
-            return 'Click or drag on the map to remove bricks.';
-        case 'pick':
-            return `Click a brick on the map to use its colour for the brush. Picked: ${state.color?.name ?? 'none'}.`;
-        default:
-            return `Click or drag on the map to make bricks ${state.color?.name ?? 'the paint colour'}.`;
-    }
-};

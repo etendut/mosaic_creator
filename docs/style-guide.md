@@ -51,10 +51,10 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 The result of the step, as large as fits: the photo, map, card, printed pages or the parts table. From top to bottom:
 
 1. **Alerts** about the result: warnings and errors, as an MUI `Alert`.
-2. **Status line:** one muted sentence, under 90 characters. Until there's something to report, it says what the step
-   is for ("Choose a picture and frame the part that becomes the mosaic."). After that it says what a click does now
-   or what just changed ("Click or drag on the map to make bricks Black. 3 bricks touched up.").
-3. **Facts** about the result: the stats row (`MosaicSummary`) and the colours used.
+2. **Status line:** only briefly, after an action, saying what just happened ("Cleaned up 7 bricks.", "Touch-ups
+   cleared. Undo brings them back."). No standing text on any page: no purpose sentences, no instructions the tools
+   already show (a pressed tool, a colour button), and no counts or sizes, which go in Info.
+3. **Facts that are also tools**, such as the colours used on Bricks (tap one to swap it). Plain numbers go in Info.
 4. **Canvas:** in a `Stage` (on the page's studs) or a `Tray`. Full width on a phone, with only the 8 px gutter.
 
 ### Tools
@@ -71,6 +71,9 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
 - **Every setting in an open group is visible.** Don't hide settings behind "More…" disclosures. If a group grows too
   long, the step is doing too much (see [One job per step](#one-job-per-step)).
 - **Help text** goes directly under the control it explains, in `body2` and muted, one or two sentences.
+- **Info** is the step's information: counts, sizes, pages, totals ("Parts 11,988 · Lots 9 · Spares none"). It's the
+  last group of the tools: the end of the column on desktop, and an ⓘ button at the end of the phone bar that opens it
+  as a panel. Labels on the left, values on the right.
 - **Show choices, don't hide them.** A choice of up to about six options is a plain list (radio buttons) or a row of
   toggle buttons, so every option is in view: Paper (A4, Letter, A3), what to print. Not a dropdown.
 - **An action that follows from the tools** (*Print cards*, after Paper and Pages) ends the tools, with a line above

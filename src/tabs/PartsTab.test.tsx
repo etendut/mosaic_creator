@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { goTo, startMosaic } from '../test/app';
+import { goTo, info, startMosaic } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 describe('Parts step', () => {
@@ -8,7 +8,8 @@ describe('Parts step', () => {
         await goTo(user, 'Parts');
         expect(screen.getByText('BrickLink part 98138')).toBeInTheDocument();
         expect(screen.getByText('BrickLink part 41539')).toBeInTheDocument();
-        expect(screen.getByText(/parts in \d+ lots/)).toBeInTheDocument();
+        expect(Number(info('Lots'))).toBeGreaterThan(0);
+        expect(info('Spares')).toBe('None: exact counts');
     });
 
     it('adds the pins for plates that need them', async () => {
@@ -50,10 +51,10 @@ describe('Parts step', () => {
         };
         const exactLegend = await legend();
         const exact = quantities();
-        expect(screen.getByText(/parts in \d+ lots, exact counts\./)).toBeInTheDocument();
+        expect(info('Spares')).toBe('None: exact counts');
 
         await user.click(screen.getByRole('button', { name: '10%' }));
-        expect(screen.getByText(/parts in \d+ lots, including [\d,]+ spares\./)).toBeInTheDocument();
+        expect(info('Spares')).toMatch(/^[\d,]+ \(10%\)$/);
         expect(screen.getByText(/10% extra of each brick colour/)).toBeInTheDocument();
         // the plates (their part row and colour row) stay exact; every other row grows by at least 10%
         const grown = quantities();
@@ -64,7 +65,7 @@ describe('Parts step', () => {
         await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));
         const xml = await lastDownloadText();
         const xmlTotal = [...xml.matchAll(/<MINQTY>(\d+)/g)].reduce((t, m) => t + Number(m[1]), 0);
-        expect(xmlTotal).toBe(number(screen.getByText(/parts in \d+ lots/).textContent));
+        expect(xmlTotal).toBe(number(info('Parts')));
 
         // the cards and the map page keep exact counts
         expect(await legend()).toBe(exactLegend);

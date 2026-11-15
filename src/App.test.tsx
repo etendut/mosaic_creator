@@ -24,7 +24,7 @@ describe('<App />', () => {
     it('builds a mosaic from the chosen image and opens every step', async () => {
         const user = await startMosaic();
         expect(screen.getByRole('tab', { name: 'Bricks' })).toHaveAttribute('aria-selected', 'true');
-        expect(screen.getByText(/colours used/)).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'Colours used' })).toBeInTheDocument();
 
         await goTo(user, 'Cards');
         expect(screen.getByRole('heading', { name: 'Cards', level: 1 })).toBeInTheDocument();

@@ -119,9 +119,11 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            status={`${total.toLocaleString()} parts in ${parts.length} lots, ${
-                spares > 0 ? `including ${spares.toLocaleString()} spares` : 'exact counts'
-            }.`}
+            info={[
+                ['Parts', total.toLocaleString()],
+                ['Lots', parts.length.toLocaleString()],
+                ['Spares', spares > 0 ? `${spares.toLocaleString()} (${sparesPercent}%)` : 'None: exact counts'],
+            ]}
             groups={[
                 {
                     id: 'spares',

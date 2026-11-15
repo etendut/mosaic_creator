@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { isInaccessible, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 import { FAKE_PNG } from './fakes';
@@ -32,6 +32,16 @@ export const startMosaic = async () => {
 
 export const goTo = (user: User, step: 'Image' | 'Bricks' | 'Touch up' | 'Cards' | 'Parts' | 'Print') =>
     user.click(screen.getByRole('tab', { name: step }));
+
+/** A value from the step's Info list, by its label (the Info section is open on desktop). */
+export const info = (label: string) => {
+    // the visible one: the image step stays mounted, hidden, with its own
+    const list = screen.getAllByLabelText('Info').find((el) => !isInaccessible(el))!;
+    const term = within(list)
+        .getAllByText(label)
+        .find((el) => el.tagName === 'DT');
+    return term?.nextElementSibling?.textContent ?? null;
+};
 
 /** Open the Project menu and pick an item by (part of) its label. */
 export const projectMenu = async (user: User, item: RegExp) => {

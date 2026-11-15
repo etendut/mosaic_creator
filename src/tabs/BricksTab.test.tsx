@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { startMosaic } from '../test/app';
+import { info, startMosaic } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -79,7 +79,7 @@ describe('Bricks step', () => {
         const user = await startMosaic();
         const max = screen.getByRole('spinbutton', { name: 'Max colours' });
         await user.type(max, '2');
-        expect(screen.getByText(/^2 colours used/)).toBeInTheDocument();
+        expect(info('Colours')).toBe('2');
         await user.clear(max);
         expect(max).toHaveValue(null);
 
@@ -150,7 +150,7 @@ describe('Bricks step', () => {
 
     it('swaps a used colour for another, and undoes it', async () => {
         const user = await startMosaic();
-        const used = screen.getByText(/colours used/).parentElement!;
+        const used = screen.getByRole('group', { name: 'Colours used' });
         const [first] = within(used).getAllByRole('button');
         const fromName = first.getAttribute('aria-label')!.split(':')[0];
         await user.click(first);
@@ -166,9 +166,18 @@ describe('Bricks step', () => {
         expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
 
+    it('lists the numbers an organiser plans around in Info', async () => {
+        await startMosaic();
+        expect(info('Cards')).toBe('12 (4 × 3)');
+        expect(info('Mosaic')).toBe('32 × 20 bricks');
+        expect(info('Finished size')).toMatch(/^256\s?mm × 192\s?mm$/);
+        expect(Number(info('Colours'))).toBeGreaterThan(0);
+        // no standing text on the page: the numbers are in Info
+        expect(screen.queryByText(/Your picture in bricks/)).not.toBeInTheDocument();
+    });
+
     it('leaves printing to the Print step', async () => {
         await startMosaic();
         expect(screen.queryByRole('button', { name: /^Print/ })).not.toBeInTheDocument();
-        expect(screen.getByText(/Your picture in bricks/)).toBeInTheDocument();
     });
 });

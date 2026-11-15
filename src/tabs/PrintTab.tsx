@@ -146,6 +146,11 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     return (
         <StepLayout
             groups={groups}
+            info={[
+                ['Cards', cards.length.toLocaleString()],
+                ['Card pages', cardPages.length.toLocaleString()],
+                ['Per page', `${layout.cardsPerPage} on ${layout.label}`],
+            ]}
             action={
                 <>
                     <Typography variant="body2" color="text.secondary">

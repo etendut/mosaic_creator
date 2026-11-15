@@ -165,8 +165,13 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <StepLayout
-            status={`Card ${firstCard?.id} as it prints. ${cards.length} cards print ${layout.cardsPerPage} to a page on ${layout.label}.`}
             groups={groups}
+            info={[
+                ['Cards', cards.length.toLocaleString()],
+                ['Per page', `${layout.cardsPerPage} on ${layout.label}`],
+                ['Pages', Math.ceil(cards.length / layout.cardsPerPage).toLocaleString()],
+                ['Brick on the card', `${layout.cellMm.toFixed(1)} mm`],
+            ]}
         >
             <Stage ref={measureStage} sx={{ display: 'flex', justifyContent: 'center' }}>
                 {firstCard && (
