@@ -1,10 +1,11 @@
-import { Alert, Box, Button, MenuItem, Slider, Stack, TextField, ToggleButton, Typography } from '@mui/material';
+import { Alert, Box, Button, Slider, Stack, ToggleButton, Typography } from '@mui/material';
 import { useMemo, useRef, useState } from 'react';
 import CropIcon from '@mui/icons-material/Crop';
 import TuneIcon from '@mui/icons-material/Tune';
 import Cropper, { type Area } from 'react-easy-crop';
 import { Stage, Tray } from '../components/Tray';
 import AppBarAction from '../components/AppBarAction';
+import ChoiceRow from '../components/ChoiceRow';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { applyEdits, filterCss, flipImage, loadImage } from '../mosaic/image';
 
@@ -112,19 +113,12 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
                   icon: <CropIcon />,
                   content: (
                       <>
-                          <TextField
-                              select
-                              size="small"
+                          <ChoiceRow
                               label="Crop shape"
-                              value={aspect}
-                              onChange={(e) => setAspect(Number(e.target.value))}
-                          >
-                              {ASPECTS.map((a) => (
-                                  <MenuItem key={a.label} value={a.value}>
-                                      {a.label}
-                                  </MenuItem>
-                              ))}
-                          </TextField>
+                              value={String(aspect)}
+                              onChange={(v) => setAspect(Number(v))}
+                              options={ASPECTS.map((a) => [String(a.value), a.label])}
+                          />
                           {slider('Zoom', zoom, '×', { min: 1, max: 5, step: 0.05 }, setZoom)}
                           {slider('Rotate', rotation, '°', { min: -180, max: 180 }, setRotation)}
                           <Stack direction="row" spacing={1}>

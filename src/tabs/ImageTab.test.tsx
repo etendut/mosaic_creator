@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { chooseImage, renderApp, applyImage } from '../test/app';
 
 const slider = (name: string) => screen.getByRole('slider', { name });
@@ -54,9 +54,11 @@ describe('Image step', () => {
         await chooseImage(user);
         await screen.findByTestId('cropper');
 
-        await user.click(screen.getByRole('combobox', { name: 'Crop shape' }));
-        await user.click(screen.getByRole('option', { name: 'Square' }));
-        expect(screen.getByRole('combobox', { name: 'Crop shape' })).toHaveTextContent('Square');
+        const shape = (name: string) =>
+            within(screen.getByRole('group', { name: 'Crop shape' })).getByRole('button', { name });
+        expect(shape('Original')).toHaveAttribute('aria-pressed', 'true');
+        await user.click(shape('Square'));
+        expect(shape('Square')).toHaveAttribute('aria-pressed', 'true');
 
         for (const name of ['Zoom', 'Rotate', 'Brightness', 'Contrast', 'Saturation']) {
             slider(name).focus();
@@ -73,7 +75,7 @@ describe('Image step', () => {
 
         await user.click(screen.getByRole('button', { name: 'Reset edits' }));
         expect(screen.getByRole('button', { name: 'Flip horizontal' })).toHaveAttribute('aria-pressed', 'false');
-        expect(screen.getByRole('combobox', { name: 'Crop shape' })).toHaveTextContent('Original');
+        expect(shape('Original')).toHaveAttribute('aria-pressed', 'true');
         expect(screen.queryByText('101%')).not.toBeInTheDocument();
     });
 
