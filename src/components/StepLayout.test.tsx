@@ -75,13 +75,13 @@ describe('Steps on a phone', () => {
     it('keeps Print cards just above the tool bar, with what it will print', async () => {
         const user = await startMosaic();
         await goTo(user, 'Print');
-        expect(screen.getByText(/cards on \d+ pages?, \d+ per A4/)).toBeInTheDocument();
-        await user.click(screen.getByRole('button', { name: 'Print map and cards' }));
+        expect(screen.getByText('The map page, on one sheet.')).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Print map page' }));
         expect(window.print).toHaveBeenCalled();
         // a tool panel opens above it
         await user.click(tools().getByRole('button', { name: 'Paper' }));
         expect(screen.getByRole('region', { name: 'Paper' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Print map and cards' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Print map page' })).toBeInTheDocument();
     });
 
     it("shows the step's name and main action in the app bar", async () => {

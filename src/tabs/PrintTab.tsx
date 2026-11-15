@@ -48,7 +48,7 @@ const Sheet = ({ layout, children }: { layout: PageLayout; children: ReactNode }
 
 type Page = { kind: 'map' } | { kind: 'cards'; cards: MosaicCard[] };
 
-/** One thing to print: the map page, the cards, or both, or one batch of a big job's cards. */
+/** One thing to print: the map page, or the cards (one part of a big job's cards). */
 interface PrintChoice {
     id: string;
     label: string;
@@ -57,11 +57,11 @@ interface PrintChoice {
     pages: Page[];
 }
 
-const PAPERS: PaperSize[] = ['A4', 'Letter', 'A3'];
+const PAPERS: PaperSize[] = ['A4', 'A3', 'Letter'];
 
 const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const { cards, settings, updateSettings, brick, grid, layout } = mosaic;
-    const [chosen, setChosen] = useState('all');
+    const [chosen, setChosen] = useState('map');
 
     const cardPages = chunk<MosaicCard>(cards, layout.cardsPerPage);
     // the map page is the same size and orientation as the cards: mixing page sizes in one print job needs named
@@ -76,35 +76,26 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     // big jobs print the map, then the cards in batches; Chrome gets slow with hundreds of pages at once
     const cardBatches = chunk(cardSheets, PAGES_PER_BATCH);
     const pageRange = (i: number) => `pages ${i * PAGES_PER_BATCH + 1}–${i * PAGES_PER_BATCH + cardBatches[i].length}`;
-    const choices: PrintChoice[] =
-        cardBatches.length > 1
-            ? [
-                  { id: 'map', label: 'Map page', button: 'Print map page', pages: [mapPage] },
-                  ...cardBatches.map((batch, i) => ({
-                      id: `cards-${i}`,
-                      label: `Cards, ${pageRange(i)}`,
-                      button: 'Print cards',
-                      pages: batch,
-                  })),
-              ]
-            : [
-                  { id: 'all', label: 'Map and cards', button: 'Print map and cards', pages: [mapPage, ...cardSheets] },
-                  { id: 'map', label: 'Map page only', button: 'Print map page', pages: [mapPage] },
-                  { id: 'cards', label: 'Cards only', button: 'Print cards', pages: cardSheets },
-              ];
+    // always the same shape: the map page, then the cards (in parts of PAGES_PER_BATCH pages for big jobs)
+    const choices: PrintChoice[] = [
+        { id: 'map', label: 'Map page', button: 'Print map page', pages: [mapPage] },
+        ...cardBatches.map((batch, i) => ({
+            id: `cards-${i}`,
+            label: `Cards, ${pageRange(i)}`,
+            button: 'Print cards',
+            pages: batch,
+        })),
+    ];
     // the choice made, or the first one if it no longer exists (e.g. after a size change)
     const choice = choices.find((c) => c.id === chosen) ?? choices[0];
     const cardsInChoice = choice.pages.reduce((n, page) => n + (page.kind === 'cards' ? page.cards.length : 0), 0);
     const sheetsOfCards = choice.pages.filter((page) => page.kind === 'cards').length;
-    const summary = [
-        choice.pages[0]?.kind === 'map' && (sheetsOfCards ? 'A map page, then' : 'The map page, on one sheet.'),
-        sheetsOfCards > 0 &&
-            `${cardsInChoice} cards on ${sheetsOfCards} ${sheetsOfCards === 1 ? 'page' : 'pages'}, ${
-                layout.cardsPerPage
-            } per ${layout.label} page.`,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const summary =
+        sheetsOfCards > 0
+            ? `${cardsInChoice} cards on ${sheetsOfCards} ${sheetsOfCards === 1 ? 'page' : 'pages'}, ${
+                  layout.cardsPerPage
+              } per ${layout.label} page.`
+            : 'The map page, on one sheet.';
 
     // pages are shown at print size, shrunk on screens narrower than a page (with its 1px border each side)
     const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.pageWidthMm) + 2);
