@@ -160,11 +160,25 @@ export interface PreviewOptions {
     background: string;
     /** Draw card boundaries and ids every `cellsPerCard` cells; 0 to hide. */
     cellsPerCard: number;
+    /** Height of the card ids in canvas px; by default sized for the map on screen (8 to 14 px). */
+    labelPx?: number;
 }
+
+/** Printed height of the card ids on the map page. */
+export const MAP_LABEL_MM = 8;
+
+/**
+ * Card id size for a map image drawn `canvasWidthPx` wide and printed `printWidthMm` wide: MAP_LABEL_MM tall on
+ * paper, but at most 30% of a card, so small cards keep most of their bricks in view.
+ */
+export const printLabelPx = (cardPx: number, canvasWidthPx: number, printWidthMm: number) => {
+    const pxPerMm = printWidthMm > 0 ? canvasWidthPx / printWidthMm : 0;
+    return Math.max(8, Math.min(cardPx * 0.3, MAP_LABEL_MM * pxPerMm));
+};
 
 /** Draw the quantised mosaic as bricks on the plate colour, with the card grid overlaid. */
 export const drawPreview = (canvas: HTMLCanvasElement, grid: PixelGrid, options: PreviewOptions) => {
-    const { cellPx, isRound, background, cellsPerCard } = options;
+    const { cellPx, isRound, background, cellsPerCard, labelPx } = options;
     canvas.width = grid.width * cellPx;
     canvas.height = grid.height * cellPx;
     const ctx = context2d(canvas);
@@ -187,11 +201,14 @@ export const drawPreview = (canvas: HTMLCanvasElement, grid: PixelGrid, options:
 
     if (cellsPerCard <= 0) return;
     const cardPx = cellsPerCard * cellPx;
-    // a dark line under a light one, so card edges show on any brick colour
+    // a dark line under a light one, so card edges show on any brick colour; thicker with bigger bricks (the map page
+    // draws them at up to 64 px), the same as before at screen sizes
+    const dark = Math.max(3, Math.round(cellPx * 0.12));
+    const light = Math.max(1, Math.round(cellPx * 0.04));
     const line = (x1: number, y1: number, x2: number, y2: number) => {
         for (const [style, width] of [
-            ['rgba(0, 0, 0, 0.55)', 3],
-            ['rgba(255, 255, 255, 0.9)', 1],
+            ['rgba(0, 0, 0, 0.55)', dark],
+            ['rgba(255, 255, 255, 0.9)', light],
         ] as const) {
             ctx.strokeStyle = style;
             ctx.lineWidth = width;
@@ -204,18 +221,20 @@ export const drawPreview = (canvas: HTMLCanvasElement, grid: PixelGrid, options:
     for (let x = 0; x <= canvas.width; x += cardPx) line(x + 0.5, 0, x + 0.5, canvas.height);
     for (let y = 0; y <= canvas.height; y += cardPx) line(0, y + 0.5, canvas.width, y + 0.5);
 
-    const fontPx = Math.min(14, Math.max(8, cardPx / 4));
+    const fontPx = labelPx ?? Math.min(14, Math.max(8, cardPx / 4));
+    // the label's box and inset grow with the text
+    const pad = Math.max(1, Math.round(fontPx * 0.15));
     ctx.font = `bold ${fontPx}px sans-serif`;
     ctx.textBaseline = 'top';
     for (let row = 0; row * cardPx < canvas.height; row++) {
         for (let col = 0; col * cardPx < canvas.width; col++) {
             const label = `${rowLabel(row + 1)}${col + 1}`;
-            const x = col * cardPx + 3;
-            const y = row * cardPx + 3;
+            const x = col * cardPx + 2 + pad;
+            const y = row * cardPx + 2 + pad;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-            ctx.fillRect(x - 1, y - 1, ctx.measureText(label).width + 4, fontPx + 2);
+            ctx.fillRect(x - pad, y - pad, ctx.measureText(label).width + pad * 2, fontPx + pad * 2);
             ctx.fillStyle = 'white';
-            ctx.fillText(label, x + 1, y);
+            ctx.fillText(label, x, y);
         }
     }
 };

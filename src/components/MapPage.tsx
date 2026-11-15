@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { drawPreview } from '../mosaic/image';
+import { drawPreview, printLabelPx } from '../mosaic/image';
 import { LEGEND_ROW_MM, MAP_HEADER_MM, MAP_PAGE_GAP_MM, type MapPageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { PixelGrid } from '../mosaic/types';
@@ -15,7 +15,13 @@ const PRINT_MAP_PX = 3000;
  * The map drawn once at print resolution, as an image URL. An <img> sized in mm prints the same in every browser;
  * a canvas stretched by flexbox does not (mobile print engines leave it at its intrinsic size or clip it).
  */
-const useMapImage = (grid: PixelGrid | null, isRound: boolean, background: string, cellsPerCard: number) => {
+const useMapImage = (
+    grid: PixelGrid | null,
+    isRound: boolean,
+    background: string,
+    cellsPerCard: number,
+    printWidthMm: number,
+) => {
     const [url, setUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -24,8 +30,11 @@ const useMapImage = (grid: PixelGrid | null, isRound: boolean, background: strin
         let cancelled = false;
         try {
             const canvas = document.createElement('canvas');
-            const cellPx = Math.max(4, Math.min(24, Math.floor(PRINT_MAP_PX / Math.max(grid.width, grid.height))));
-            drawPreview(canvas, grid, { cellPx, isRound, background, cellsPerCard });
+            // up to 64 px a brick, so a small mosaic still prints sharp (about 200 dpi across A4)
+            const cellPx = Math.max(4, Math.min(64, Math.floor(PRINT_MAP_PX / Math.max(grid.width, grid.height))));
+            // card ids sized for the paper, not the screen, since the image is shrunk to fit the page
+            const labelPx = printLabelPx(cellsPerCard * cellPx, grid.width * cellPx, printWidthMm);
+            drawPreview(canvas, grid, { cellPx, isRound, background, cellsPerCard, labelPx });
             canvas.toBlob((blob) => {
                 if (!blob || cancelled) return;
                 current = URL.createObjectURL(blob);
@@ -38,7 +47,7 @@ const useMapImage = (grid: PixelGrid | null, isRound: boolean, background: strin
             cancelled = true;
             if (current) URL.revokeObjectURL(current);
         };
-    }, [grid, isRound, background, cellsPerCard]);
+    }, [grid, isRound, background, cellsPerCard, printWidthMm]);
 
     return grid ? url : null;
 };
@@ -49,7 +58,7 @@ const useMapImage = (grid: PixelGrid | null, isRound: boolean, background: strin
  */
 const MapPage = ({ mosaic, layout }: { mosaic: Mosaic; layout: MapPageLayout }) => {
     const { grid, brick, plate, cellsPerSide, settings } = mosaic;
-    const mapUrl = useMapImage(grid, brick.isRound, plate.color.hex, cellsPerSide);
+    const mapUrl = useMapImage(grid, brick.isRound, plate.color.hex, cellsPerSide, layout.mapWidthMm);
     const used = colorsUsed(mosaic.parts, brick.partId);
 
     return (
