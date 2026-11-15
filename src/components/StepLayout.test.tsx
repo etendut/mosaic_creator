@@ -72,6 +72,18 @@ describe('Steps on a phone', () => {
         expect(within(screen.getByRole('menu')).queryByText('Copy XML')).not.toBeInTheDocument();
     });
 
+    it('keeps Print cards just above the tool bar, with what it will print', async () => {
+        const user = await startMosaic();
+        await goTo(user, 'Print');
+        expect(screen.getByText(/cards on \d+ pages?, \d+ per A4/)).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Print cards' }));
+        expect(window.print).toHaveBeenCalled();
+        // a tool panel opens above it
+        await user.click(tools().getByRole('button', { name: 'Paper' }));
+        expect(screen.getByRole('region', { name: 'Paper' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Print cards' })).toBeInTheDocument();
+    });
+
     it("shows the step's name and main action in the app bar", async () => {
         const user = renderApp();
         expect(screen.getByRole('heading', { name: 'Image', level: 1 })).toBeInTheDocument();

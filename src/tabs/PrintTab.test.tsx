@@ -11,8 +11,11 @@ describe('Print step', () => {
         await goTo(user, 'Print');
         expect(screen.getByText(/8 per A4 landscape page, after a map page/)).toBeInTheDocument();
         expect(screen.getByRole('list', { name: 'Colours used' })).toBeInTheDocument();
-        // printing is the step's main action, in the app bar
-        await user.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Print cards' }));
+        // printing ends the tools, under the settings it follows from, with what it'll print just above it
+        const tools = within(screen.getByRole('complementary', { name: 'Tools' }));
+        expect(tools.getByText(/8 per A4 landscape page, after a map page/)).toBeInTheDocument();
+        expect(within(screen.getByRole('banner')).queryByRole('button', { name: /Print/ })).not.toBeInTheDocument();
+        await user.click(tools.getByRole('button', { name: 'Print cards' }));
         expect(window.print).toHaveBeenCalled();
     });
 

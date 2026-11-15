@@ -2,7 +2,6 @@ import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, TextField, Ty
 import { useState, type ReactNode } from 'react';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import DescriptionIcon from '@mui/icons-material/Description';
-import AppBarAction from '../components/AppBarAction';
 import BuildingCard from '../components/BuildingCard';
 import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
@@ -132,25 +131,27 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <StepLayout
-            alerts={
-                batches.length > 1 && (
-                    <Alert severity="info">
-                        Large jobs print in batches of {PAGES_PER_BATCH} pages. Print this batch, then choose the next
-                        one under Pages.
-                    </Alert>
-                )
-            }
-            status={`${cards.length} cards on ${cardPages.length} ${cardPages.length === 1 ? 'page' : 'pages'}, ${
-                layout.cardsPerPage
-            } per ${layout.label} page${settings.includeMapPage ? ', after a map page' : ''}.`}
             groups={groups}
+            action={
+                <>
+                    <Typography variant="body2" color="text.secondary">
+                        {cards.length} cards on {cardPages.length} {cardPages.length === 1 ? 'page' : 'pages'},{' '}
+                        {layout.cardsPerPage} per {layout.label} page
+                        {settings.includeMapPage ? ', after a map page' : ''}.
+                    </Typography>
+                    {batches.length > 1 && (
+                        <Alert severity="info">
+                            Large jobs print in batches of {PAGES_PER_BATCH} pages. Print this batch, then choose the
+                            next one under Pages.
+                        </Alert>
+                    )}
+                    <Button variant="contained" size="large" fullWidth onClick={() => window.print()}>
+                        Print cards
+                    </Button>
+                </>
+            }
         >
             <PrintPageStyle size={`${layout.pageWidthMm}mm ${layout.pageHeightMm}mm`} />
-            <AppBarAction>
-                <Button variant="contained" onClick={() => window.print()}>
-                    Print cards
-                </Button>
-            </AppBarAction>
             <Stage ref={measureStage}>
                 <Box sx={{ zoom: fitScale, '@media print': { zoom: 1 } }}>
                     {batches[currentBatch]?.map((page, i) => (

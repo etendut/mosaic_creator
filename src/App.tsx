@@ -20,8 +20,15 @@ type Step = (typeof STEPS)[number];
 /** Hidden on screen but still read out, e.g. the step's name on desktop, where the highlighted tab already shows it. */
 const visuallyHidden = {
     position: 'absolute',
+    // pinned inside the bar, so it can't widen the page
+    top: 0,
+    left: 0,
     width: 1,
     height: 1,
+    minHeight: 0,
+    margin: -1,
+    padding: 0,
+    border: 0,
     overflow: 'hidden',
     clip: 'rect(0 0 0 0)',
     whiteSpace: 'nowrap',

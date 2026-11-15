@@ -1,6 +1,6 @@
 import { Box, ButtonBase, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useId, useState, type ReactNode } from 'react';
+import { useCallback, useId, useState, type ReactNode } from 'react';
 import { tokens } from '../theme';
 import { Tray } from './Tray';
 
@@ -29,6 +29,11 @@ interface StepLayoutProps {
     facts?: ReactNode;
     /** The tools that change the canvas, in the order you'd decide them. */
     groups?: ToolGroup[];
+    /**
+     * The step's action when it follows from the tools (Print cards), with a line about what it will do above it. On
+     * desktop it ends the tools column; on a phone it sits just above the tool bar.
+     */
+    action?: ReactNode;
     /** The canvas: the photo, map, card, pages or table. */
     children: ReactNode;
 }
@@ -52,13 +57,23 @@ export const ControlSection = ({ title, children }: { title: string; children: R
  * facts above it, and the tools beside it. On desktop the tool groups are a column on the left, all open. On a phone
  * they're a bar along the bottom; tapping a group opens its settings in a panel above the bar.
  */
-const StepLayout = ({ alerts, status, facts, groups = [], children }: StepLayoutProps) => {
+const StepLayout = ({ alerts, status, facts, groups = [], action, children }: StepLayoutProps) => {
     const theme = useTheme();
     // without media queries (tests) the desktop layout is used
     const desktop = useMediaQuery(theme.breakpoints.up('md'), { defaultMatches: true, noSsr: true });
     const [open, setOpen] = useState<string | null>(null);
     const panelId = useId();
     const openGroup = groups.find((g) => g.id === open);
+    // on a phone: how much of the screen bottom the tool bar and the action strip cover
+    const [bottomPx, setBottomPx] = useState(0);
+    const measureBottom = useCallback((element: HTMLElement | null) => {
+        if (!element) return setBottomPx(0);
+        setBottomPx(element.offsetHeight);
+        if (typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(() => setBottomPx(element.offsetHeight));
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
 
     const result = (
         <Stack spacing={2} sx={{ minWidth: 0, '@media print': { display: 'block' } }}>
@@ -81,14 +96,14 @@ const StepLayout = ({ alerts, status, facts, groups = [], children }: StepLayout
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: groups.length ? '340px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+                    gridTemplateColumns: groups.length || action ? '340px minmax(0, 1fr)' : 'minmax(0, 1fr)',
                     gap: 2,
                     padding: 2,
                     alignItems: 'start',
                     '@media print': { display: 'block', padding: 0 },
                 }}
             >
-                {groups.length > 0 && (
+                {(groups.length > 0 || action) && (
                     <Tray
                         component="aside"
                         aria-label="Tools"
@@ -106,6 +121,11 @@ const StepLayout = ({ alerts, status, facts, groups = [], children }: StepLayout
                                 {g.content}
                             </ControlSection>
                         ))}
+                        {action && (
+                            <Stack spacing={1.5} sx={{ padding: 2, borderTop: `1px solid ${tokens.groove}` }}>
+                                {action}
+                            </Stack>
+                        )}
                     </Tray>
                 )}
                 {result}
@@ -113,81 +133,91 @@ const StepLayout = ({ alerts, status, facts, groups = [], children }: StepLayout
         );
 
     return (
-        <Box sx={{ padding: 1, paddingBottom: groups.length ? `${TOOL_BAR_PX + 8}px` : 1 }}>
+        <Box sx={{ padding: 1, paddingBottom: `${bottomPx + 8}px` }}>
             {result}
-            {openGroup && (
-                <Paper
-                    id={panelId}
-                    role="region"
-                    aria-label={openGroup.title ?? openGroup.label}
-                    elevation={8}
-                    sx={{
-                        position: 'fixed',
-                        insetInline: 0,
-                        bottom: TOOL_BAR_PX,
-                        zIndex: 20,
-                        maxHeight: '45dvh',
-                        overflowY: 'auto',
-                        borderRadius: '12px 12px 0 0',
-                        displayPrint: 'none',
-                    }}
+            {(groups.length > 0 || action) && (
+                <Stack
+                    ref={measureBottom}
+                    sx={{ position: 'fixed', insetInline: 0, bottom: 0, zIndex: 20, displayPrint: 'none' }}
                 >
-                    <Stack
-                        direction="row"
-                        sx={{ alignItems: 'center', justifyContent: 'space-between', paddingInline: 2, paddingTop: 1 }}
-                    >
-                        <Typography variant="subtitle1" component="h2">
-                            {openGroup.title ?? openGroup.label}
-                        </Typography>
-                        <IconButton aria-label={`Close ${openGroup.label}`} onClick={() => setOpen(null)}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Stack>
-                    <Stack spacing={1.5} sx={{ padding: 2, paddingTop: 1 }}>
-                        {openGroup.content}
-                    </Stack>
-                </Paper>
-            )}
-            {groups.length > 0 && (
-                <Box
-                    role="toolbar"
-                    aria-label="Tools"
-                    sx={{
-                        position: 'fixed',
-                        insetInline: 0,
-                        bottom: 0,
-                        zIndex: 21,
-                        height: TOOL_BAR_PX,
-                        display: 'flex',
-                        backgroundColor: tokens.tray,
-                        borderTop: `1px solid ${tokens.groove}`,
-                        displayPrint: 'none',
-                    }}
-                >
-                    {groups.map((g) => {
-                        const selected = g.id === open;
-                        return (
-                            <ButtonBase
-                                key={g.id}
-                                aria-expanded={selected}
-                                aria-controls={selected ? panelId : undefined}
-                                onClick={() => setOpen(selected ? null : g.id)}
+                    {openGroup && (
+                        <Paper
+                            id={panelId}
+                            role="region"
+                            aria-label={openGroup.title ?? openGroup.label}
+                            elevation={8}
+                            sx={{ maxHeight: '45dvh', overflowY: 'auto', borderRadius: '12px 12px 0 0' }}
+                        >
+                            <Stack
+                                direction="row"
                                 sx={{
-                                    flex: 1,
-                                    flexDirection: 'column',
-                                    gap: 0.25,
-                                    fontSize: 12,
-                                    color: selected ? tokens.azure : tokens.muted,
-                                    fontWeight: selected ? 500 : 400,
-                                    borderTop: `3px solid ${selected ? tokens.azure : 'transparent'}`,
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    paddingInline: 2,
+                                    paddingTop: 1,
                                 }}
                             >
-                                {g.icon}
-                                {g.label}
-                            </ButtonBase>
-                        );
-                    })}
-                </Box>
+                                <Typography variant="subtitle1" component="h2">
+                                    {openGroup.title ?? openGroup.label}
+                                </Typography>
+                                <IconButton aria-label={`Close ${openGroup.label}`} onClick={() => setOpen(null)}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </Stack>
+                            <Stack spacing={1.5} sx={{ padding: 2, paddingTop: 1 }}>
+                                {openGroup.content}
+                            </Stack>
+                        </Paper>
+                    )}
+                    {action && (
+                        <Stack
+                            spacing={1}
+                            sx={{
+                                padding: 1.5,
+                                backgroundColor: tokens.tray,
+                                borderTop: `1px solid ${tokens.groove}`,
+                            }}
+                        >
+                            {action}
+                        </Stack>
+                    )}
+                    {groups.length > 0 && (
+                        <Box
+                            role="toolbar"
+                            aria-label="Tools"
+                            sx={{
+                                height: TOOL_BAR_PX,
+                                display: 'flex',
+                                backgroundColor: tokens.tray,
+                                borderTop: `1px solid ${tokens.groove}`,
+                            }}
+                        >
+                            {groups.map((g) => {
+                                const selected = g.id === open;
+                                return (
+                                    <ButtonBase
+                                        key={g.id}
+                                        aria-expanded={selected}
+                                        aria-controls={selected ? panelId : undefined}
+                                        onClick={() => setOpen(selected ? null : g.id)}
+                                        sx={{
+                                            flex: 1,
+                                            flexDirection: 'column',
+                                            gap: 0.25,
+                                            fontSize: 12,
+                                            color: selected ? tokens.azure : tokens.muted,
+                                            fontWeight: selected ? 500 : 400,
+                                            borderTop: `3px solid ${selected ? tokens.azure : 'transparent'}`,
+                                        }}
+                                    >
+                                        {g.icon}
+                                        {g.label}
+                                    </ButtonBase>
+                                );
+                            })}
+                        </Box>
+                    )}
+                </Stack>
             )}
         </Box>
     );
