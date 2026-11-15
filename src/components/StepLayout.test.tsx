@@ -119,9 +119,17 @@ describe('Steps on a phone', () => {
         expect(tools().getByRole('button', { name: 'Clear all touch-ups' })).toBeDisabled();
         expect(within(screen.getByRole('banner')).queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
 
-        // the palette is always above the bar; the brush is on from the start
+        // the palette is always above the bar, in the bar's style: swatch, − size +, and one shape toggle
         expect(tools().getByRole('button', { name: 'Brush' })).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByRole('group', { name: 'Brush size' })).toBeInTheDocument();
+        const size = within(screen.getByRole('group', { name: 'Brush size' }));
+        expect(size.getByText('1 × 1')).toBeInTheDocument();
+        expect(size.getByRole('button', { name: 'Smaller brush' })).toBeDisabled();
+        await user.click(size.getByRole('button', { name: 'Bigger brush' }));
+        expect(size.getByText('2 × 2')).toBeInTheDocument();
+        await user.click(size.getByRole('button', { name: 'Smaller brush' }));
+        expect(size.getByText('1 × 1')).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Brush shape: square' }));
+        expect(screen.getByRole('button', { name: 'Brush shape: round' })).toBeInTheDocument();
         await user.click(tools().getByRole('button', { name: 'Eraser' }));
         expect(tools().getByRole('button', { name: 'Eraser' })).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByRole('button', { name: /^Paint colour/ })).toBeInTheDocument();

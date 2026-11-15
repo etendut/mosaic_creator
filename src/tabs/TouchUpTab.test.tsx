@@ -59,7 +59,7 @@ describe('Touch up step', () => {
         const column = within(screen.getByRole('complementary', { name: 'Tools' }));
         const names = column
             .getAllByRole('button')
-            .map((b) => b.getAttribute('aria-label'))
+            .map((b) => b.getAttribute('aria-label') ?? b.textContent)
             .filter((n) => n && !/×|brush$/.test(n));
         expect(names).toEqual([
             'Undo',
@@ -74,6 +74,11 @@ describe('Touch up step', () => {
             'Clear all touch-ups',
         ]);
         expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
+        // on desktop every tool shows its name, not just an icon
+        for (const name of ['Undo', 'Redo', 'Before / after', 'Brush', 'Eraser', 'Eyedropper', 'Clear all touch-ups'])
+            expect(column.getByRole('button', { name })).toHaveTextContent(name);
+        expect(column.getByText('Brush size')).toBeInTheDocument();
+        expect(column.getByRole('button', { name: 'Round brush' })).toHaveTextContent('Round');
         // the brush is on from the start
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
     });

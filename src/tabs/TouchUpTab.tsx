@@ -1,8 +1,8 @@
-import { Alert, Divider, Stack } from '@mui/material';
+import { Alert } from '@mui/material';
 import { useEffect, useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
-import { Palette, ToolRow } from '../components/TouchUp';
+import { DesktopTools, PhonePalette } from '../components/TouchUp';
 import { touchUpActions, type TouchUpAction } from '../components/touchUpTools';
 import { Stage } from '../components/Tray';
 import { colorsUsed } from '../mosaic/partsList';
@@ -29,7 +29,6 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const onChange = (change: Partial<TouchUpState>) => setTouchUp((t) => ({ ...t, ...change }));
     const touched = mosaic.touchUps?.edits.length ?? 0;
     const { history, tools, cleaning, clearing } = touchUpActions(mosaic, state, onChange, setMessage);
-    const palette = <Palette mosaic={mosaic} state={state} onChange={onChange} />;
 
     // the same buttons in the same order on both layouts: history, tools, palette, clean-up, clearing
     const asGroups = (actions: TouchUpAction[], divider: boolean, barRow: 1 | 2 = 1): ToolGroup[] =>
@@ -51,13 +50,12 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
             icon: null,
             only: 'desktop',
             content: (
-                <Stack spacing={1.5} divider={<Divider flexItem />}>
-                    <ToolRow actions={history} />
-                    <ToolRow actions={tools} />
-                    {palette}
-                    <ToolRow actions={cleaning} />
-                    <ToolRow actions={clearing} />
-                </Stack>
+                <DesktopTools
+                    mosaic={mosaic}
+                    state={state}
+                    onChange={onChange}
+                    actions={{ history, tools, cleaning, clearing }}
+                />
             ),
         },
         ...asGroups(history, false),
@@ -85,7 +83,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 ['Colours', used.length.toLocaleString()],
             ]}
             groups={groups}
-            phoneStrip={palette}
+            phoneStrip={<PhonePalette mosaic={mosaic} state={state} onChange={onChange} />}
             iconOnlyBar
         >
             {/* no padding: the map's own scrolling box is the canvas area, filling down to the window's bottom */}
