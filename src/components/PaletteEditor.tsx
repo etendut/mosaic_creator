@@ -3,7 +3,6 @@ import {
     Box,
     Button,
     FormControlLabel,
-    MenuItem,
     Stack,
     Switch,
     TextField,
@@ -24,6 +23,7 @@ import {
     type PalettePreset,
 } from '../mosaic/palette';
 import type { Mosaic } from '../useMosaic';
+import ChoiceRow from './ChoiceRow';
 import ColorSwatch from './ColorSwatch';
 
 const DITHERING_HELP: Record<Dithering, string> = {
@@ -127,43 +127,35 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                     ))}
                 </Box>
             </Box>
-            <Stack direction="row" spacing={1}>
-                <TextField
-                    type="number"
-                    size="small"
-                    label="Max colours"
-                    placeholder="No limit"
-                    value={maxColors ?? ''}
-                    onChange={(e) =>
-                        setMaxColors(Number(e.target.value) > 0 ? Math.round(Number(e.target.value)) : null)
-                    }
-                    slotProps={{ htmlInput: { min: 1 }, inputLabel: { shrink: true } }}
-                    sx={{ flex: 1 }}
-                />
-                <TextField
-                    select
-                    size="small"
-                    label="Colour matching"
-                    value={mosaic.metric}
-                    onChange={(e) => mosaic.setMetric(e.target.value as ColorMetric)}
-                    sx={{ flex: 1.3 }}
-                >
-                    <MenuItem value="rgb">Closest RGB</MenuItem>
-                    <MenuItem value="perceptual">Perceptual</MenuItem>
-                </TextField>
-            </Stack>
             <TextField
-                select
+                type="number"
                 size="small"
+                label="Max colours"
+                placeholder="No limit"
+                value={maxColors ?? ''}
+                onChange={(e) => setMaxColors(Number(e.target.value) > 0 ? Math.round(Number(e.target.value)) : null)}
+                slotProps={{ htmlInput: { min: 1 }, inputLabel: { shrink: true } }}
+            />
+            <ChoiceRow
+                label="Colour matching"
+                value={mosaic.metric}
+                onChange={(m) => mosaic.setMetric(m as ColorMetric)}
+                options={[
+                    ['rgb', 'Closest RGB'],
+                    ['perceptual', 'Perceptual'],
+                ]}
+            />
+            <ChoiceRow
                 label="Dithering"
                 value={mosaic.dithering}
-                onChange={(e) => mosaic.setDithering(e.target.value as Dithering)}
-                helperText={DITHERING_HELP[mosaic.dithering]}
-            >
-                <MenuItem value="none">None</MenuItem>
-                <MenuItem value="smooth">Smooth</MenuItem>
-                <MenuItem value="pattern">Pattern</MenuItem>
-            </TextField>
+                onChange={(d) => mosaic.setDithering(d as Dithering)}
+                options={[
+                    ['none', 'None'],
+                    ['smooth', 'Smooth'],
+                    ['pattern', 'Pattern'],
+                ]}
+                help={DITHERING_HELP[mosaic.dithering]}
+            />
             {message && (
                 <Alert severity={message.severity} onClose={() => setMessage(null)}>
                     {message.text}

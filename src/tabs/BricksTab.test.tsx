@@ -83,26 +83,30 @@ describe('Bricks step', () => {
         await user.clear(max);
         expect(max).toHaveValue(null);
 
-        await user.click(screen.getByRole('combobox', { name: 'Colour matching' }));
-        await user.click(screen.getByRole('option', { name: 'Perceptual' }));
-        expect(screen.getByRole('combobox', { name: 'Colour matching' })).toHaveTextContent('Perceptual');
+        // a row of buttons, every choice in view
+        const matching = within(screen.getByRole('group', { name: 'Colour matching' }));
+        expect(matching.getByRole('button', { name: 'Closest RGB' })).toHaveAttribute('aria-pressed', 'true');
+        await user.click(matching.getByRole('button', { name: 'Perceptual' }));
+        expect(matching.getByRole('button', { name: 'Perceptual' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('dithers photos when asked', async () => {
         const user = await startMosaic();
-        const dithering = () => screen.getByRole('combobox', { name: 'Dithering' });
-        expect(dithering()).toHaveTextContent('None');
+        const dithering = within(screen.getByRole('group', { name: 'Dithering' }));
+        expect(dithering.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText(/Best for logos and flat art/)).toBeInTheDocument();
 
         for (const [option, help] of [
             ['Smooth', /soften bands in photos/],
             ['Pattern', /regular grid/],
         ] as const) {
-            await user.click(dithering());
-            await user.click(screen.getByRole('option', { name: option }));
-            expect(dithering()).toHaveTextContent(option);
+            await user.click(dithering.getByRole('button', { name: option }));
+            expect(dithering.getByRole('button', { name: option })).toHaveAttribute('aria-pressed', 'true');
             expect(screen.getByText(help)).toBeInTheDocument();
         }
+        // pressing the chosen one again keeps it
+        await user.click(dithering.getByRole('button', { name: 'Pattern' }));
+        expect(dithering.getByRole('button', { name: 'Pattern' })).toHaveAttribute('aria-pressed', 'true');
         expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).dithering).toBe('pattern');
     });
 
