@@ -1,8 +1,11 @@
 import { Alert, Box, Button, MenuItem, Slider, Stack, TextField, ToggleButton, Typography } from '@mui/material';
 import { useMemo, useRef, useState } from 'react';
+import CropIcon from '@mui/icons-material/Crop';
+import TuneIcon from '@mui/icons-material/Tune';
 import Cropper, { type Area } from 'react-easy-crop';
 import { Stage, Tray } from '../components/Tray';
-import { ControlSection, Workspace } from '../components/Workspace';
+import AppBarAction from '../components/AppBarAction';
+import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { applyEdits, filterCss, flipImage, loadImage } from '../mosaic/image';
 
 const ASPECTS = [
@@ -17,11 +20,13 @@ const NO_ADJUSTMENTS = { brightness: 100, contrast: 100, saturation: 100 };
 
 interface ImageTabProps {
     onApply: (image: HTMLCanvasElement) => void;
+    /** Whether the step is on screen; it stays mounted when it isn't, to keep the edits. */
+    active?: boolean;
     /** Start from this image, e.g. the one in an opened project. */
     initialSource?: HTMLImageElement | null;
 }
 
-const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
+const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProps) => {
     const fileInput = useRef<HTMLInputElement>(null);
     const [source, setSource] = useState<HTMLImageElement | null>(initialSource);
     const [error, setError] = useState('');
@@ -99,75 +104,74 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
 
     const chooseFile = () => fileInput.current?.click();
 
-    const controls = source ? (
-        <>
-            <ControlSection title="Frame">
-                <Typography variant="body2" color="text.secondary">
-                    Frame the part of the picture you want in the mosaic. Drag to move it; scroll or pinch to zoom.
-                </Typography>
-                <TextField
-                    select
-                    size="small"
-                    label="Crop shape"
-                    value={aspect}
-                    onChange={(e) => setAspect(Number(e.target.value))}
-                >
-                    {ASPECTS.map((a) => (
-                        <MenuItem key={a.label} value={a.value}>
-                            {a.label}
-                        </MenuItem>
-                    ))}
-                </TextField>
-                {slider('Zoom', zoom, '×', { min: 1, max: 5, step: 0.05 }, setZoom)}
-                {slider('Rotate', rotation, '°', { min: -180, max: 180 }, setRotation)}
-                <Stack direction="row" spacing={1}>
-                    <ToggleButton
-                        size="small"
-                        value="h"
-                        selected={flipH}
-                        onChange={() => setFlipH(!flipH)}
-                        sx={{ flex: 1 }}
-                    >
-                        Flip horizontal
-                    </ToggleButton>
-                    <ToggleButton
-                        size="small"
-                        value="v"
-                        selected={flipV}
-                        onChange={() => setFlipV(!flipV)}
-                        sx={{ flex: 1 }}
-                    >
-                        Flip vertical
-                    </ToggleButton>
-                </Stack>
-            </ControlSection>
-            <ControlSection title="Adjust">
-                {adjustment('brightness', 'Brightness')}
-                {adjustment('contrast', 'Contrast')}
-                {adjustment('saturation', 'Saturation')}
-            </ControlSection>
-            <Stack spacing={1} sx={{ padding: 2 }}>
-                {/* on phones this button sits right under the image instead; see below */}
-                <Button
-                    variant="contained"
-                    size="large"
-                    onClick={apply}
-                    disabled={!area}
-                    sx={{ display: { xs: 'none', md: 'inline-flex' } }}
-                >
-                    Use this image
-                </Button>
-                <Stack direction="row" spacing={1}>
-                    <Button onClick={reset} sx={{ flex: 1 }}>
-                        Reset edits
-                    </Button>
-                    <Button onClick={chooseFile} sx={{ flex: 1 }}>
-                        Choose another
-                    </Button>
-                </Stack>
-            </Stack>
-        </>
-    ) : null;
+    const groups: ToolGroup[] = source
+        ? [
+              {
+                  id: 'frame',
+                  label: 'Frame',
+                  icon: <CropIcon />,
+                  content: (
+                      <>
+                          <TextField
+                              select
+                              size="small"
+                              label="Crop shape"
+                              value={aspect}
+                              onChange={(e) => setAspect(Number(e.target.value))}
+                          >
+                              {ASPECTS.map((a) => (
+                                  <MenuItem key={a.label} value={a.value}>
+                                      {a.label}
+                                  </MenuItem>
+                              ))}
+                          </TextField>
+                          {slider('Zoom', zoom, '×', { min: 1, max: 5, step: 0.05 }, setZoom)}
+                          {slider('Rotate', rotation, '°', { min: -180, max: 180 }, setRotation)}
+                          <Stack direction="row" spacing={1}>
+                              <ToggleButton
+                                  size="small"
+                                  value="h"
+                                  selected={flipH}
+                                  onChange={() => setFlipH(!flipH)}
+                                  sx={{ flex: 1 }}
+                              >
+                                  Flip horizontal
+                              </ToggleButton>
+                              <ToggleButton
+                                  size="small"
+                                  value="v"
+                                  selected={flipV}
+                                  onChange={() => setFlipV(!flipV)}
+                                  sx={{ flex: 1 }}
+                              >
+                                  Flip vertical
+                              </ToggleButton>
+                          </Stack>
+                          <Stack direction="row" spacing={1}>
+                              <Button size="small" onClick={reset} sx={{ flex: 1 }}>
+                                  Reset edits
+                              </Button>
+                              <Button size="small" onClick={chooseFile} sx={{ flex: 1 }}>
+                                  Choose another
+                              </Button>
+                          </Stack>
+                      </>
+                  ),
+              },
+              {
+                  id: 'adjust',
+                  label: 'Adjust',
+                  icon: <TuneIcon />,
+                  content: (
+                      <>
+                          {adjustment('brightness', 'Brightness')}
+                          {adjustment('contrast', 'Contrast')}
+                          {adjustment('saturation', 'Saturation')}
+                      </>
+                  ),
+              },
+          ]
+        : [];
 
     return (
         <Box
@@ -188,18 +192,27 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                     e.target.value = '';
                 }}
             />
-            <Workspace controls={controls}>
-                {error && (
-                    <Alert severity="error" sx={{ marginBottom: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+            {active && displayUrl && (
+                <AppBarAction>
+                    <Button variant="contained" onClick={apply} disabled={!area}>
+                        Use this image
+                    </Button>
+                </AppBarAction>
+            )}
+            <StepLayout
+                alerts={error && <Alert severity="error">{error}</Alert>}
+                status={
+                    displayUrl &&
+                    'Frame the part of the picture you want in the mosaic. Drag to move it; scroll or pinch to zoom.'
+                }
+                groups={groups}
+            >
                 <Stage
                     sx={{
                         position: 'relative',
-                        // on phones leave room to see the controls below start
-                        height: { xs: '62dvh', md: 'calc(100dvh - 93px)' },
-                        minHeight: 360,
+                        // fill the screen between the bars, with the status line above
+                        height: { xs: 'calc(100dvh - 240px)', md: 'calc(100dvh - 150px)' },
+                        minHeight: 300,
                         padding: 0,
                         overflow: 'hidden',
                     }}
@@ -218,7 +231,7 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                             style={{ mediaStyle: { filter: filterCss(adjustments) } }}
                         />
                     ) : (
-                        <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', padding: 1 }}>
                             <Tray sx={{ padding: 4, textAlign: 'center', maxWidth: 380 }}>
                                 <Typography variant="h2" component="p" gutterBottom>
                                     Start with a picture
@@ -237,19 +250,7 @@ const ImageTab = ({ onApply, initialSource = null }: ImageTabProps) => {
                         </Stack>
                     )}
                 </Stage>
-                {displayUrl && (
-                    <Button
-                        variant="contained"
-                        size="large"
-                        fullWidth
-                        onClick={apply}
-                        disabled={!area}
-                        sx={{ display: { xs: 'inline-flex', md: 'none' }, marginTop: 1 }}
-                    >
-                        Use this image
-                    </Button>
-                )}
-            </Workspace>
+            </StepLayout>
         </Box>
     );
 };

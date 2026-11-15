@@ -7,11 +7,13 @@ import {
     DialogContentText,
     DialogTitle,
     Divider,
+    IconButton,
     ListItemText,
     Menu,
     MenuItem,
     Snackbar,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
@@ -79,9 +81,14 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
 
     return (
         <>
-            <Button onClick={(e) => setAnchor(e.currentTarget)} aria-haspopup="menu" sx={{ flexShrink: 0 }}>
-                Project
-            </Button>
+            <IconButton
+                onClick={(e) => setAnchor(e.currentTarget)}
+                aria-haspopup="menu"
+                aria-label="Menu"
+                sx={{ flexShrink: 0, width: 44, height: 44 }}
+            >
+                <MenuIcon />
+            </IconButton>
             <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
                 <MenuItem
                     onClick={() => {

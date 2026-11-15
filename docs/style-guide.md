@@ -64,7 +64,7 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
 - **Groups:** tools come in groups, in the order you'd decide them, for example Plate, Brick, Size, Colours. Each group
   has a short name and an icon.
 - **On a phone:** a bar along the bottom with one icon and label per group. Tapping a group opens its settings in a
-  panel just above the bar, at most half the screen high, with the canvas still in view. Tapping the group again, or
+  panel just above the bar, at most 45% of the screen high, with the canvas still in view. Tapping the group again, or
   the canvas, closes it. One panel is open at a time.
 - **On desktop:** the same groups as the left column (340 px), all open, each as a titled `ControlSection`.
 - **Every setting in an open group is visible.** Don't hide settings behind "More…" disclosures. If a group grows too
@@ -132,7 +132,8 @@ The fix is to split it into two steps, as Bricks and Touch up were split. Don't 
 ## Phone
 
 - Check every step at 390 px wide. Nothing may scroll sideways.
-- From top to bottom: the app bar, then the status line and canvas, then the open tool panel, then the tool bar.
+- From top to bottom: the app bar, then the status line and canvas, then the facts, with the tool bar along the
+  bottom. The facts go under the canvas on a phone, so the canvas stays in view above an open tool panel.
 - The tool bar stays at the bottom of the screen, and the canvas fills the space between the bars.
 - Tap targets are at least 40 px.
 - A canvas that takes drags (painting) scrolls the page in View mode and only captures touch while a tool is on.

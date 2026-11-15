@@ -57,7 +57,7 @@ describe('Touch up step', () => {
         await startTouchUp();
         expect(screen.getByRole('heading', { name: 'Touch up' })).toBeInTheDocument();
         expect(tool('View')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/Choose the brush or eraser/)).toBeInTheDocument();
+        expect(screen.getByText(/Fix single bricks: choose the brush or eraser/)).toBeInTheDocument();
     });
 
     it('is where touch-ups are made; the Bricks step shows them on its map and says how many', async () => {
@@ -68,7 +68,7 @@ describe('Touch up step', () => {
         map().click(4, 4);
         await goTo(user, 'Bricks');
         expect(screen.queryByRole('toolbar', { name: 'Touch up' })).not.toBeInTheDocument();
-        expect(screen.getByText('2 bricks touched up on the Touch up step.')).toBeInTheDocument();
+        expect(screen.getByText(/with 2 bricks touched up on the Touch up step/)).toBeInTheDocument();
         // the colours used, and so the cards and parts, follow the touched-up bricks
         expect(screen.getByTitle('Black: 1')).toBeInTheDocument();
     });
@@ -268,7 +268,7 @@ describe('Touch up step', () => {
 
         await goTo(user, 'Bricks');
         setAcross(4);
-        expect(screen.getByText('1 brick touched up on the Touch up step.')).toBeInTheDocument();
+        expect(screen.getByText(/with 1 brick touched up on the Touch up step/)).toBeInTheDocument();
 
         setAcross(5);
         await goTo(user, 'Touch up');

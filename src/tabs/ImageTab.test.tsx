@@ -81,6 +81,6 @@ describe('Image step', () => {
         const user = renderApp();
         await chooseImage(user);
         await applyImage(user);
-        expect(await screen.findByRole('heading', { name: 'Card map' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
     });
 });

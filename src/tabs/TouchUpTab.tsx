@@ -1,6 +1,6 @@
-import { Box, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
+import StepLayout from '../components/StepLayout';
 import { TouchUpToolbar } from '../components/TouchUp';
 import { Stage } from '../components/Tray';
 import { colorsUsed } from '../mosaic/partsList';
@@ -15,20 +15,16 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const toolbar = { ...touchUp, color: touchUp.color ?? used[0]?.color ?? null };
 
     return (
-        <Stack spacing={2} sx={{ padding: { xs: 1, sm: 2 } }}>
-            <Box>
-                <Typography variant="h2" gutterBottom>
-                    Touch up
-                </Typography>
-                <Typography color="text.secondary">
-                    Fix single bricks: paint, erase, or clean up strays. The cards and parts list follow your changes.
-                </Typography>
-            </Box>
-            <TouchUpToolbar
-                mosaic={mosaic}
-                state={toolbar}
-                onChange={(change) => setTouchUp((t) => ({ ...t, ...change }))}
-            />
+        // the toolbar sits above the map for now; its line under the tools is the step's status line
+        <StepLayout
+            facts={
+                <TouchUpToolbar
+                    mosaic={mosaic}
+                    state={toolbar}
+                    onChange={(change) => setTouchUp((t) => ({ ...t, ...change }))}
+                />
+            }
+        >
             <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
                 <MosaicPreview
                     mosaic={mosaic}
@@ -43,7 +39,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     }
                 />
             </Stage>
-        </Stack>
+        </StepLayout>
     );
 };
 
