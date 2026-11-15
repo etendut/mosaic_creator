@@ -256,43 +256,45 @@ describe('Touch up step', () => {
         expect(blackBricks()).toBe(2);
     });
 
-    it('zooms with the control and the wheel, and pans with Space or the middle button', async () => {
+    it('zooms with the control or Ctrl + wheel, and scrolls the zoomed map with Space or the middle button', async () => {
         const user = await startTouchUp();
         const frame = screen.getByTestId('map-frame');
-        frame.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        const box = screen.getByTestId('map-scroll');
+        box.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
         const zoom = () => Number(frame.dataset.zoom);
-        const shift = () => frame.firstElementChild!.getAttribute('class');
         expect(screen.getByLabelText('Zoom level')).toHaveTextContent('100%');
         expect(tool('Zoom out')).toBeDisabled();
 
         await user.click(tool('Zoom in'));
         expect(screen.getByLabelText('Zoom level')).toHaveTextContent('150%');
+        await user.click(tool('Zoom out'));
+        expect(zoom()).toBe(1);
+
+        // a plain wheel scrolls; Ctrl + wheel (or a trackpad pinch) zooms around the pointer
+        fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100 });
+        expect(zoom()).toBe(1);
+        fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100, ctrlKey: true });
+        expect(zoom()).toBeGreaterThan(1);
         await user.click(tool('Fit to screen'));
         expect(zoom()).toBe(1);
 
-        // the wheel zooms around the pointer
-        fireEvent.wheel(frame, { deltaY: -500, clientX: 160, clientY: 100 });
-        expect(zoom()).toBeGreaterThan(1);
-        fireEvent.wheel(frame, { deltaY: 5000, clientX: 160, clientY: 100 });
-        expect(zoom()).toBe(1);
-
-        // Space and drag pans, without painting
+        // Space and drag scrolls the map, without painting
         await user.click(tool('Zoom in'));
-        const before = shift();
+        box.scrollLeft = 100;
+        box.scrollTop = 50;
         fireEvent.keyDown(window, { code: 'Space' });
-        fireEvent.pointerDown(frame, { clientX: 100, clientY: 100, pointerId: 7, pointerType: 'mouse', button: 0 });
-        fireEvent.pointerMove(frame, { clientX: 140, clientY: 120, pointerId: 7, pointerType: 'mouse' });
-        fireEvent.pointerUp(frame, { pointerId: 7, pointerType: 'mouse' });
+        fireEvent.pointerDown(box, { clientX: 100, clientY: 100, pointerId: 7, pointerType: 'mouse', button: 0 });
+        fireEvent.pointerMove(box, { clientX: 140, clientY: 120, pointerId: 7, pointerType: 'mouse' });
+        fireEvent.pointerUp(box, { pointerId: 7, pointerType: 'mouse' });
         fireEvent.keyUp(window, { code: 'Space' });
-        expect(shift()).not.toBe(before);
+        expect([box.scrollLeft, box.scrollTop]).toEqual([60, 30]);
         noneTouchedUp();
 
         // so does a middle-button drag
-        const after = shift();
-        fireEvent.pointerDown(frame, { clientX: 140, clientY: 120, pointerId: 8, pointerType: 'mouse', button: 1 });
-        fireEvent.pointerMove(frame, { clientX: 100, clientY: 90, pointerId: 8, pointerType: 'mouse' });
-        fireEvent.pointerUp(frame, { pointerId: 8, pointerType: 'mouse' });
-        expect(shift()).not.toBe(after);
+        fireEvent.pointerDown(box, { clientX: 140, clientY: 120, pointerId: 8, pointerType: 'mouse', button: 1 });
+        fireEvent.pointerMove(box, { clientX: 120, clientY: 110, pointerId: 8, pointerType: 'mouse' });
+        fireEvent.pointerUp(box, { pointerId: 8, pointerType: 'mouse' });
+        expect([box.scrollLeft, box.scrollTop]).toEqual([80, 40]);
         noneTouchedUp();
 
         // painting still lands on the brick under the pointer
@@ -303,7 +305,8 @@ describe('Touch up step', () => {
     it('on touch: a tap or a drag paints, and two fingers pinch and pan without painting', async () => {
         await startTouchUp();
         const frame = screen.getByTestId('map-frame');
-        frame.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        screen.getByTestId('map-scroll').getBoundingClientRect = () =>
+            ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
         map(); // lays the canvas out at 10 px a brick
         const touch = (id: number, x: number, y: number) => ({
             clientX: x * 10 + 5,

@@ -1,36 +1,38 @@
 /**
- * Zoom and pan for a canvas shown in a fixed frame: the content is scaled by `zoom` from the frame's top-left corner,
- * then moved by (`x`, `y`) in frame pixels. At zoom 1 the content exactly fills the frame.
+ * Zooming a canvas inside a scrolling box: at zoom 1 the canvas fits the box; zoomed in, it's bigger than the box and
+ * scrolls. When it's smaller than the box along an axis, it's centred along that axis.
  */
-export interface View {
-    zoom: number;
-    x: number;
-    y: number;
-}
-
-export const FIT: View = { zoom: 1, x: 0, y: 0 };
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 8;
 
-const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+export const clampZoom = (zoom: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 
-/** Keep the zoom in range, and the content covering the frame: no gap opens at any edge. */
-export const clampView = (view: View, width: number, height: number): View => {
-    const zoom = clamp(view.zoom, MIN_ZOOM, MAX_ZOOM);
-    return {
-        zoom,
-        x: clamp(view.x, width - width * zoom, 0),
-        y: clamp(view.y, height - height * zoom, 0),
-    };
+/** The scale at which content `contentW` × `contentH` fits a `boxW` × `boxH` box, keeping its shape. */
+export const fitScale = (contentW: number, contentH: number, boxW: number, boxH: number) =>
+    contentW > 0 && contentH > 0 && boxW > 0 && boxH > 0 ? Math.min(boxW / contentW, boxH / contentH) : 0;
+
+/**
+ * Along one axis: the scroll position that keeps the content point under `point` (in box pixels) there when the zoom
+ * goes from `from` to `to`. `base` is the content's size at zoom 1, `box` the box's size, `scroll` the current scroll.
+ */
+export const scrollForZoom = (from: number, to: number, point: number, scroll: number, base: number, box: number) => {
+    // centring offset when the content is smaller than the box
+    const offset = (zoom: number) => Math.max(0, (box - base * zoom) / 2);
+    const content = (scroll + point - offset(from)) / from;
+    const next = content * to + offset(to) - point;
+    return Math.min(Math.max(0, base * to - box), Math.max(0, next));
 };
 
-/** Zoom by `factor` keeping the point (`px`, `py`) of the frame where it is: under the pointer, or between fingers. */
-export const zoomAt = (view: View, factor: number, px: number, py: number, width: number, height: number): View => {
-    const zoom = clamp(view.zoom * factor, MIN_ZOOM, MAX_ZOOM);
-    const ratio = zoom / view.zoom;
-    return clampView({ zoom, x: px - (px - view.x) * ratio, y: py - (py - view.y) * ratio }, width, height);
-};
+/** The content point (at zoom 1) under `point` in the box, along one axis. */
+export const contentAt = (zoom: number, point: number, scroll: number, base: number, box: number) =>
+    (scroll + point - Math.max(0, (box - base * zoom) / 2)) / zoom;
 
-/** Move the content by (`dx`, `dy`) frame pixels. */
-export const panBy = (view: View, dx: number, dy: number, width: number, height: number): View =>
-    clampView({ ...view, x: view.x + dx, y: view.y + dy }, width, height);
+/** The scroll that puts the content point `content` (at zoom 1) under `point` in the box, along one axis. */
+export const scrollToPut = (content: number, zoom: number, point: number, base: number, box: number) =>
+    Math.min(
+        Math.max(0, base * zoom - box),
+        Math.max(0, content * zoom + Math.max(0, (box - base * zoom) / 2) - point),
+    );
+
+/** The resolution to draw at for a zoom: steps of 1, 2, 4 and 8, so zooming redraws only now and then. */
+export const drawZoom = (zoom: number) => 2 ** Math.ceil(Math.log2(clampZoom(zoom)));

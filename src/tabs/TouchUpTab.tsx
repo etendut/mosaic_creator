@@ -87,7 +87,6 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
             <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
                 <MosaicPreview
                     mosaic={mosaic}
-                    fill
                     zoomable
                     tool={brushFor(state)}
                     showGrid={state.before ? mosaic.untouchedGrid : null}

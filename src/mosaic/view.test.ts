@@ -1,29 +1,39 @@
-import { clampView, FIT, MAX_ZOOM, panBy, zoomAt } from './view';
+import { clampZoom, contentAt, drawZoom, fitScale, MAX_ZOOM, scrollForZoom, scrollToPut } from './view';
 
-describe('zoom and pan', () => {
-    it('zooms around a point, keeping it in place', () => {
-        // zoom 2× about the frame's centre: the centre stays put
-        const v = zoomAt(FIT, 2, 50, 40, 100, 80);
-        expect(v).toEqual({ zoom: 2, x: -50, y: -40 });
-        // the content point under the centre is still (50, 40) in the frame
-        expect((50 - v.x) / v.zoom).toBe(50 - 0);
-        // zooming about the top-left corner keeps that corner
-        expect(zoomAt(FIT, 3, 0, 0, 100, 80)).toEqual({ zoom: 3, x: 0, y: 0 });
+describe('zooming in a scrolling box', () => {
+    it('fits the content to the box, keeping its shape', () => {
+        expect(fitScale(800, 500, 400, 400)).toBe(0.5);
+        expect(fitScale(800, 500, 1600, 500)).toBe(1);
+        expect(fitScale(0, 500, 400, 400)).toBe(0);
     });
 
-    it('keeps the zoom between fit and its limit', () => {
-        expect(zoomAt(FIT, 0.5, 10, 10, 100, 80)).toEqual(FIT);
-        expect(zoomAt(FIT, 100, 0, 0, 100, 80).zoom).toBe(MAX_ZOOM);
+    it('keeps the point under the pointer in place as it zooms', () => {
+        // a 400 px wide map in a 400 px box: zoom 2× about x = 100
+        const scroll = scrollForZoom(1, 2, 100, 0, 400, 400);
+        expect(scroll).toBe(100);
+        // the content under the pointer (x = 100 at zoom 1) is still there
+        expect(contentAt(2, 100, scroll, 400, 400)).toBe(100);
+        // zooming back out scrolls back to the start
+        expect(scrollForZoom(2, 1, 100, scroll, 400, 400)).toBe(0);
     });
 
-    it('pans, but never past the content’s edges', () => {
-        const zoomed = { zoom: 2, x: -50, y: -40 };
-        expect(panBy(zoomed, 20, -10, 100, 80)).toEqual({ zoom: 2, x: -30, y: -50 });
-        // the content is 200 × 160 in a 100 × 80 frame: it moves from 0 to -100 across, 0 to -80 down
-        expect(panBy(zoomed, 500, 500, 100, 80)).toEqual({ zoom: 2, x: 0, y: 0 });
-        expect(panBy(zoomed, -500, -500, 100, 80)).toEqual({ zoom: 2, x: -100, y: -80 });
-        // at fit there's nothing to pan
-        expect(panBy(FIT, 30, 30, 100, 80)).toEqual(FIT);
-        expect(clampView({ zoom: 0.2, x: 5, y: 5 }, 100, 80)).toEqual(FIT);
+    it('allows for the centring gap when the content is narrower than the box', () => {
+        // a 200 px wide map centred in a 400 px box: 100 px gap each side; zoom 3× about the middle
+        expect(contentAt(1, 200, 0, 200, 400)).toBe(100);
+        const scroll = scrollForZoom(1, 3, 200, 0, 200, 400);
+        expect(contentAt(3, 200, scroll, 200, 400)).toBeCloseTo(100);
+    });
+
+    it('never scrolls past the content', () => {
+        expect(scrollForZoom(1, 2, 400, 0, 400, 400)).toBe(400);
+        expect(scrollForZoom(1, 2, 0, 0, 400, 400)).toBe(0);
+        expect(scrollToPut(399, 2, 0, 400, 400)).toBe(400);
+        expect(scrollToPut(-50, 2, 0, 400, 400)).toBe(0);
+    });
+
+    it('limits the zoom, and redraws in steps', () => {
+        expect(clampZoom(0.5)).toBe(1);
+        expect(clampZoom(100)).toBe(MAX_ZOOM);
+        expect([1, 1.2, 2, 2.5, 5, 9].map(drawZoom)).toEqual([1, 2, 2, 4, 8, 8]);
     });
 });
