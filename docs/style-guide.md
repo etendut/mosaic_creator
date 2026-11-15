@@ -54,7 +54,7 @@ The result of the step, as large as fits: the photo, map, card, printed pages or
    is for ("Choose a picture and frame the part that becomes the mosaic."). After that it says what a click does now
    or what just changed ("Click or drag on the map to make bricks Black. 3 bricks touched up.").
 3. **Facts** about the result: the stats row (`MosaicSummary`) and the colours used.
-4. **Canvas:** on the stud texture (`Stage`) or in a `Tray`. Full width on a phone, with only the 8 px gutter.
+4. **Canvas:** in a `Stage` (on the page's studs) or a `Tray`. Full width on a phone, with only the 8 px gutter.
 
 ### Tools
 
@@ -124,8 +124,10 @@ The fix is to split it into two steps, as Bricks and Touch up were split. Don't 
   the tokens in `src/theme.ts` (`plate`, `tray`, `groove`, `ink`, `muted`, `azure`, `azureWash`), never raw hex.
 - **Type:** Rubik on a 1.25 scale. Group titles use `subtitle1`, body text `body1`, and help and status text `body2`
   in muted.
-- **Surfaces:** white `Tray` for working areas, panels and lists, and `Stage` (stud texture) behind the canvas.
-  Panels have no shadow, except the phone tool panel, which sits over the canvas.
+- **Surfaces:** every page sits on the stud texture (`studTexture`, on the page body), like a baseplate. White
+  `Tray` for working areas, panels and lists. `Stage` holds the canvas with no background of its own, so the studs run
+  through it unbroken. Panels have no shadow, except the phone tool panel, which sits over the canvas. Print is plain
+  white.
 - **Spacing:** MUI units of 8 px. Use 2 (16 px) between zones and groups, and 1–1.5 inside a group.
 - **Icons:** Material icons from `@mui/icons-material`, always with a label or tooltip and an `aria-label`.
 
