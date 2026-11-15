@@ -1,8 +1,12 @@
-import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, TextField, Typography } from '@mui/material';
 import { useState, type ReactNode } from 'react';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import DescriptionIcon from '@mui/icons-material/Description';
+import AppBarAction from '../components/AppBarAction';
 import BuildingCard from '../components/BuildingCard';
 import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
+import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { Stage } from '../components/Tray';
 import { CARD_GAP_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
@@ -66,34 +70,34 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     // pages are shown at print size, shrunk on screens narrower than a page (with its 1px border each side)
     const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.pageWidthMm) + 2);
 
-    return (
-        <Box sx={{ padding: 2, '@media print': { padding: 0 } }}>
-            <PrintPageStyle size={`${layout.pageWidthMm}mm ${layout.pageHeightMm}mm`} />
-            <Stack spacing={2} sx={{ paddingBottom: 2, displayPrint: 'none' }}>
-                <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-end', flexWrap: 'wrap', rowGap: 2 }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="h2" gutterBottom>
-                            Building cards
-                        </Typography>
-                        <Typography color="text.secondary">
-                            {cards.length} cards on {cardPages.length} {cardPages.length === 1 ? 'page' : 'pages'},{' '}
-                            {layout.cardsPerPage} per {layout.label} page
-                            {settings.includeMapPage ? ', after a map page' : ''}.
-                        </Typography>
-                    </Box>
-                    {layout.usesPaper && (
-                        <TextField
-                            select
-                            size="small"
-                            label="Paper"
-                            value={settings.paperSize}
-                            onChange={(e) => updateSettings({ paperSize: e.target.value as PaperSize })}
-                            sx={{ minWidth: 120 }}
-                        >
-                            <MenuItem value="A4">A4</MenuItem>
-                            <MenuItem value="Letter">Letter</MenuItem>
-                        </TextField>
-                    )}
+    const groups: ToolGroup[] = [
+        {
+            id: 'paper',
+            label: 'Paper',
+            icon: <DescriptionIcon />,
+            content: layout.usesPaper ? (
+                <TextField
+                    select
+                    size="small"
+                    label="Paper"
+                    value={settings.paperSize}
+                    onChange={(e) => updateSettings({ paperSize: e.target.value as PaperSize })}
+                >
+                    <MenuItem value="A4">A4</MenuItem>
+                    <MenuItem value="Letter">Letter</MenuItem>
+                </TextField>
+            ) : (
+                <Typography variant="body2" color="text.secondary">
+                    These cards are too big for A4 or Letter, so they print on {layout.sheet}.
+                </Typography>
+            ),
+        },
+        {
+            id: 'pages',
+            label: 'Pages',
+            icon: <AutoStoriesIcon />,
+            content: (
+                <>
                     <FormControlLabel
                         label="Map page"
                         control={
@@ -103,6 +107,9 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             />
                         }
                     />
+                    <Typography variant="body2" color="text.secondary">
+                        The whole mosaic with every card marked, printed before the cards, to put up at the event.
+                    </Typography>
                     {batches.length > 1 && (
                         <TextField
                             select
@@ -110,7 +117,6 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             label="Pages"
                             value={currentBatch}
                             onChange={(e) => setBatch(Number(e.target.value))}
-                            sx={{ minWidth: 120 }}
                         >
                             {batches.map((b, i) => (
                                 <MenuItem key={i} value={i}>
@@ -119,18 +125,32 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             ))}
                         </TextField>
                     )}
-                    <Button variant="contained" size="large" onClick={() => window.print()}>
-                        Print cards
-                    </Button>
-                </Stack>
-                {batches.length > 1 && (
+                </>
+            ),
+        },
+    ];
+
+    return (
+        <StepLayout
+            alerts={
+                batches.length > 1 && (
                     <Alert severity="info">
                         Large jobs print in batches of {PAGES_PER_BATCH} pages. Print this batch, then choose the next
                         one under Pages.
                     </Alert>
-                )}
-            </Stack>
-
+                )
+            }
+            status={`${cards.length} cards on ${cardPages.length} ${cardPages.length === 1 ? 'page' : 'pages'}, ${
+                layout.cardsPerPage
+            } per ${layout.label} page${settings.includeMapPage ? ', after a map page' : ''}.`}
+            groups={groups}
+        >
+            <PrintPageStyle size={`${layout.pageWidthMm}mm ${layout.pageHeightMm}mm`} />
+            <AppBarAction>
+                <Button variant="contained" onClick={() => window.print()}>
+                    Print cards
+                </Button>
+            </AppBarAction>
             <Stage ref={measureStage}>
                 <Box sx={{ zoom: fitScale, '@media print': { zoom: 1 } }}>
                     {batches[currentBatch]?.map((page, i) => (
@@ -161,7 +181,7 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     ))}
                 </Box>
             </Stage>
-        </Box>
+        </StepLayout>
     );
 };
 

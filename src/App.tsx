@@ -1,6 +1,7 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
+import { StepMenu, type StepMenuItem } from './stepMenu';
 import ProjectMenu from './components/ProjectMenu';
 import { recallImage } from './imageStore';
 import { imageToCanvas, pngToImage } from './mosaic/image';
@@ -53,6 +54,8 @@ const App = () => {
     const [step, setStep] = useState<Step>('Image');
     // where the current step's main action goes in the app bar
     const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
+    // the current step's secondary actions, offered in the menu on phones
+    const [stepItems, setStepItems] = useState<StepMenuItem[]>([]);
     // an opened project's image restarts the image step from that image
     const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement | null; key: number } | null>(null);
     const hasImage = !!mosaic.grid;
@@ -118,6 +121,7 @@ const App = () => {
             >
                 <ProjectMenu
                     mosaic={mosaic}
+                    stepItems={stepItems}
                     onImageOpened={(image) => {
                         imageChosen.current = true;
                         showImage(image);
@@ -183,19 +187,21 @@ const App = () => {
                 />
             </Box>
             <AppBarSlot.Provider value={actionSlot}>
-                <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
-                    <ImageTab
-                        key={openedImage?.key}
-                        initialSource={openedImage?.image}
-                        active={step === 'Image'}
-                        onApply={(image) => {
-                            imageChosen.current = true;
-                            mosaic.setImage(image);
-                            setStep('Bricks');
-                        }}
-                    />
-                </Box>
-                {content()}
+                <StepMenu.Provider value={setStepItems}>
+                    <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
+                        <ImageTab
+                            key={openedImage?.key}
+                            initialSource={openedImage?.image}
+                            active={step === 'Image'}
+                            onApply={(image) => {
+                                imageChosen.current = true;
+                                mosaic.setImage(image);
+                                setStep('Bricks');
+                            }}
+                        />
+                    </Box>
+                    {content()}
+                </StepMenu.Provider>
             </AppBarSlot.Provider>
         </Box>
     );

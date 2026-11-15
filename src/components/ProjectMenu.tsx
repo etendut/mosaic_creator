@@ -12,6 +12,8 @@ import {
     Menu,
     MenuItem,
     Snackbar,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useRef, useState } from 'react';
@@ -19,6 +21,7 @@ import { downloadFile } from '../download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import { canvasToPng, pngToImage } from '../mosaic/image';
 import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '../mosaic/project';
+import type { StepMenuItem } from '../stepMenu';
 import type { Mosaic } from '../useMosaic';
 import { VERSION } from '../version';
 import AboutDialog from './AboutDialog';
@@ -29,10 +32,30 @@ interface ProjectMenuProps {
     onImageOpened: (image: HTMLImageElement) => void;
     /** Drop the image, including the copy this browser remembers. */
     onForgetImage: () => void;
+    /** The current step's secondary actions, listed first on phones (on desktop they sit in the app bar). */
+    stepItems?: StepMenuItem[];
 }
 
 /** Save the whole project to a file, open one, or go back to the default settings. */
-const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps) => {
+const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, stepItems = [] }: ProjectMenuProps) => {
+    const theme = useTheme();
+    const desktop = useMediaQuery(theme.breakpoints.up('md'), { defaultMatches: true, noSsr: true });
+    const stepEntries = desktop
+        ? []
+        : [
+              ...stepItems.map((item) => (
+                  <MenuItem
+                      key={`step-${item.label}`}
+                      onClick={() => {
+                          setAnchor(null);
+                          item.onClick();
+                      }}
+                  >
+                      <ListItemText primary={item.label} secondary={item.secondary} />
+                  </MenuItem>
+              )),
+              ...(stepItems.length ? [<Divider key="step-divider" />] : []),
+          ];
     const fileInput = useRef<HTMLInputElement>(null);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [confirmReset, setConfirmReset] = useState(false);
@@ -90,6 +113,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                 <MenuIcon />
             </IconButton>
             <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+                {stepEntries}
                 <MenuItem
                     onClick={() => {
                         setAnchor(null);

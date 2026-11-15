@@ -61,18 +61,18 @@ const StepLayout = ({ alerts, status, facts, groups = [], children }: StepLayout
     const openGroup = groups.find((g) => g.id === open);
 
     const result = (
-        <Stack spacing={2} sx={{ minWidth: 0 }}>
-            {alerts}
+        <Stack spacing={2} sx={{ minWidth: 0, '@media print': { display: 'block' } }}>
+            {alerts && <Box sx={{ displayPrint: 'none' }}>{alerts}</Box>}
             {status && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ displayPrint: 'none' }}>
                     {status}
                 </Typography>
             )}
-            {desktop && facts}
+            {desktop && facts && <Box sx={{ displayPrint: 'none' }}>{facts}</Box>}
             {/* on a phone, touching the canvas closes the open tool panel, so the canvas is never stuck behind it */}
             <Box onPointerDown={() => setOpen(null)}>{children}</Box>
             {/* on a phone the facts go under the canvas, so the canvas stays in view above an open tool panel */}
-            {!desktop && facts}
+            {!desktop && facts && <Box sx={{ displayPrint: 'none' }}>{facts}</Box>}
         </Stack>
     );
 

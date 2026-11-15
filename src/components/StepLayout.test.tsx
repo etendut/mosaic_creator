@@ -1,5 +1,5 @@
 import { fireEvent, screen, within } from '@testing-library/react';
-import { chooseImage, renderApp, startMosaic } from '../test/app';
+import { chooseImage, goTo, renderApp, startMosaic } from '../test/app';
 
 /** Make the screen phone-sized: media queries for desktop widths stop matching. */
 const asPhone = () => {
@@ -58,6 +58,18 @@ describe('Steps on a phone', () => {
         await user.click(tools().getByRole('button', { name: 'Brick' }));
         fireEvent.pointerDown(screen.getByLabelText('Card map'));
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    });
+
+    it('offers the step’s secondary action in the menu', async () => {
+        const user = await startMosaic();
+        await goTo(user, 'Parts');
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
+        await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: /^Copy XML/ }));
+        expect(await navigator.clipboard.readText()).toMatch(/^<INVENTORY>/);
+        // only while that step is on screen
+        await goTo(user, 'Print');
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
+        expect(within(screen.getByRole('menu')).queryByText('Copy XML')).not.toBeInTheDocument();
     });
 
     it("shows the step's name and main action in the app bar", async () => {

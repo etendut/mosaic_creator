@@ -50,10 +50,11 @@ describe('Parts step', () => {
         };
         const exactLegend = await legend();
         const exact = quantities();
-        expect(screen.getByText(/Exact counts, no spares added/)).toBeInTheDocument();
+        expect(screen.getByText(/parts in \d+ lots, exact counts\./)).toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: '10%' }));
-        expect(screen.getByText(/Includes [\d,]+ spares: 10% extra of each brick colour/)).toBeInTheDocument();
+        expect(screen.getByText(/parts in \d+ lots, including [\d,]+ spares\./)).toBeInTheDocument();
+        expect(screen.getByText(/10% extra of each brick colour/)).toBeInTheDocument();
         // the plates (their part row and colour row) stay exact; every other row grows by at least 10%
         const grown = quantities();
         expect(grown.filter((n, i) => n === exact[i])).toHaveLength(2);
@@ -74,8 +75,19 @@ describe('Parts step', () => {
         await user.type(field, '25');
         expect(screen.getByText(/25% extra of each brick colour/)).toBeInTheDocument();
         await user.click(screen.getByRole('button', { name: 'None' }));
-        expect(screen.getByText(/Exact counts, no spares added/)).toBeInTheDocument();
+        expect(screen.getByText(/the list has exact counts/)).toBeInTheDocument();
         expect(quantities()).toEqual(exact);
+    });
+
+    it('puts the download in the app bar, with Copy XML beside it', async () => {
+        const user = await startMosaic();
+        await goTo(user, 'Parts');
+        const bar = within(screen.getByRole('banner'));
+        expect(bar.getByRole('button', { name: 'Download BrickLink XML' })).toBeInTheDocument();
+        expect(bar.getByRole('button', { name: 'Copy XML' })).toBeInTheDocument();
+        // on desktop the menu doesn't repeat it
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
+        expect(within(screen.getByRole('menu')).queryByText('Copy XML')).not.toBeInTheDocument();
     });
 
     it('names the file "mosaic" when the title is empty', async () => {

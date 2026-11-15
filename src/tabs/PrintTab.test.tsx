@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { DEFAULT_PROJECT } from '../mosaic/project';
 import { goTo, startMosaic } from '../test/app';
 
@@ -11,7 +11,8 @@ describe('Print step', () => {
         await goTo(user, 'Print');
         expect(screen.getByText(/8 per A4 landscape page, after a map page/)).toBeInTheDocument();
         expect(screen.getByRole('list', { name: 'Colours used' })).toBeInTheDocument();
-        await user.click(screen.getByRole('button', { name: 'Print cards' }));
+        // printing is the step's main action, in the app bar
+        await user.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Print cards' }));
         expect(window.print).toHaveBeenCalled();
     });
 
@@ -49,5 +50,6 @@ describe('Print step', () => {
         await goTo(user, 'Print');
         expect(screen.getByText(/1 per A3 portrait page/)).toBeInTheDocument();
         expect(screen.queryByRole('combobox', { name: 'Paper' })).not.toBeInTheDocument();
+        expect(screen.getByText(/too big for A4 or Letter, so they print on A3/)).toBeInTheDocument();
     });
 });

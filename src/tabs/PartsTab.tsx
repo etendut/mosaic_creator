@@ -15,8 +15,12 @@ import {
     Typography,
 } from '@mui/material';
 import { Fragment, useState } from 'react';
+import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
+import AppBarAction from '../components/AppBarAction';
 import ColorSwatch from '../components/ColorSwatch';
 import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
+import StepLayout from '../components/StepLayout';
+import StepMenuItems from '../components/StepMenuItems';
 import { Tray } from '../components/Tray';
 import { catalog } from '../data/catalog';
 import { downloadFile } from '../download';
@@ -43,7 +47,6 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
     const selected = custom || !SPARES_PRESETS.includes(percent) ? 'custom' : percent;
     return (
         <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-            <Typography id="spares-label">Spares</Typography>
             <ToggleButtonGroup
                 exclusive
                 size="small"
@@ -53,7 +56,7 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
                     setCustom(value === 'custom');
                     if (value !== 'custom') onChange(value);
                 }}
-                aria-labelledby="spares-label"
+                aria-label="Spares"
             >
                 {SPARES_PRESETS.map((n) => (
                     <ToggleButton key={n} value={n}>
@@ -101,40 +104,54 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
         setCopied(true);
     };
 
+    const download = () => downloadFile(xml(), `${settings.title || 'mosaic'}.xml`, 'application/xml');
+
     return (
-        <Stack spacing={2} sx={{ padding: 2, maxWidth: 960, marginInline: 'auto' }}>
-            <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="h2" gutterBottom>
-                        Parts
-                    </Typography>
-                    <Typography color="text.secondary">
-                        {total.toLocaleString()} parts in {parts.length} lots.{' '}
-                        {spares > 0
-                            ? `Includes ${spares.toLocaleString()} spares: ${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates are exact, and the cards still show exact counts.`
-                            : 'Exact counts, no spares added.'}
-                    </Typography>
-                </Box>
-                <Button
-                    variant="contained"
-                    onClick={() => downloadFile(xml(), `${settings.title || 'mosaic'}.xml`, 'application/xml')}
-                >
-                    Download BrickLink XML
-                </Button>
-                <Button variant="outlined" onClick={copy}>
+        <StepLayout
+            alerts={
+                copied && (
+                    <Alert severity="success" onClose={() => setCopied(false)}>
+                        Copied. Paste it into BrickLink&apos;s{' '}
+                        <Link href={BRICKLINK_UPLOAD_URL} target="_blank" rel="noreferrer">
+                            wanted list upload
+                        </Link>{' '}
+                        page.
+                    </Alert>
+                )
+            }
+            status={`${total.toLocaleString()} parts in ${parts.length} lots, ${
+                spares > 0 ? `including ${spares.toLocaleString()} spares` : 'exact counts'
+            }.`}
+            groups={[
+                {
+                    id: 'spares',
+                    label: 'Spares',
+                    icon: <LibraryAddIcon />,
+                    content: (
+                        <>
+                            <SparesControl percent={sparesPercent} onChange={setSparesPercent} />
+                            <Typography variant="body2" color="text.secondary">
+                                {sparesPercent > 0
+                                    ? `${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates stay exact, and the cards still show exact counts.`
+                                    : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
+                            </Typography>
+                        </>
+                    ),
+                },
+            ]}
+        >
+            <AppBarAction>
+                {/* on phones the bar has room for one button; Copy XML is in the menu instead */}
+                <Button variant="outlined" onClick={copy} sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
                     Copy XML
                 </Button>
-            </Stack>
-            <SparesControl percent={sparesPercent} onChange={setSparesPercent} />
-            {copied && (
-                <Alert severity="success" onClose={() => setCopied(false)}>
-                    Copied. Paste it into BrickLink&apos;s{' '}
-                    <Link href={BRICKLINK_UPLOAD_URL} target="_blank" rel="noreferrer">
-                        wanted list upload
-                    </Link>{' '}
-                    page.
-                </Alert>
-            )}
+                <Button variant="contained" onClick={download}>
+                    Download BrickLink XML
+                </Button>
+            </AppBarAction>
+            <StepMenuItems
+                items={[{ label: 'Copy XML', secondary: 'For BrickLink’s wanted list upload', onClick: copy }]}
+            />
             <Tray sx={{ padding: 0, overflow: 'hidden' }}>
                 <Table size="small">
                     <TableHead>
@@ -203,7 +220,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </TableBody>
                 </Table>
             </Tray>
-        </Stack>
+        </StepLayout>
     );
 };
 
