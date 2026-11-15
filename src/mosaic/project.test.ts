@@ -96,7 +96,7 @@ describe('sanitizeSettings', () => {
             card: {
                 ...custom.card,
                 backgroundColor: 'green',
-                paperSize: 'A3',
+                paperSize: 'A5',
                 includeMapPage: 'yes',
                 cardSize: 'huge',
                 bagList: 1,
@@ -110,7 +110,8 @@ describe('sanitizeSettings', () => {
         expect(settings.platesAcross).toBe(DEFAULT_PROJECT.platesAcross);
         expect(settings.card.backgroundColor).toBe(DEFAULT_PROJECT.card.backgroundColor);
         expect(settings.card.paperSize).toBe(DEFAULT_PROJECT.card.paperSize);
-        expect(settings.card.includeMapPage).toBe(true);
+        // the map page is chosen when printing now; an old file's setting is dropped
+        expect(settings.card).not.toHaveProperty('includeMapPage');
         expect(settings.card.cardSize).toBe('real');
         expect(settings.card.bagList).toBe(false);
         expect(settings.card.title).toBe('Library Day');

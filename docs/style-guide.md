@@ -39,8 +39,9 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 - **Step tabs** next to it on desktop. On a phone they take the bar's second row and scroll sideways; the first row
   shows ☰, the current step's name and the main action.
 - **Main action** at the right: at most one `contained` button, for the thing the step produces, like a photo
-  editor's Export or Done. Examples: *Use this image*, *Download BrickLink XML*, *Print cards*. A step that only sets
-  things up (Bricks, Touch up, Cards) has no main action; you move on with the step tabs.
+  editor's Export or Done. Examples: *Use this image*, *Download BrickLink XML*. A step that only sets things up
+  (Bricks, Touch up, Cards) has no main action; you move on with the step tabs. An action that follows from the tool
+  settings goes at the end of the tools instead (see [Tools](#tools)), as *Print cards* does.
 - **Secondary action** (at most one, `outlined`): beside the main action on desktop, and in ☰ on a phone (*Copy
   XML*).
 - There's no separate title on the page. The highlighted tab names the step, and the status line says what it's for.
@@ -70,6 +71,12 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
 - **Every setting in an open group is visible.** Don't hide settings behind "More…" disclosures. If a group grows too
   long, the step is doing too much (see [One job per step](#one-job-per-step)).
 - **Help text** goes directly under the control it explains, in `body2` and muted, one or two sentences.
+- **Show choices, don't hide them.** A choice of up to about six options is a plain list (radio buttons) or a row of
+  toggle buttons, so every option is in view: Paper (A4, Letter, A3), what to print. Not a dropdown.
+- **An action that follows from the tools** (*Print cards*, after Paper and Pages) ends the tools, with a line above
+  it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page, after a map page.") and any note about
+  it. On desktop it's the last block of the column, and on a phone a strip just above the tool bar, so it's one tap
+  away. It's the step's main action, so the app bar has none.
 - **Steps that edit the canvas directly** (Touch up) use the same zone for their tools: a bottom bar of tools on a
   phone, and a vertical tool rail on desktop. The current tool's options show in the panel above the bar (phone) or
   under the rail (desktop).
@@ -93,7 +100,7 @@ The fix is to split it into two steps, as Bricks and Touch up were split. Don't 
 
 | Kind | Style | Where | Example |
 |---|---|---|---|
-| Main action | `contained`, one per step | app bar, right | Print cards |
+| Main action | `contained`, one per step | app bar, right, or the end of the tools when it follows from them | Download BrickLink XML, Print cards |
 | Secondary | `outlined` | beside the main action (desktop), ☰ (phone) | Copy XML |
 | In a group | `text` (small) | under the setting it acts on | Save palette |
 | Tools | icon + label (bar) or icon + tooltip (rail), with an `aria-label` | tools zone | Brush, Undo |
@@ -166,7 +173,7 @@ line. On a phone, tool groups move from below the canvas into the bottom bar and
 | Touch up | none | Brush, Eraser, Eyedropper, then clean-up, undo/redo, before/after, clear | The toolbar becomes the bottom bar (phone) and a left rail (desktop). Its icon buttons are about 30 px; make them 40 px on touch screens. |
 | Cards | none | Size, Text, Colour | |
 | Parts | Download BrickLink XML | Spares | Spares moves out of the page header into the tools zone. *Copy XML* is the secondary action. |
-| Print | Print cards | Paper, Pages (map page, batches) | Paper, Map page and batches move out of the page header into the tools zone. |
+| Print | none in the app bar; *Print cards* ends the tools, with its summary above it | Paper, Pages (map page, batches) | Paper, Map page and batches move out of the page header into the tools zone. |
 
 A shared layout component (app-bar action, status line, canvas and tool groups) will hold the zones in code, so a new
 step can't drift.

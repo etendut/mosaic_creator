@@ -159,7 +159,8 @@ export const cardLayout = (options: {
     const realMm = STUD_MM * brickStuds;
     const minMm = size === 'real' ? realMm * REAL_SIZE_MIN : Math.min(realMm, COMPACT_CELL_MIN_MM);
 
-    const sheets: Sheet[] = [paperSize, 'A3', 'A2'];
+    // the chosen paper first, then bigger sheets for cards that don't fit it
+    const sheets = [...new Set<Sheet>([paperSize, 'A3', 'A2'])];
     for (const sheet of sheets) {
         let best: CardLayout | null = null;
         for (const landscape of [false, true])

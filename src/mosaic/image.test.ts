@@ -8,6 +8,7 @@ import {
     imageToCanvas,
     loadImage,
     pngToImage,
+    printLabelPx,
     resizeCanvas,
     shrinkToBricks,
 } from './image';
@@ -151,6 +152,25 @@ describe('drawPreview', () => {
         expect(calls.filter((x) => x === 'fillRect').length).toBeGreaterThan(10);
         expect(calls).toContain('fillText');
         expect(calls).not.toContain('arc');
+    });
+
+    it('sizes card ids for the paper on the map page', () => {
+        // 32 bricks across at 64 px, printed 250 mm wide: about 8 px a mm, so 8 mm is about 66 px
+        expect(printLabelPx(8 * 64, 32 * 64, 250)).toBeCloseTo(65.5, 0);
+        // a big mosaic's cards are small on paper: the id stays within 30% of a card
+        expect(printLabelPx(72, 2880, 270)).toBeCloseTo(21.6, 1);
+        expect(printLabelPx(20, 100, 0)).toBe(8);
+
+        const { calls, restore } = recording();
+        drawPreview(canvas(1, 1), grid, {
+            cellPx: 10,
+            isRound: false,
+            background: '#000',
+            cellsPerCard: 2,
+            labelPx: 6,
+        });
+        restore();
+        expect(calls).toContain('fillText');
     });
 
     it('draws round bricks, and no card overlay when asked', () => {

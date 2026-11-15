@@ -1,6 +1,7 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
+import { StepMenu, type StepMenuItem } from './stepMenu';
 import ProjectMenu from './components/ProjectMenu';
 import { recallImage } from './imageStore';
 import { imageToCanvas, pngToImage } from './mosaic/image';
@@ -19,8 +20,15 @@ type Step = (typeof STEPS)[number];
 /** Hidden on screen but still read out, e.g. the step's name on desktop, where the highlighted tab already shows it. */
 const visuallyHidden = {
     position: 'absolute',
+    // pinned inside the bar, so it can't widen the page
+    top: 0,
+    left: 0,
     width: 1,
     height: 1,
+    minHeight: 0,
+    margin: -1,
+    padding: 0,
+    border: 0,
     overflow: 'hidden',
     clip: 'rect(0 0 0 0)',
     whiteSpace: 'nowrap',
@@ -53,6 +61,8 @@ const App = () => {
     const [step, setStep] = useState<Step>('Image');
     // where the current step's main action goes in the app bar
     const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
+    // the current step's secondary actions, offered in the menu on phones
+    const [stepItems, setStepItems] = useState<StepMenuItem[]>([]);
     // an opened project's image restarts the image step from that image
     const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement | null; key: number } | null>(null);
     const hasImage = !!mosaic.grid;
@@ -118,6 +128,7 @@ const App = () => {
             >
                 <ProjectMenu
                     mosaic={mosaic}
+                    stepItems={stepItems}
                     onImageOpened={(image) => {
                         imageChosen.current = true;
                         showImage(image);
@@ -183,19 +194,21 @@ const App = () => {
                 />
             </Box>
             <AppBarSlot.Provider value={actionSlot}>
-                <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
-                    <ImageTab
-                        key={openedImage?.key}
-                        initialSource={openedImage?.image}
-                        active={step === 'Image'}
-                        onApply={(image) => {
-                            imageChosen.current = true;
-                            mosaic.setImage(image);
-                            setStep('Bricks');
-                        }}
-                    />
-                </Box>
-                {content()}
+                <StepMenu.Provider value={setStepItems}>
+                    <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
+                        <ImageTab
+                            key={openedImage?.key}
+                            initialSource={openedImage?.image}
+                            active={step === 'Image'}
+                            onApply={(image) => {
+                                imageChosen.current = true;
+                                mosaic.setImage(image);
+                                setStep('Bricks');
+                            }}
+                        />
+                    </Box>
+                    {content()}
+                </StepMenu.Provider>
             </AppBarSlot.Provider>
         </Box>
     );

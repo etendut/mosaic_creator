@@ -35,7 +35,6 @@ export const DEFAULT_CARD: CardSettings = {
     bottomMessage: 'Then hand it to one of the volunteers.\nStand back and watch the magic',
     backgroundColor: '#4CAF50',
     paperSize: 'A4',
-    includeMapPage: true,
     cardSize: 'real',
     // off by default: it costs space, e.g. 8×8 real size cards fit 4 to a page with it instead of 8
     bagList: false,
@@ -116,8 +115,7 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
                 (c): c is string => isString(c) && /^#[0-9a-f]{6}$/i.test(c),
                 d.card.backgroundColor,
             ),
-            paperSize: pick(card.paperSize, oneOf<PaperSize>('A4', 'Letter'), d.card.paperSize),
-            includeMapPage: pick(card.includeMapPage, isBoolean, d.card.includeMapPage),
+            paperSize: pick(card.paperSize, oneOf<PaperSize>('A4', 'Letter', 'A3'), d.card.paperSize),
             cardSize: pick(card.cardSize, oneOf<CardSize>('real', 'compact'), d.card.cardSize),
             bagList: pick(card.bagList, isBoolean, d.card.bagList),
         },

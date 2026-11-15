@@ -126,6 +126,13 @@ describe('cardLayout', () => {
         expect(layoutOf(8, 'real', { paperSize: 'Letter' }).label).toMatch(/^Letter/);
     });
 
+    it('prints on A3 when chosen: more cards a page, and big plates on the paper itself', () => {
+        expect(layoutOf(8, 'real', { paperSize: 'A3' }).cardsPerPage).toBeGreaterThan(layoutOf(8, 'real').cardsPerPage);
+        expect(layoutOf(32, 'real', { paperSize: 'A3' })).toMatchObject({ sheet: 'A3', usesPaper: true });
+        // too big for A3 too: on to A2
+        expect(layoutOf(48, 'real', { paperSize: 'A3' })).toMatchObject({ sheet: 'A2', usesPaper: false });
+    });
+
     it('never fits fewer cards per page in compact than in real size', () => {
         for (const plate of [6, 8, 16, 32, 48])
             for (const brickStuds of [1, 2])
@@ -137,7 +144,7 @@ describe('cardLayout', () => {
     it('fits every card, grid and text inside its page', () => {
         for (const plate of [6, 8, 16, 32, 48])
             for (const brickStuds of [1, 2])
-                for (const paperSize of ['A4', 'Letter'] as const)
+                for (const paperSize of ['A4', 'Letter', 'A3'] as const)
                     for (const size of ['real', 'compact'] as const)
                         for (const bagListColors of [0, 12]) {
                             const l = layoutOf(plate, size, {
