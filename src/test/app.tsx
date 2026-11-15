@@ -30,7 +30,7 @@ export const startMosaic = async () => {
     return user;
 };
 
-export const goTo = (user: User, step: 'Image' | 'Bricks' | 'Cards' | 'Parts' | 'Print') =>
+export const goTo = (user: User, step: 'Image' | 'Bricks' | 'Touch up' | 'Cards' | 'Parts' | 'Print') =>
     user.click(screen.getByRole('tab', { name: step }));
 
 /** Open the Project menu and pick an item by (part of) its label. */

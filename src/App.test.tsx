@@ -11,7 +11,7 @@ describe('<App />', () => {
         expect(screen.getAllByRole('button', { name: 'Choose an image' })).toHaveLength(1);
     });
 
-    it.each(['Bricks', 'Cards', 'Parts', 'Print'])('keeps %s locked until there is an image', (step) => {
+    it.each(['Bricks', 'Touch up', 'Cards', 'Parts', 'Print'])('keeps %s locked until there is an image', (step) => {
         render(<App />);
         expect(screen.getByRole('tab', { name: step })).toBeDisabled();
     });

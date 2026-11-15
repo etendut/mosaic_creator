@@ -8,10 +8,11 @@ import CardsTab from './tabs/CardsTab';
 import ImageTab from './tabs/ImageTab';
 import PartsTab from './tabs/PartsTab';
 import PrintTab from './tabs/PrintTab';
+import TouchUpTab from './tabs/TouchUpTab';
 import { tokens } from './theme';
 import { useMosaic } from './useMosaic';
 
-const STEPS = ['Image', 'Bricks', 'Cards', 'Parts', 'Print'] as const;
+const STEPS = ['Image', 'Bricks', 'Touch up', 'Cards', 'Parts', 'Print'] as const;
 type Step = (typeof STEPS)[number];
 
 /** Four studs: the app's mark. */
@@ -90,6 +91,8 @@ const App = () => {
         switch (step) {
             case 'Bricks':
                 return <BricksTab mosaic={mosaic} />;
+            case 'Touch up':
+                return <TouchUpTab mosaic={mosaic} />;
             case 'Cards':
                 return <CardsTab mosaic={mosaic} />;
             case 'Parts':

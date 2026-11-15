@@ -7,6 +7,7 @@ import type { Mosaic } from '../useMosaic';
 
 /** Target on-screen width of the preview; the canvas is scaled down with CSS if the window is narrower. */
 const PREVIEW_WIDTH_PX = 1200;
+const FILL_WIDTH_PX = 2400;
 
 interface MosaicPreviewProps {
     mosaic: Mosaic;
@@ -16,9 +17,11 @@ interface MosaicPreviewProps {
     showGrid?: PixelGrid | null;
     /** Set to pick a brick's colour with a click (an eyedropper); called with the brick, or null for no brick. */
     onPick?: ((cell: Cell) => void) | null;
+    /** Draw the map as big as the space allows, up to the window's height (for touching up bricks). */
+    fill?: boolean;
 }
 
-const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null }: MosaicPreviewProps) => {
+const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, fill = false }: MosaicPreviewProps) => {
     const { brick, plate, cellsPerSide, editBricks } = mosaic;
     const grid = showGrid ?? mosaic.grid;
     // the map takes clicks when painting, erasing or picking a colour
@@ -32,12 +35,15 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null }: MosaicP
     useEffect(() => {
         if (!grid || !canvasRef.current) return;
         drawPreview(canvasRef.current, grid, {
-            cellPx: Math.max(4, Math.min(24, Math.floor(PREVIEW_WIDTH_PX / grid.width))),
+            // drawn sharp at the largest size it's shown at; CSS scales it down to fit
+            cellPx: fill
+                ? Math.max(4, Math.min(48, Math.floor(FILL_WIDTH_PX / grid.width)))
+                : Math.max(4, Math.min(24, Math.floor(PREVIEW_WIDTH_PX / grid.width))),
             isRound: brick.isRound,
             background: plate.color.hex,
             cellsPerCard: cellsPerSide,
         });
-    }, [grid, brick.isRound, plate.color.hex, cellsPerSide]);
+    }, [grid, brick.isRound, plate.color.hex, cellsPerSide, fill]);
 
     /** The brick under the pointer, from where it sits on the canvas as drawn (CSS may have scaled it). */
     const cellAt = (e: PointerEvent) => {
@@ -76,6 +82,8 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null }: MosaicP
             <Box
                 component="canvas"
                 ref={canvasRef}
+                data-columns={grid?.width}
+                data-rows={grid?.height}
                 aria-label={
                     onPick
                         ? 'Card map: click a brick to pick its colour'
@@ -107,6 +115,8 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null }: MosaicP
                 sx={{
                     display: 'block',
                     maxWidth: '100%',
+                    // under the header, step title and toolbar, so the whole map is in view without scrolling
+                    maxHeight: fill ? { md: 'calc(100dvh - 280px)' } : 'none',
                     height: 'auto',
                     // while painting, a finger drag paints instead of scrolling the page
                     touchAction: active ? 'none' : 'auto',

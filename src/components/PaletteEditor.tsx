@@ -25,7 +25,6 @@ import {
 } from '../mosaic/palette';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
-import Disclosure from './Disclosure';
 
 const DITHERING_HELP: Record<Dithering, string> = {
     none: 'Each brick takes its closest colour. Best for logos and flat art.',
@@ -46,10 +45,6 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
     const [message, setMessage] = useState<{ severity: 'error' | 'info'; text: string } | null>(null);
     const [showNames, setShowNames] = useState(false);
     const allowed = new Set(allowedColors.map((c) => c.id));
-    // advanced settings that differ from their defaults, so the closed section can say they're in effect
-    const changedOptions = [maxColors !== null, mosaic.metric !== 'rgb', mosaic.dithering !== 'none'].filter(
-        Boolean,
-    ).length;
     const presetIsEmpty = preset !== 'custom' && presetColors(preset, brick.colors).length === 0;
 
     const save = () => {
@@ -106,14 +101,10 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                     catalog, so solid colours are used instead.
                 </Alert>
             )}
-            <Typography variant="body2" color="text.secondary">
-                {allowed.size} of {brick.colors.length} colours on.
-            </Typography>
-            {/* opens by itself for a custom palette, which is made by picking colours here */}
-            <Disclosure label="Choose colours" defaultOpen={preset === 'custom'}>
+            <Box>
                 <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', paddingBottom: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                        Click a colour to turn it on or off.
+                        {allowed.size} of {brick.colors.length} colours on. Click a colour to turn it on or off.
                     </Typography>
                     <FormControlLabel
                         label="Names"
@@ -135,61 +126,57 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                         />
                     ))}
                 </Box>
-            </Disclosure>
-            <Disclosure label="More colour options" note={changedOptions > 0 ? `${changedOptions} changed` : undefined}>
-                <Stack spacing={1.5}>
-                    <Stack direction="row" spacing={1}>
-                        <TextField
-                            type="number"
-                            size="small"
-                            label="Max colours"
-                            placeholder="No limit"
-                            value={maxColors ?? ''}
-                            onChange={(e) =>
-                                setMaxColors(Number(e.target.value) > 0 ? Math.round(Number(e.target.value)) : null)
-                            }
-                            slotProps={{ htmlInput: { min: 1 }, inputLabel: { shrink: true } }}
-                            sx={{ flex: 1 }}
-                        />
-                        <TextField
-                            select
-                            size="small"
-                            label="Colour matching"
-                            value={mosaic.metric}
-                            onChange={(e) => mosaic.setMetric(e.target.value as ColorMetric)}
-                            sx={{ flex: 1.3 }}
-                        >
-                            <MenuItem value="rgb">Closest RGB</MenuItem>
-                            <MenuItem value="perceptual">Perceptual</MenuItem>
-                        </TextField>
-                    </Stack>
-                    <TextField
-                        select
-                        size="small"
-                        label="Dithering"
-                        value={mosaic.dithering}
-                        onChange={(e) => mosaic.setDithering(e.target.value as Dithering)}
-                        helperText={DITHERING_HELP[mosaic.dithering]}
-                    >
-                        <MenuItem value="none">None</MenuItem>
-                        <MenuItem value="smooth">Smooth</MenuItem>
-                        <MenuItem value="pattern">Pattern</MenuItem>
-                    </TextField>
-                    <Stack direction="row" spacing={1}>
-                        <Button size="small" onClick={save}>
-                            Save palette
-                        </Button>
-                        <Button size="small" onClick={() => fileInput.current?.click()}>
-                            Load palette
-                        </Button>
-                    </Stack>
-                </Stack>
-            </Disclosure>
+            </Box>
+            <Stack direction="row" spacing={1}>
+                <TextField
+                    type="number"
+                    size="small"
+                    label="Max colours"
+                    placeholder="No limit"
+                    value={maxColors ?? ''}
+                    onChange={(e) =>
+                        setMaxColors(Number(e.target.value) > 0 ? Math.round(Number(e.target.value)) : null)
+                    }
+                    slotProps={{ htmlInput: { min: 1 }, inputLabel: { shrink: true } }}
+                    sx={{ flex: 1 }}
+                />
+                <TextField
+                    select
+                    size="small"
+                    label="Colour matching"
+                    value={mosaic.metric}
+                    onChange={(e) => mosaic.setMetric(e.target.value as ColorMetric)}
+                    sx={{ flex: 1.3 }}
+                >
+                    <MenuItem value="rgb">Closest RGB</MenuItem>
+                    <MenuItem value="perceptual">Perceptual</MenuItem>
+                </TextField>
+            </Stack>
+            <TextField
+                select
+                size="small"
+                label="Dithering"
+                value={mosaic.dithering}
+                onChange={(e) => mosaic.setDithering(e.target.value as Dithering)}
+                helperText={DITHERING_HELP[mosaic.dithering]}
+            >
+                <MenuItem value="none">None</MenuItem>
+                <MenuItem value="smooth">Smooth</MenuItem>
+                <MenuItem value="pattern">Pattern</MenuItem>
+            </TextField>
             {message && (
                 <Alert severity={message.severity} onClose={() => setMessage(null)}>
                     {message.text}
                 </Alert>
             )}
+            <Stack direction="row" spacing={1}>
+                <Button size="small" onClick={save}>
+                    Save palette
+                </Button>
+                <Button size="small" onClick={() => fileInput.current?.click()}>
+                    Load palette
+                </Button>
+            </Stack>
             <input
                 ref={fileInput}
                 type="file"
