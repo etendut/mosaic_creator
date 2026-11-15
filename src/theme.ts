@@ -19,7 +19,7 @@ export const tokens = {
     azureWash: '#E3F2F4',
 };
 
-/** A subtle grid of studs, used behind the areas where the actual work is shown. */
+/** A subtle grid of studs: every page sits on it, like a baseplate. */
 export const studTexture = {
     backgroundColor: tokens.plate,
     backgroundImage: `radial-gradient(circle, ${tokens.plateDot} 3px, transparent 3.5px)`,
@@ -60,6 +60,8 @@ const theme = createTheme({
         MuiCssBaseline: {
             styleOverrides: {
                 ':focus-visible': { outline: `2px solid ${tokens.azure}`, outlineOffset: 2 },
+                // the whole page is a baseplate; plain white on paper
+                body: { ...studTexture, '@media print': { background: 'white' } },
             },
         },
     },
