@@ -105,6 +105,16 @@ describe('Steps on a phone', () => {
             'Info',
         ]);
         expect(buttons.every((b) => b.textContent === '')).toBe(true);
+        // two rows, so every button stays wide: history and tools, then clean-up, clearing and Info
+        const rows = [...screen.getByRole('toolbar', { name: 'Tools' }).children].map((row) =>
+            within(row as HTMLElement)
+                .getAllByRole('button')
+                .map((b) => b.getAttribute('aria-label')),
+        );
+        expect(rows).toEqual([
+            ['Undo', 'Redo', 'Before / after', 'Brush', 'Eraser', 'Eyedropper'],
+            ['Clean up single bricks', 'Clean up single bricks and pairs', 'Clear all touch-ups', 'Info'],
+        ]);
         expect(tools().getByRole('button', { name: 'Undo' })).toBeDisabled();
         expect(tools().getByRole('button', { name: 'Clear all touch-ups' })).toBeDisabled();
         expect(within(screen.getByRole('banner')).queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();

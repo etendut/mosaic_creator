@@ -11,6 +11,8 @@ import { Tray } from './Tray';
 const HEADER_PX = 61;
 /** Height of the phone tool bar along the bottom of the screen. */
 export const TOOL_BAR_PX = 60;
+/** Height of each row when the phone tool bar has two. */
+const TWO_ROW_BAR_PX = 52;
 
 /** One group of tools: a short name and an icon for the phone tool bar, and its settings. */
 export interface ToolGroup {
@@ -33,6 +35,8 @@ export interface ToolGroup {
     shortLabel?: string;
     /** Start a new set in the phone bar, after a divider. */
     divider?: boolean;
+    /** Which row of the phone bar, for a long set of tools: 1 (the default) or 2. */
+    barRow?: 1 | 2;
     /** Show the group on one layout only. */
     only?: 'phone' | 'desktop';
 }
@@ -101,10 +105,13 @@ const StepLayout = ({
                 icon: <InfoOutlinedIcon />,
                 content: <InfoList facts={info} />,
                 divider: true,
+                // on the bar's last row
+                barRow: groups.some((g) => g.barRow === 2) ? 2 : 1,
             },
         ];
     const desktopGroups = groups.filter((g) => g.only !== 'phone' && g.content);
     const phoneGroups = groups.filter((g) => g.only !== 'desktop');
+    const barRows = [1, 2].map((r) => phoneGroups.filter((g) => (g.barRow ?? 1) === r)).filter((row) => row.length > 0);
     const theme = useTheme();
     // without media queries (tests) the desktop layout is used
     const desktop = useMediaQuery(theme.breakpoints.up('md'), { defaultMatches: true, noSsr: true });
@@ -252,48 +259,59 @@ const StepLayout = ({
                         <Box
                             role="toolbar"
                             aria-label="Tools"
-                            sx={{
-                                height: TOOL_BAR_PX,
-                                display: 'flex',
-                                backgroundColor: tokens.tray,
-                                borderTop: `1px solid ${tokens.groove}`,
-                            }}
+                            sx={{ backgroundColor: tokens.tray, borderTop: `1px solid ${tokens.groove}` }}
                         >
-                            {phoneGroups.map((g) => {
-                                // a mode switches on, an action just runs, and a group with settings opens its panel
-                                const selected = g.onPress ? !!g.pressed : g.id === open;
-                                return (
-                                    <ButtonBase
-                                        key={g.id}
-                                        aria-label={g.shortLabel || iconOnlyBar ? g.label : undefined}
-                                        disabled={g.disabled}
-                                        aria-pressed={g.onPress && g.pressed !== undefined ? selected : undefined}
-                                        aria-expanded={g.onPress ? undefined : selected}
-                                        aria-controls={!g.onPress && selected ? panelId : undefined}
-                                        onClick={() => {
-                                            if (g.onPress) {
-                                                g.onPress();
-                                                setOpen(null);
-                                            } else setOpen(selected ? null : g.id);
-                                        }}
-                                        sx={{
-                                            flex: 1,
-                                            minWidth: 0,
-                                            flexDirection: 'column',
-                                            gap: 0.25,
-                                            fontSize: 12,
-                                            borderLeft: g.divider ? `1px solid ${tokens.groove}` : undefined,
-                                            '&.Mui-disabled': { opacity: 0.35 },
-                                            color: selected ? tokens.azure : tokens.muted,
-                                            fontWeight: selected ? 500 : 400,
-                                            borderTop: `3px solid ${selected ? tokens.azure : 'transparent'}`,
-                                        }}
-                                    >
-                                        {g.icon}
-                                        {!iconOnlyBar && (g.shortLabel ?? g.label)}
-                                    </ButtonBase>
-                                );
-                            })}
+                            {barRows.map((row, r) => (
+                                <Box
+                                    key={r}
+                                    sx={{
+                                        display: 'flex',
+                                        height: barRows.length > 1 ? TWO_ROW_BAR_PX : TOOL_BAR_PX,
+                                        borderTop: r > 0 ? `1px solid ${tokens.groove}` : undefined,
+                                    }}
+                                >
+                                    {row.map((g, i) => {
+                                        // a mode switches on, an action just runs, and a group with settings opens
+                                        // its panel
+                                        const selected = g.onPress ? !!g.pressed : g.id === open;
+                                        return (
+                                            <ButtonBase
+                                                key={g.id}
+                                                aria-label={g.shortLabel || iconOnlyBar ? g.label : undefined}
+                                                disabled={g.disabled}
+                                                aria-pressed={
+                                                    g.onPress && g.pressed !== undefined ? selected : undefined
+                                                }
+                                                aria-expanded={g.onPress ? undefined : selected}
+                                                aria-controls={!g.onPress && selected ? panelId : undefined}
+                                                onClick={() => {
+                                                    if (g.onPress) {
+                                                        g.onPress();
+                                                        setOpen(null);
+                                                    } else setOpen(selected ? null : g.id);
+                                                }}
+                                                sx={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    flexDirection: 'column',
+                                                    gap: 0.25,
+                                                    fontSize: 12,
+                                                    // a divider between sets, but not at the start of a row
+                                                    borderLeft:
+                                                        g.divider && i > 0 ? `1px solid ${tokens.groove}` : undefined,
+                                                    '&.Mui-disabled': { opacity: 0.35 },
+                                                    color: selected ? tokens.azure : tokens.muted,
+                                                    fontWeight: selected ? 500 : 400,
+                                                    borderTop: `3px solid ${selected ? tokens.azure : 'transparent'}`,
+                                                }}
+                                            >
+                                                {g.icon}
+                                                {!iconOnlyBar && (g.shortLabel ?? g.label)}
+                                            </ButtonBase>
+                                        );
+                                    })}
+                                </Box>
+                            ))}
                         </Box>
                     )}
                 </Stack>

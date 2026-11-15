@@ -32,7 +32,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const palette = <Palette mosaic={mosaic} state={state} onChange={onChange} />;
 
     // the same buttons in the same order on both layouts: history, tools, palette, clean-up, clearing
-    const asGroups = (actions: TouchUpAction[], divider: boolean): ToolGroup[] =>
+    const asGroups = (actions: TouchUpAction[], divider: boolean, barRow: 1 | 2 = 1): ToolGroup[] =>
         actions.map((a, i) => ({
             id: a.id,
             label: a.label,
@@ -42,6 +42,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
             pressed: a.pressed,
             disabled: a.disabled,
             divider: divider && i === 0,
+            barRow,
         }));
     const groups: ToolGroup[] = [
         {
@@ -61,8 +62,9 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
         },
         ...asGroups(history, false),
         ...asGroups(tools, true),
-        ...asGroups(cleaning, true),
-        ...asGroups(clearing, true),
+        // on a phone, two rows keep every button wide: history and tools, then clean-up, clearing and Info
+        ...asGroups(cleaning, true, 2),
+        ...asGroups(clearing, true, 2),
     ];
 
     return (
