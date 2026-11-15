@@ -71,6 +71,8 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
 - **Every setting in an open group is visible.** Don't hide settings behind "More…" disclosures. If a group grows too
   long, the step is doing too much (see [One job per step](#one-job-per-step)).
 - **Help text** goes directly under the control it explains, in `body2` and muted, one or two sentences.
+- **Show choices, don't hide them.** A choice of up to about six options is a plain list (radio buttons) or a row of
+  toggle buttons, so every option is in view: Paper (A4, Letter, A3), what to print. Not a dropdown.
 - **An action that follows from the tools** (*Print cards*, after Paper and Pages) ends the tools, with a line above
   it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page, after a map page.") and any note about
   it. On desktop it's the last block of the column, and on a phone a strip just above the tool bar, so it's one tap

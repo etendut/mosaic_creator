@@ -76,12 +76,12 @@ describe('Steps on a phone', () => {
         const user = await startMosaic();
         await goTo(user, 'Print');
         expect(screen.getByText(/cards on \d+ pages?, \d+ per A4/)).toBeInTheDocument();
-        await user.click(screen.getByRole('button', { name: 'Print cards' }));
+        await user.click(screen.getByRole('button', { name: 'Print map and cards' }));
         expect(window.print).toHaveBeenCalled();
         // a tool panel opens above it
         await user.click(tools().getByRole('button', { name: 'Paper' }));
         expect(screen.getByRole('region', { name: 'Paper' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Print cards' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Print map and cards' })).toBeInTheDocument();
     });
 
     it("shows the step's name and main action in the app bar", async () => {

@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import { useState, type ReactNode } from 'react';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -48,9 +48,20 @@ const Sheet = ({ layout, children }: { layout: PageLayout; children: ReactNode }
 
 type Page = { kind: 'map' } | { kind: 'cards'; cards: MosaicCard[] };
 
+/** One thing to print: the map page, the cards, or both, or one batch of a big job's cards. */
+interface PrintChoice {
+    id: string;
+    label: string;
+    /** The print button's name for it. */
+    button: string;
+    pages: Page[];
+}
+
+const PAPERS: PaperSize[] = ['A4', 'Letter', 'A3'];
+
 const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const { cards, settings, updateSettings, brick, grid, layout } = mosaic;
-    const [batch, setBatch] = useState(0);
+    const [chosen, setChosen] = useState('all');
 
     const cardPages = chunk<MosaicCard>(cards, layout.cardsPerPage);
     // the map page is the same size and orientation as the cards: mixing page sizes in one print job needs named
@@ -60,12 +71,41 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
         grid ?? { width: 1, height: 1 },
         colorsUsed(mosaic.parts, brick.partId).length,
     );
-    const pages: Page[] = [
-        ...(settings.includeMapPage ? [{ kind: 'map' } as const] : []),
-        ...cardPages.map((c) => ({ kind: 'cards', cards: c }) as const),
-    ];
-    const batches = chunk(pages, PAGES_PER_BATCH);
-    const currentBatch = Math.min(batch, Math.max(0, batches.length - 1));
+    const mapPage: Page = { kind: 'map' };
+    const cardSheets: Page[] = cardPages.map((c) => ({ kind: 'cards', cards: c }));
+    // big jobs print the map, then the cards in batches; Chrome gets slow with hundreds of pages at once
+    const cardBatches = chunk(cardSheets, PAGES_PER_BATCH);
+    const pageRange = (i: number) => `pages ${i * PAGES_PER_BATCH + 1}–${i * PAGES_PER_BATCH + cardBatches[i].length}`;
+    const choices: PrintChoice[] =
+        cardBatches.length > 1
+            ? [
+                  { id: 'map', label: 'Map page', button: 'Print map page', pages: [mapPage] },
+                  ...cardBatches.map((batch, i) => ({
+                      id: `cards-${i}`,
+                      label: `Cards, ${pageRange(i)}`,
+                      button: 'Print cards',
+                      pages: batch,
+                  })),
+              ]
+            : [
+                  { id: 'all', label: 'Map and cards', button: 'Print map and cards', pages: [mapPage, ...cardSheets] },
+                  { id: 'map', label: 'Map page only', button: 'Print map page', pages: [mapPage] },
+                  { id: 'cards', label: 'Cards only', button: 'Print cards', pages: cardSheets },
+              ];
+    // the choice made, or the first one if it no longer exists (e.g. after a size change)
+    const choice = choices.find((c) => c.id === chosen) ?? choices[0];
+    const cardsInChoice = choice.pages.reduce((n, page) => n + (page.kind === 'cards' ? page.cards.length : 0), 0);
+    const sheetsOfCards = choice.pages.filter((page) => page.kind === 'cards').length;
+    const summary = [
+        choice.pages[0]?.kind === 'map' && (sheetsOfCards ? 'A map page, then' : 'The map page, on one sheet.'),
+        sheetsOfCards > 0 &&
+            `${cardsInChoice} cards on ${sheetsOfCards} ${sheetsOfCards === 1 ? 'page' : 'pages'}, ${
+                layout.cardsPerPage
+            } per ${layout.label} page.`,
+    ]
+        .filter(Boolean)
+        .join(' ');
+
     // pages are shown at print size, shrunk on screens narrower than a page (with its 1px border each side)
     const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.pageWidthMm) + 2);
 
@@ -74,21 +114,23 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             id: 'paper',
             label: 'Paper',
             icon: <DescriptionIcon />,
-            content: layout.usesPaper ? (
-                <TextField
-                    select
-                    size="small"
-                    label="Paper"
-                    value={settings.paperSize}
-                    onChange={(e) => updateSettings({ paperSize: e.target.value as PaperSize })}
-                >
-                    <MenuItem value="A4">A4</MenuItem>
-                    <MenuItem value="Letter">Letter</MenuItem>
-                </TextField>
-            ) : (
-                <Typography variant="body2" color="text.secondary">
-                    These cards are too big for A4 or Letter, so they print on {layout.sheet}.
-                </Typography>
+            content: (
+                <>
+                    <RadioGroup
+                        aria-label="Paper"
+                        value={settings.paperSize}
+                        onChange={(e) => updateSettings({ paperSize: e.target.value as PaperSize })}
+                    >
+                        {PAPERS.map((paper) => (
+                            <FormControlLabel key={paper} value={paper} control={<Radio />} label={paper} />
+                        ))}
+                    </RadioGroup>
+                    {!layout.usesPaper && (
+                        <Typography variant="body2" color="text.secondary">
+                            These cards are too big for {settings.paperSize}, so they print on {layout.sheet}.
+                        </Typography>
+                    )}
+                </>
             ),
         },
         {
@@ -97,33 +139,14 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             icon: <AutoStoriesIcon />,
             content: (
                 <>
-                    <FormControlLabel
-                        label="Map page"
-                        control={
-                            <Checkbox
-                                checked={settings.includeMapPage}
-                                onChange={(e) => updateSettings({ includeMapPage: e.target.checked })}
-                            />
-                        }
-                    />
+                    <RadioGroup aria-label="Print" value={choice.id} onChange={(e) => setChosen(e.target.value)}>
+                        {choices.map((c) => (
+                            <FormControlLabel key={c.id} value={c.id} control={<Radio />} label={c.label} />
+                        ))}
+                    </RadioGroup>
                     <Typography variant="body2" color="text.secondary">
-                        The whole mosaic with every card marked, printed before the cards, to put up at the event.
+                        The map page shows the whole mosaic with every card marked, to put up at the event.
                     </Typography>
-                    {batches.length > 1 && (
-                        <TextField
-                            select
-                            size="small"
-                            label="Pages"
-                            value={currentBatch}
-                            onChange={(e) => setBatch(Number(e.target.value))}
-                        >
-                            {batches.map((b, i) => (
-                                <MenuItem key={i} value={i}>
-                                    {i * PAGES_PER_BATCH + 1}-{i * PAGES_PER_BATCH + b.length}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    )}
                 </>
             ),
         },
@@ -135,18 +158,16 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             action={
                 <>
                     <Typography variant="body2" color="text.secondary">
-                        {cards.length} cards on {cardPages.length} {cardPages.length === 1 ? 'page' : 'pages'},{' '}
-                        {layout.cardsPerPage} per {layout.label} page
-                        {settings.includeMapPage ? ', after a map page' : ''}.
+                        {summary}
                     </Typography>
-                    {batches.length > 1 && (
+                    {cardBatches.length > 1 && (
                         <Alert severity="info">
-                            Large jobs print in batches of {PAGES_PER_BATCH} pages. Print this batch, then choose the
-                            next one under Pages.
+                            Large jobs print in parts: the map page, then the cards {PAGES_PER_BATCH} pages at a time.
+                            Print each one in turn from Pages.
                         </Alert>
                     )}
                     <Button variant="contained" size="large" fullWidth onClick={() => window.print()}>
-                        Print cards
+                        {choice.button}
                     </Button>
                 </>
             }
@@ -154,7 +175,7 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             <PrintPageStyle size={`${layout.pageWidthMm}mm ${layout.pageHeightMm}mm`} />
             <Stage ref={measureStage}>
                 <Box sx={{ zoom: fitScale, '@media print': { zoom: 1 } }}>
-                    {batches[currentBatch]?.map((page, i) => (
+                    {choice.pages.map((page, i) => (
                         <Sheet key={i} layout={layout}>
                             {page.kind === 'map' ? (
                                 <MapPage mosaic={mosaic} layout={mapLayout} />
