@@ -84,6 +84,50 @@ describe('Steps on a phone', () => {
         expect(screen.getByRole('button', { name: 'Print map page' })).toBeInTheDocument();
     });
 
+    it('puts Touch up’s tools in the bottom bar, in the same order as on desktop, with the palette above', async () => {
+        const user = await startMosaic();
+        await goTo(user, 'Touch up');
+        // icons only, named for screen readers: history, tools, clean-up, clearing
+        const buttons = tools().getAllByRole('button');
+        expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
+            'Undo',
+            'Redo',
+            'Before / after',
+            'Brush',
+            'Eraser',
+            'Eyedropper',
+            'Clean up single bricks',
+            'Clean up single bricks and pairs',
+            'Clear all touch-ups',
+        ]);
+        expect(buttons.every((b) => b.textContent === '')).toBe(true);
+        expect(tools().getByRole('button', { name: 'Undo' })).toBeDisabled();
+        expect(tools().getByRole('button', { name: 'Clear all touch-ups' })).toBeDisabled();
+        expect(within(screen.getByRole('banner')).queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+
+        // the palette is always above the bar; the brush is on from the start
+        expect(tools().getByRole('button', { name: 'Brush' })).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByRole('group', { name: 'Brush size' })).toBeInTheDocument();
+        await user.click(tools().getByRole('button', { name: 'Eraser' }));
+        expect(tools().getByRole('button', { name: 'Eraser' })).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByRole('button', { name: /^Paint colour/ })).toBeInTheDocument();
+
+        // erase a brick, then the history and clearing in the bar
+        const canvas = screen.getByLabelText(/^Card map/);
+        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        fireEvent.pointerDown(canvas, { clientX: 15, clientY: 15, pointerId: 1 });
+        fireEvent.pointerUp(canvas);
+        expect(tools().getByRole('button', { name: 'Undo' })).toBeEnabled();
+        await user.click(tools().getByRole('button', { name: 'Before / after' }));
+        expect(tools().getByRole('button', { name: 'Before / after' })).toHaveAttribute('aria-pressed', 'true');
+        await user.click(tools().getByRole('button', { name: 'Undo' }));
+        await user.click(tools().getByRole('button', { name: 'Redo' }));
+        await user.click(tools().getByRole('button', { name: 'Clean up single bricks' }));
+        expect(screen.getByText(/Cleaned up|No stray bricks/)).toBeInTheDocument();
+        await user.click(tools().getByRole('button', { name: 'Clear all touch-ups' }));
+        expect(screen.getByText('Touch-ups cleared. Undo brings them back.')).toBeInTheDocument();
+    });
+
     it("shows the step's name and main action in the app bar", async () => {
         const user = renderApp();
         expect(screen.getByRole('heading', { name: 'Image', level: 1 })).toBeInTheDocument();

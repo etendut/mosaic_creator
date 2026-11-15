@@ -23,8 +23,8 @@ const map = () => {
     };
 };
 
-const toolbar = () => within(screen.getByRole('toolbar', { name: 'Touch up' }));
-const tool = (name: string | RegExp) => toolbar().getByRole('button', { name });
+/** A tool or action by name: the tools are in the left column, undo, redo and before/after in the app bar. */
+const tool = (name: string | RegExp) => screen.getByRole('button', { name });
 /** Bricks touched up to black (BrickLink 11), from the saved touch-ups. */
 const blackBricks = (): number =>
     (JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps?.edits ?? []).filter(
@@ -40,8 +40,7 @@ const paintWith = async (user: User, name: string) => {
 };
 
 const brush = async (user: User, size: number, shape: 'Round' | 'Square') => {
-    await user.click(toolbar().getByRole('combobox', { name: 'Brush size' }));
-    await user.click(screen.getByRole('option', { name: `${size} × ${size}` }));
+    await user.click(tool(`${size} × ${size}`));
     await user.click(tool(`${shape} brush`));
 };
 
@@ -53,11 +52,30 @@ const startTouchUp = async () => {
 };
 
 describe('Touch up step', () => {
-    it('says what the step is for, and starts in View so a phone can scroll past the map', async () => {
+    it('lays the tools out in one consistent column: history, tools, palette, clean-up, clearing', async () => {
         await startTouchUp();
         expect(screen.getByRole('heading', { name: 'Touch up' })).toBeInTheDocument();
-        expect(tool('View')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/Fix single bricks: choose the brush or eraser/)).toBeInTheDocument();
+        const column = within(screen.getByRole('complementary', { name: 'Tools' }));
+        const names = column
+            .getAllByRole('button')
+            .map((b) => b.getAttribute('aria-label'))
+            .filter((n) => n && !/×|brush$/.test(n));
+        expect(names).toEqual([
+            'Undo',
+            'Redo',
+            'Before / after',
+            'Brush',
+            'Eraser',
+            'Eyedropper',
+            expect.stringMatching(/^Paint colour/),
+            'Clean up single bricks',
+            'Clean up single bricks and pairs',
+            'Clear all touch-ups',
+        ]);
+        expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
+        // the brush is on from the start
+        expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByText(/^Click or drag on the map to make bricks/)).toBeInTheDocument();
     });
 
     it('is where touch-ups are made; the Bricks step shows them on its map and says how many', async () => {
@@ -76,11 +94,6 @@ describe('Touch up step', () => {
     it('paints single bricks, drags to paint several, and undoes a drag in one step', async () => {
         const user = await startTouchUp();
         const m = map();
-        // viewing: clicks do nothing
-        expect(tool('View')).toHaveAttribute('aria-pressed', 'true');
-        m.click(4, 4);
-        noneTouchedUp();
-
         await paintWith(user, 'Black');
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText(/make bricks Black/)).toBeInTheDocument();
@@ -114,24 +127,14 @@ describe('Touch up step', () => {
         expect(touchedUp(4)).toBeInTheDocument();
     });
 
-    it('shows the colour and brush options only for the tools that use them', async () => {
+    it('keeps the brush palette in view for every tool', async () => {
         const user = await startTouchUp();
-        const options = () => ({
-            color: toolbar().queryByRole('button', { name: /^Paint colour/ }),
-            size: toolbar().queryByRole('combobox', { name: 'Brush size' }),
-            shape: toolbar().queryByRole('group', { name: 'Brush shape' }),
-        });
-        const shown = () => Object.entries(options()).flatMap(([name, el]) => (el ? [name] : []));
-
-        expect(shown()).toEqual([]);
-        await user.click(tool('Brush'));
-        expect(shown()).toEqual(['color', 'size', 'shape']);
-        await user.click(tool('Eraser'));
-        expect(shown()).toEqual(['size', 'shape']);
-        await user.click(tool('Eyedropper: pick a colour from the map'));
-        expect(shown()).toEqual(['color']);
-        await user.click(tool('View'));
-        expect(shown()).toEqual([]);
+        for (const name of ['Brush', 'Eraser', 'Eyedropper']) {
+            await user.click(tool(name));
+            expect(screen.getByRole('button', { name: /^Paint colour/ })).toHaveAttribute('aria-haspopup', 'menu');
+            expect(screen.getByRole('group', { name: 'Brush size' })).toBeInTheDocument();
+            expect(screen.getByRole('group', { name: 'Brush shape' })).toBeInTheDocument();
+        }
     });
 
     it('paints with bigger, round or square brushes', async () => {
@@ -178,7 +181,7 @@ describe('Touch up step', () => {
     it('picks the paint colour from a brick with the eyedropper, and stays on it like the other tools', async () => {
         const user = await startTouchUp();
         const m = map();
-        const eyedropper = () => tool('Eyedropper: pick a colour from the map');
+        const eyedropper = () => tool('Eyedropper');
         await paintWith(user, 'Black');
         m.click(4, 4);
         await paintWith(user, 'White');
@@ -227,26 +230,112 @@ describe('Touch up step', () => {
         expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('cleans up stray bricks, after saying how many will change', async () => {
+    it('cleans up stray bricks in one click, saying how many changed', async () => {
         const user = await startTouchUp();
-        await user.click(tool('Clean up stray bricks'));
-        expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
-        await user.keyboard('{Escape}');
+        await user.click(tool('Clean up single bricks'));
+        expect(screen.getByText('No stray bricks to clean up.')).toBeInTheDocument();
 
         await paintWith(user, 'Black');
         map().click(4, 4);
         expect(blackBricks()).toBe(1);
+        await user.click(tool('Clean up single bricks'));
+        expect(screen.getByText('Cleaned up 1 brick.')).toBeInTheDocument();
+        expect(blackBricks()).toBe(0);
 
-        await user.click(tool('Clean up stray bricks'));
-        expect(screen.getByText('1 brick would change.')).toBeInTheDocument();
-        await user.click(screen.getByRole('combobox', { name: 'Strays' }));
-        await user.click(screen.getByRole('option', { name: 'Single bricks and pairs' }));
-        await user.click(screen.getByRole('button', { name: 'Apply' }));
+        // pairs too
+        await user.click(tool('Undo'));
+        map().click(5, 4);
+        expect(blackBricks()).toBe(2);
+        await user.click(tool('Clean up single bricks'));
+        expect(screen.getByText('No stray bricks to clean up.')).toBeInTheDocument();
+        await user.click(tool('Clean up single bricks and pairs'));
+        expect(screen.getByText('Cleaned up 2 bricks.')).toBeInTheDocument();
         expect(blackBricks()).toBe(0);
 
         await user.click(tool('Undo'));
-        expect(blackBricks()).toBe(1);
+        expect(blackBricks()).toBe(2);
+    });
+
+    it('zooms with the control or Ctrl + wheel, and scrolls the zoomed map with Space or the middle button', async () => {
+        const user = await startTouchUp();
+        const frame = screen.getByTestId('map-frame');
+        const box = screen.getByTestId('map-scroll');
+        box.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        const zoom = () => Number(frame.dataset.zoom);
+        expect(screen.getByLabelText('Zoom level')).toHaveTextContent('100%');
+        expect(tool('Zoom out')).toBeDisabled();
+
+        await user.click(tool('Zoom in'));
+        expect(screen.getByLabelText('Zoom level')).toHaveTextContent('150%');
+        await user.click(tool('Zoom out'));
+        expect(zoom()).toBe(1);
+
+        // a plain wheel scrolls; Ctrl + wheel (or a trackpad pinch) zooms around the pointer
+        fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100 });
+        expect(zoom()).toBe(1);
+        fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100, ctrlKey: true });
+        expect(zoom()).toBeGreaterThan(1);
+        await user.click(tool('Fit to screen'));
+        expect(zoom()).toBe(1);
+
+        // Space and drag scrolls the map, without painting
+        await user.click(tool('Zoom in'));
+        box.scrollLeft = 100;
+        box.scrollTop = 50;
+        fireEvent.keyDown(window, { code: 'Space' });
+        fireEvent.pointerDown(box, { clientX: 100, clientY: 100, pointerId: 7, pointerType: 'mouse', button: 0 });
+        fireEvent.pointerMove(box, { clientX: 140, clientY: 120, pointerId: 7, pointerType: 'mouse' });
+        fireEvent.pointerUp(box, { pointerId: 7, pointerType: 'mouse' });
+        fireEvent.keyUp(window, { code: 'Space' });
+        expect([box.scrollLeft, box.scrollTop]).toEqual([60, 30]);
+        noneTouchedUp();
+
+        // so does a middle-button drag
+        fireEvent.pointerDown(box, { clientX: 140, clientY: 120, pointerId: 8, pointerType: 'mouse', button: 1 });
+        fireEvent.pointerMove(box, { clientX: 120, clientY: 110, pointerId: 8, pointerType: 'mouse' });
+        fireEvent.pointerUp(box, { pointerId: 8, pointerType: 'mouse' });
+        expect([box.scrollLeft, box.scrollTop]).toEqual([80, 40]);
+        noneTouchedUp();
+
+        // painting still lands on the brick under the pointer
+        map().click(4, 4);
+        expect(touchedUp(1)).toBeInTheDocument();
+    });
+
+    it('on touch: a tap or a drag paints, and two fingers pinch and pan without painting', async () => {
+        await startTouchUp();
+        const frame = screen.getByTestId('map-frame');
+        screen.getByTestId('map-scroll').getBoundingClientRect = () =>
+            ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        map(); // lays the canvas out at 10 px a brick
+        const touch = (id: number, x: number, y: number) => ({
+            clientX: x * 10 + 5,
+            clientY: y * 10 + 5,
+            pointerId: id,
+            pointerType: 'touch',
+        });
+        const canvas = screen.getByLabelText(/^Card map/);
+
+        // a finger down paints nothing yet: it might be the start of a pinch
+        fireEvent.pointerDown(canvas, touch(1, 4, 4));
+        noneTouchedUp();
+        fireEvent.pointerUp(canvas, touch(1, 4, 4));
+        expect(touchedUp(1)).toBeInTheDocument();
+
+        // a finger that moves paints from where it went down
+        fireEvent.pointerDown(canvas, touch(2, 6, 6));
+        fireEvent.pointerMove(canvas, touch(2, 7, 6));
+        fireEvent.pointerUp(canvas, touch(2, 7, 6));
+        expect(touchedUp(3)).toBeInTheDocument();
+
+        // two fingers spreading apart zoom in, and paint nothing
+        fireEvent.pointerDown(canvas, touch(3, 10, 10));
+        fireEvent.pointerDown(canvas, touch(4, 12, 10));
+        fireEvent.pointerMove(canvas, touch(4, 16, 10));
+        fireEvent.pointerUp(canvas, touch(4, 16, 10));
+        fireEvent.pointerUp(canvas, touch(3, 10, 10));
+        expect(Number(frame.dataset.zoom)).toBeGreaterThan(1);
+        expect(touchedUp(3)).toBeInTheDocument();
     });
 
     it('hides touch-ups made at another size until the size comes back, and says so on both steps', async () => {
