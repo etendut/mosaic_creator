@@ -162,11 +162,9 @@ describe('Bricks step', () => {
         expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
 
-    it('prints the map', async () => {
-        const user = await startMosaic();
-        await user.click(screen.getByRole('button', { name: 'Print map' }));
-        expect(window.print).toHaveBeenCalled();
-        // the printed page, hidden on screen
-        expect(screen.getByRole('list', { name: 'Colours used', hidden: true })).toBeInTheDocument();
+    it('leaves printing to the Print step', async () => {
+        await startMosaic();
+        expect(screen.queryByRole('button', { name: /^Print/ })).not.toBeInTheDocument();
+        expect(screen.getByText(/Your picture in bricks/)).toBeInTheDocument();
     });
 });

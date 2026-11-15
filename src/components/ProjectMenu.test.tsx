@@ -50,7 +50,7 @@ describe('Project menu', () => {
         const user = renderApp();
         await openProject(user, packProject({ settings, image: FAKE_PNG }));
         expect(await screen.findByText('Opened club.mosaic.zip.')).toBeInTheDocument();
-        expect(await screen.findByRole('heading', { name: 'Card map' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
         await goTo(user, 'Cards');
         expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Library Day');
     });
@@ -66,7 +66,7 @@ describe('Project menu', () => {
         const user = await startMosaic();
         await openProject(user, packProject({ settings, image: null }), 't.mosaic.zip');
         expect(await screen.findByText(/Your current image is kept/)).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Card map' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
     });
 
     it("refuses a file that isn't a project", async () => {
@@ -99,7 +99,7 @@ describe('Project menu', () => {
 
     it('closes the menu without doing anything', async () => {
         const user = renderApp();
-        await user.click(screen.getByRole('button', { name: 'Project' }));
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
         await user.keyboard('{Escape}');
         expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });

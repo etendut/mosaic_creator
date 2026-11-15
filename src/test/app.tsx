@@ -26,7 +26,7 @@ export const startMosaic = async () => {
     const user = renderApp();
     await chooseImage(user);
     await applyImage(user);
-    await screen.findByRole('heading', { name: 'Card map' });
+    await screen.findByRole('heading', { name: 'Bricks', level: 1 });
     return user;
 };
 
@@ -35,6 +35,6 @@ export const goTo = (user: User, step: 'Image' | 'Bricks' | 'Touch up' | 'Cards'
 
 /** Open the Project menu and pick an item by (part of) its label. */
 export const projectMenu = async (user: User, item: RegExp) => {
-    await user.click(screen.getByRole('button', { name: 'Project' }));
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
     await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: item }));
 };

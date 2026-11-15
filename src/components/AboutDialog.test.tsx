@@ -4,7 +4,7 @@ import { projectMenu, renderApp } from '../test/app';
 describe('About', () => {
     it('shows the version, the first 8 characters of the build commit, linked to that commit', async () => {
         const user = renderApp();
-        await user.click(screen.getByRole('button', { name: 'Project' }));
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
         expect(screen.getByRole('menuitem', { name: /About Version [0-9a-f]{8}$/ })).toBeInTheDocument();
         await user.keyboard('{Escape}');
 
