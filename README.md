@@ -33,6 +33,9 @@ npm run typecheck
 npm run build      # dist/index.html, a single self-contained file
 ```
 
+Interface changes follow the [style guide](docs/style-guide.md): the zones every step has, where actions and settings
+go, and how text reads.
+
 Pushes to `main` deploy to GitHub Pages through the `gh-pages` branch. Each pull request gets a preview at
 `https://etendut.github.io/mosaic_creator/pr-preview/pr-<number>/`, linked in a comment on the PR and removed when
 the PR closes. Previews share the live site's origin, so they see the same saved settings and image.
