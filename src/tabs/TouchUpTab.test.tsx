@@ -256,6 +256,85 @@ describe('Touch up step', () => {
         expect(blackBricks()).toBe(2);
     });
 
+    it('zooms with the control and the wheel, and pans with Space or the middle button', async () => {
+        const user = await startTouchUp();
+        const frame = screen.getByTestId('map-frame');
+        frame.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        const zoom = () => Number(frame.dataset.zoom);
+        const shift = () => frame.firstElementChild!.getAttribute('class');
+        expect(screen.getByLabelText('Zoom level')).toHaveTextContent('100%');
+        expect(tool('Zoom out')).toBeDisabled();
+
+        await user.click(tool('Zoom in'));
+        expect(screen.getByLabelText('Zoom level')).toHaveTextContent('150%');
+        await user.click(tool('Fit to screen'));
+        expect(zoom()).toBe(1);
+
+        // the wheel zooms around the pointer
+        fireEvent.wheel(frame, { deltaY: -500, clientX: 160, clientY: 100 });
+        expect(zoom()).toBeGreaterThan(1);
+        fireEvent.wheel(frame, { deltaY: 5000, clientX: 160, clientY: 100 });
+        expect(zoom()).toBe(1);
+
+        // Space and drag pans, without painting
+        await user.click(tool('Zoom in'));
+        const before = shift();
+        fireEvent.keyDown(window, { code: 'Space' });
+        fireEvent.pointerDown(frame, { clientX: 100, clientY: 100, pointerId: 7, pointerType: 'mouse', button: 0 });
+        fireEvent.pointerMove(frame, { clientX: 140, clientY: 120, pointerId: 7, pointerType: 'mouse' });
+        fireEvent.pointerUp(frame, { pointerId: 7, pointerType: 'mouse' });
+        fireEvent.keyUp(window, { code: 'Space' });
+        expect(shift()).not.toBe(before);
+        noneTouchedUp();
+
+        // so does a middle-button drag
+        const after = shift();
+        fireEvent.pointerDown(frame, { clientX: 140, clientY: 120, pointerId: 8, pointerType: 'mouse', button: 1 });
+        fireEvent.pointerMove(frame, { clientX: 100, clientY: 90, pointerId: 8, pointerType: 'mouse' });
+        fireEvent.pointerUp(frame, { pointerId: 8, pointerType: 'mouse' });
+        expect(shift()).not.toBe(after);
+        noneTouchedUp();
+
+        // painting still lands on the brick under the pointer
+        map().click(4, 4);
+        expect(touchedUp(1)).toBeInTheDocument();
+    });
+
+    it('on touch: a tap or a drag paints, and two fingers pinch and pan without painting', async () => {
+        await startTouchUp();
+        const frame = screen.getByTestId('map-frame');
+        frame.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        map(); // lays the canvas out at 10 px a brick
+        const touch = (id: number, x: number, y: number) => ({
+            clientX: x * 10 + 5,
+            clientY: y * 10 + 5,
+            pointerId: id,
+            pointerType: 'touch',
+        });
+        const canvas = screen.getByLabelText(/^Card map/);
+
+        // a finger down paints nothing yet: it might be the start of a pinch
+        fireEvent.pointerDown(canvas, touch(1, 4, 4));
+        noneTouchedUp();
+        fireEvent.pointerUp(canvas, touch(1, 4, 4));
+        expect(touchedUp(1)).toBeInTheDocument();
+
+        // a finger that moves paints from where it went down
+        fireEvent.pointerDown(canvas, touch(2, 6, 6));
+        fireEvent.pointerMove(canvas, touch(2, 7, 6));
+        fireEvent.pointerUp(canvas, touch(2, 7, 6));
+        expect(touchedUp(3)).toBeInTheDocument();
+
+        // two fingers spreading apart zoom in, and paint nothing
+        fireEvent.pointerDown(canvas, touch(3, 10, 10));
+        fireEvent.pointerDown(canvas, touch(4, 12, 10));
+        fireEvent.pointerMove(canvas, touch(4, 16, 10));
+        fireEvent.pointerUp(canvas, touch(4, 16, 10));
+        fireEvent.pointerUp(canvas, touch(3, 10, 10));
+        expect(Number(frame.dataset.zoom)).toBeGreaterThan(1);
+        expect(touchedUp(3)).toBeInTheDocument();
+    });
+
     it('hides touch-ups made at another size until the size comes back, and says so on both steps', async () => {
         const user = await startTouchUp();
         await user.click(tool('Eraser'));

@@ -88,6 +88,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 <MosaicPreview
                     mosaic={mosaic}
                     fill
+                    zoomable
                     tool={brushFor(state)}
                     showGrid={state.before ? mosaic.untouchedGrid : null}
                     // the eyedropper takes the brick's colour for the brush and stays on, like the other tools

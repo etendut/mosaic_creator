@@ -82,6 +82,9 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
   palette (colour ▾, size, shape; always in view), clean-up (one icon button per strength), and clear all. On desktop
   it's one Tools section in the column; on a phone the palette is a strip above an icons-only bottom bar, with the
   names read out. A tool is on from the start, so there's no View tool.
+- **A canvas you edit zooms and pans**, as in a photo editor: pinch and two-finger drag on touch screens; the wheel
+  (around the pointer), and Space or middle-button drags, with a mouse; and a small zoom control in the canvas's
+  corner (− · % · + · fit). One finger still paints: it waits until it moves or lifts, so a pinch never paints.
 
 ### Empty states
 
