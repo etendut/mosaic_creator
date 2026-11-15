@@ -60,6 +60,8 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
     const [hover, setHover] = useState<Point | null>(null);
     const [zoom, setZoom] = useState(1);
     const [box, setBox] = useState({ width: 0, height: 0 });
+    // where the box starts on the page, so it can fill exactly from there to the bottom of the window
+    const [top, setTop] = useState(0);
     const [spaceHeld, setSpaceHeld] = useState(false);
     // during a drag: the last brick the pointer was over, and whether this drag has changed anything yet (its first
     // change starts a new undo step, the rest join it)
@@ -102,16 +104,24 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
         });
     }, [grid, brick.isRound, plate.color.hex, cellsPerSide, cellPx]);
 
-    // the box's size, for fitting the map to it (and again when the window changes)
+    // the box's size, for fitting the map to it, and where it starts on the page; again whenever the window or the
+    // page's layout changes (a status line that wraps, say)
     const measure = useCallback((el: HTMLDivElement | null) => {
         scrollRef.current = el;
         if (!el) return;
-        const update = () => setBox({ width: el.offsetWidth, height: el.offsetHeight });
+        const update = () => {
+            setBox({ width: el.offsetWidth, height: el.offsetHeight });
+            setTop(Math.round(el.getBoundingClientRect().top + window.scrollY));
+        };
         update();
-        if (typeof ResizeObserver === 'undefined') return;
-        const observer = new ResizeObserver(update);
-        observer.observe(el);
-        return () => observer.disconnect();
+        window.addEventListener('resize', update);
+        const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+        observer?.observe(el);
+        observer?.observe(document.body);
+        return () => {
+            window.removeEventListener('resize', update);
+            observer?.disconnect();
+        };
     }, []);
 
     useEffect(() => {
@@ -372,8 +382,9 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
                 sx={{
                     display: 'flex',
                     overflow: 'auto',
-                    // fill the space between the status line and the bottom of the window (or the phone's tools)
-                    height: { xs: 'calc(100dvh - 345px)', md: 'calc(100dvh - 140px)' },
+                    // fill the window from here down to what the layout keeps at the bottom (padding, or the phone's
+                    // tools), so the page itself never scrolls
+                    height: `calc(100dvh - ${top}px - var(--bottom-reserve, 16px))`,
                     minHeight: 240,
                     // a finger drag paints, pinches or pans the map instead of scrolling the page
                     touchAction: 'none',

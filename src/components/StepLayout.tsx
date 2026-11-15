@@ -124,6 +124,8 @@ const StepLayout = ({
         return (
             <Box
                 sx={{
+                    // a canvas that fills the window stops this far from its bottom (the grid's padding)
+                    '--bottom-reserve': '16px',
                     display: 'grid',
                     gridTemplateColumns: desktopGroups.length || action ? '340px minmax(0, 1fr)' : 'minmax(0, 1fr)',
                     gap: 2,
@@ -162,7 +164,14 @@ const StepLayout = ({
         );
 
     return (
-        <Box sx={{ padding: 1, paddingBottom: `${bottomPx + 8}px` }}>
+        <Box
+            sx={{
+                padding: 1,
+                paddingBottom: `${bottomPx + 8}px`,
+                // a canvas that fills the window stops above the phone's tools
+                '--bottom-reserve': `${bottomPx + 8}px`,
+            }}
+        >
             {result}
             {(phoneGroups.length > 0 || action || phoneStrip) && (
                 <Stack

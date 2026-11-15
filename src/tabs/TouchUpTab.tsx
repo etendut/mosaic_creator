@@ -84,7 +84,8 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
             phoneStrip={palette}
             iconOnlyBar
         >
-            <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
+            {/* no padding: the map's own scrolling box is the canvas area, filling down to the window's bottom */}
+            <Stage sx={{ padding: { xs: 0, sm: 0 } }}>
                 <MosaicPreview
                     mosaic={mosaic}
                     zoomable
