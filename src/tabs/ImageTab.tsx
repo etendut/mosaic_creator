@@ -201,10 +201,6 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
             )}
             <StepLayout
                 alerts={error && <Alert severity="error">{error}</Alert>}
-                status={
-                    displayUrl &&
-                    'Frame the part of the picture you want in the mosaic. Drag to move it; scroll or pinch to zoom.'
-                }
                 groups={groups}
                 info={flipped ? [['Picture', `${flipped.width} × ${flipped.height} px`]] : []}
             >

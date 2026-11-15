@@ -1,5 +1,6 @@
 import AspectRatioIcon from '@mui/icons-material/AspectRatio';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import InvertColorsIcon from '@mui/icons-material/InvertColors';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import { Alert, Slider, Stack, TextField, Typography } from '@mui/material';
@@ -8,7 +9,7 @@ import MosaicPreview from '../components/MosaicPreview';
 import PaletteEditor from '../components/PaletteEditor';
 import { BrickPicker, PlatePicker } from '../components/PartPickers';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
-import { Stage, Tray } from '../components/Tray';
+import { Stage } from '../components/Tray';
 import { mosaicFacts, type Fact } from '../mosaic/facts';
 import { colorsUsed } from '../mosaic/partsList';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
@@ -69,6 +70,14 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
             ),
         },
         { id: 'colours', label: 'Colours', icon: <PaletteIcon />, content: <PaletteEditor mosaic={mosaic} /> },
+        // what the mosaic ended up using, with swapping: a tool, so it's with the others
+        {
+            id: 'used',
+            label: 'Used',
+            title: 'Colours used',
+            icon: <InvertColorsIcon />,
+            content: <ColorsUsed mosaic={mosaic} />,
+        },
     ];
 
     return (
@@ -81,12 +90,6 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                         mosaic. They show again when you go back to that size.
                     </Alert>
                 )
-            }
-            status="Your picture in bricks. Each square is one card, built on one plate."
-            facts={
-                <Tray>
-                    <ColorsUsed mosaic={mosaic} />
-                </Tray>
             }
             groups={groups}
             info={[

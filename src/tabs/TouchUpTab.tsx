@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { Palette, ToolRow } from '../components/TouchUp';
-import { touchUpActions, touchUpHint, type TouchUpAction } from '../components/touchUpTools';
+import { touchUpActions, type TouchUpAction } from '../components/touchUpTools';
 import { Stage } from '../components/Tray';
 import { colorsUsed } from '../mosaic/partsList';
 import { brushFor, DEFAULT_TOUCH_UP, type TouchUpState } from '../mosaic/touchUp';
@@ -65,8 +65,6 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
         ...asGroups(clearing, true),
     ];
 
-    const status = message ?? touchUpHint(state);
-
     return (
         <StepLayout
             alerts={
@@ -77,7 +75,8 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            status={status}
+            // only a brief message after clean-up or clearing; the pressed tool says what a click does
+            status={message}
             info={[
                 ['Touched up', mosaic.hiddenTouchUps ? 'Hidden at this size' : bricks(touched)],
                 ['Bricks', mosaic.cards.reduce((n, c) => n + c.brickCount, 0).toLocaleString()],

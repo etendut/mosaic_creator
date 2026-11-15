@@ -119,7 +119,6 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            status="The parts to build the mosaic, ready to order with a BrickLink wanted list."
             info={[
                 ['Parts', total.toLocaleString()],
                 ['Lots', parts.length.toLocaleString()],

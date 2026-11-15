@@ -76,7 +76,6 @@ describe('Touch up step', () => {
         expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
         // the brush is on from the start
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/^Click or drag on the map to make bricks/)).toBeInTheDocument();
     });
 
     it('is where touch-ups are made; the Bricks step shows them on its map and says how many', async () => {
@@ -97,7 +96,7 @@ describe('Touch up step', () => {
         const m = map();
         await paintWith(user, 'Black');
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/make bricks Black/)).toBeInTheDocument();
+        expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
         m.click(4, 4);
         touchedUp(1);
         // the painted brick is saved with the settings
@@ -160,7 +159,7 @@ describe('Touch up step', () => {
         const user = await startTouchUp();
         const m = map();
         await user.click(tool('Eraser'));
-        expect(screen.getByText(/remove bricks/)).toBeInTheDocument();
+        expect(tool('Eraser')).toHaveAttribute('aria-pressed', 'true');
         m.click(2, 2);
         m.click(2, 3);
         touchedUp(2);
@@ -189,13 +188,12 @@ describe('Touch up step', () => {
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: White');
 
         await user.click(eyedropper());
-        expect(screen.getByText(/use its colour for the brush\. Picked: White/)).toBeInTheDocument();
+        expect(tool('Eyedropper')).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByLabelText(/pick its colour/)).toBeInTheDocument();
         m.move(4, 4, 'mouse');
         expect(screen.getByTestId('brush-outline')).toHaveStyle({ width: `${(1 / 32) * 100}%` });
         m.click(4, 4);
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
-        expect(screen.getByText(/Picked: Black/)).toBeInTheDocument();
         expect(eyedropper()).toHaveAttribute('aria-pressed', 'true');
         // picking doesn't change any bricks
         touchedUp(1);
@@ -222,7 +220,6 @@ describe('Touch up step', () => {
 
         await user.click(tool('Before / after'));
         expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/Showing the mosaic before touch-ups/)).toBeInTheDocument();
         map().click(8, 8);
         touchedUp(1);
 

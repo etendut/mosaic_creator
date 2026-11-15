@@ -165,7 +165,6 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <StepLayout
-            status={`Card ${firstCard?.id} as it prints.`}
             groups={groups}
             info={[
                 ['Cards', cards.length.toLocaleString()],

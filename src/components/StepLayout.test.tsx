@@ -34,7 +34,7 @@ describe('Steps on a phone', () => {
             tools()
                 .getAllByRole('button')
                 .map((b) => b.textContent),
-        ).toEqual(['Plate', 'Brick', 'Size', 'Colours', 'Info']);
+        ).toEqual(['Plate', 'Brick', 'Size', 'Colours', 'Used', 'Info']);
         // nothing open: the canvas has the screen
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
         expect(screen.queryByRole('complementary', { name: 'Tools' })).not.toBeInTheDocument();

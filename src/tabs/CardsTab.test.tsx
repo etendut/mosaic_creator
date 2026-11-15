@@ -5,7 +5,7 @@ describe('Cards step', () => {
     it('previews the first card with the card text', async () => {
         const user = await startMosaic();
         await goTo(user, 'Cards');
-        expect(screen.getByText(/Card A1 as it prints/)).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'Card A1' })).toBeInTheDocument();
 
         // pasted rather than typed: each keystroke redraws the card, which is slow under coverage
         const title = screen.getByRole('textbox', { name: 'Title' });

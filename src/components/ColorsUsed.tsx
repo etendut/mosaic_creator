@@ -19,14 +19,14 @@ const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <Box>
-            <Typography variant="body2" sx={{ paddingBottom: 1 }}>
-                {used.length} colours used
-                <Box component="span" sx={{ color: 'text.secondary' }}>
-                    {' '}
-                    (click one to swap it for another colour)
-                </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ paddingBottom: 1 }}>
+                Click a colour to build it in a different colour instead.
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, paddingBottom: 1 }}>
+            <Box
+                role="group"
+                aria-label="Colours used"
+                sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, paddingBottom: 1 }}
+            >
                 {used.map((line) => (
                     <Stack key={line.color.id} sx={{ alignItems: 'center' }}>
                         <ColorSwatch
