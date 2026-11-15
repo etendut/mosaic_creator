@@ -23,8 +23,8 @@ const map = () => {
     };
 };
 
-const toolbar = () => within(screen.getByRole('toolbar', { name: 'Touch up' }));
-const tool = (name: string | RegExp) => toolbar().getByRole('button', { name });
+/** A tool or action by name: the tools are in the left column, undo, redo and before/after in the app bar. */
+const tool = (name: string | RegExp) => screen.getByRole('button', { name });
 /** Bricks touched up to black (BrickLink 11), from the saved touch-ups. */
 const blackBricks = (): number =>
     (JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps?.edits ?? []).filter(
@@ -40,8 +40,7 @@ const paintWith = async (user: User, name: string) => {
 };
 
 const brush = async (user: User, size: number, shape: 'Round' | 'Square') => {
-    await user.click(toolbar().getByRole('combobox', { name: 'Brush size' }));
-    await user.click(screen.getByRole('option', { name: `${size} × ${size}` }));
+    await user.click(tool(`${size} × ${size}`));
     await user.click(tool(`${shape} brush`));
 };
 
@@ -117,9 +116,9 @@ describe('Touch up step', () => {
     it('shows the colour and brush options only for the tools that use them', async () => {
         const user = await startTouchUp();
         const options = () => ({
-            color: toolbar().queryByRole('button', { name: /^Paint colour/ }),
-            size: toolbar().queryByRole('combobox', { name: 'Brush size' }),
-            shape: toolbar().queryByRole('group', { name: 'Brush shape' }),
+            color: screen.queryByRole('button', { name: /^Paint colour/ }),
+            size: screen.queryByRole('group', { name: 'Brush size' }),
+            shape: screen.queryByRole('group', { name: 'Brush shape' }),
         });
         const shown = () => Object.entries(options()).flatMap(([name, el]) => (el ? [name] : []));
 
@@ -128,7 +127,7 @@ describe('Touch up step', () => {
         expect(shown()).toEqual(['color', 'size', 'shape']);
         await user.click(tool('Eraser'));
         expect(shown()).toEqual(['size', 'shape']);
-        await user.click(tool('Eyedropper: pick a colour from the map'));
+        await user.click(tool('Eyedropper'));
         expect(shown()).toEqual(['color']);
         await user.click(tool('View'));
         expect(shown()).toEqual([]);
@@ -178,7 +177,7 @@ describe('Touch up step', () => {
     it('picks the paint colour from a brick with the eyedropper, and stays on it like the other tools', async () => {
         const user = await startTouchUp();
         const m = map();
-        const eyedropper = () => tool('Eyedropper: pick a colour from the map');
+        const eyedropper = () => tool('Eyedropper');
         await paintWith(user, 'Black');
         m.click(4, 4);
         await paintWith(user, 'White');
@@ -229,21 +228,18 @@ describe('Touch up step', () => {
 
     it('cleans up stray bricks, after saying how many will change', async () => {
         const user = await startTouchUp();
-        await user.click(tool('Clean up stray bricks'));
         expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
-        await user.keyboard('{Escape}');
+        expect(tool('Apply')).toBeDisabled();
 
         await paintWith(user, 'Black');
         map().click(4, 4);
         expect(blackBricks()).toBe(1);
-
-        await user.click(tool('Clean up stray bricks'));
         expect(screen.getByText('1 brick would change.')).toBeInTheDocument();
-        await user.click(screen.getByRole('combobox', { name: 'Strays' }));
-        await user.click(screen.getByRole('option', { name: 'Single bricks and pairs' }));
-        await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+        await user.click(screen.getByRole('radio', { name: 'Single bricks and pairs' }));
+        await user.click(tool('Apply'));
         expect(blackBricks()).toBe(0);
+        expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
 
         await user.click(tool('Undo'));
         expect(blackBricks()).toBe(1);

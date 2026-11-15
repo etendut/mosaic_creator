@@ -84,6 +84,44 @@ describe('Steps on a phone', () => {
         expect(screen.getByRole('button', { name: 'Print map page' })).toBeInTheDocument();
     });
 
+    it('puts Touch up’s tools in the bottom bar, their options above it, and clearing in the menu', async () => {
+        const user = await startMosaic();
+        await goTo(user, 'Touch up');
+        expect(
+            tools()
+                .getAllByRole('button')
+                .map((b) => b.textContent),
+        ).toEqual(['View', 'Brush', 'Eraser', 'Eyedropper', 'Clean up']);
+        // undo, redo and before/after in the app bar
+        const bar = within(screen.getByRole('banner'));
+        expect(bar.getByRole('button', { name: 'Undo' })).toBeDisabled();
+        expect(bar.getByRole('button', { name: 'Before / after' })).toBeInTheDocument();
+
+        // a tool switches on; its options show above the bar
+        expect(screen.queryByRole('group', { name: 'Brush size' })).not.toBeInTheDocument();
+        await user.click(tools().getByRole('button', { name: 'Brush' }));
+        expect(tools().getByRole('button', { name: 'Brush' })).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByRole('group', { name: 'Brush size' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^Paint colour/ })).toBeInTheDocument();
+        await user.click(tools().getByRole('button', { name: 'View' }));
+        expect(screen.queryByRole('group', { name: 'Brush size' })).not.toBeInTheDocument();
+
+        // clean-up opens its panel
+        await user.click(tools().getByRole('button', { name: 'Clean up' }));
+        expect(screen.getByRole('region', { name: 'Clean up stray bricks' })).toBeInTheDocument();
+
+        // after a touch-up, clearing is in the menu, and undo comes back
+        await user.click(tools().getByRole('button', { name: 'Eraser' }));
+        const canvas = screen.getByLabelText(/^Card map/);
+        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
+        fireEvent.pointerDown(canvas, { clientX: 15, clientY: 15, pointerId: 1 });
+        fireEvent.pointerUp(canvas);
+        expect(bar.getByRole('button', { name: 'Undo' })).toBeEnabled();
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
+        await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: /^Clear all touch-ups/ }));
+        expect(screen.getByText(/^Click or drag on the map to remove bricks\.$/)).toBeInTheDocument();
+    });
+
     it("shows the step's name and main action in the app bar", async () => {
         const user = renderApp();
         expect(screen.getByRole('heading', { name: 'Image', level: 1 })).toBeInTheDocument();

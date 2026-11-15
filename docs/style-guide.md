@@ -77,9 +77,11 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
   it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page, after a map page.") and any note about
   it. On desktop it's the last block of the column, and on a phone a strip just above the tool bar, so it's one tap
   away. It's the step's main action, so the app bar has none.
-- **Steps that edit the canvas directly** (Touch up) use the same zone for their tools: a bottom bar of tools on a
-  phone, and a vertical tool rail on desktop. The current tool's options show in the panel above the bar (phone) or
-  under the rail (desktop).
+- **Steps that edit the canvas directly** (Touch up) use the same zone for their tools, like a photo editor: the
+  tools (View, Brush, Eraser, Eyedropper, Clean up) are the bottom bar on a phone and a tool list at the top of the
+  column on desktop. The current tool's options (colour, size, shape) show in a strip just above the bar (phone) or
+  in the section under the tool list (desktop), and only for the tools that use them. Undo, redo and before/after sit
+  in the app bar, in place of a main action.
 
 ### Empty states
 
@@ -110,8 +112,9 @@ The fix is to split it into two steps, as Bricks and Touch up were split. Don't 
 - An action is named by what happens ("Print cards", not "Submit"). It keeps the same name everywhere: the button,
   the status line and any message after it.
 - Each action lives in one place only. Printing is on the Print step only.
-- Tool bars follow a photo editor's layout: tools first, then fixed actions (clean-up, undo, redo, before/after,
-  clear). The current tool's options show only for the tools that use them. The fixed buttons never move.
+- Editing tools follow a photo editor's layout: the tools in the tools zone, history (undo, redo, before/after) in the
+  app bar, and destructive extras (clear all) in the tools column on desktop and ☰ on a phone. The current tool's
+  options show only for the tools that use them, and the fixed buttons never move.
 
 ## Text
 
@@ -170,7 +173,7 @@ line. On a phone, tool groups move from below the canvas into the bottom bar and
 |---|---|---|---|
 | Image | Use this image | Frame, Adjust | The empty-state card stays. |
 | Bricks | none (*Print map* goes; printing is on Print only) | Plate, Brick, Size, Colours | |
-| Touch up | none | Brush, Eraser, Eyedropper, then clean-up, undo/redo, before/after, clear | The toolbar becomes the bottom bar (phone) and a left rail (desktop). Its icon buttons are about 30 px; make them 40 px on touch screens. |
+| Touch up | none (undo, redo, before/after in the app bar) | View, Brush, Eraser, Eyedropper, Clean up | Done: tools in the bottom bar (phone) and a tool list (desktop), options above the bar or under the list, 40 px tap targets. |
 | Cards | none | Size, Text, Colour | |
 | Parts | Download BrickLink XML | Spares | Spares moves out of the page header into the tools zone. *Copy XML* is the secondary action. |
 | Print | none in the app bar; *Print cards* ends the tools, with its summary above it | Paper, Pages (map page, batches) | Paper, Map page and batches move out of the page header into the tools zone. |

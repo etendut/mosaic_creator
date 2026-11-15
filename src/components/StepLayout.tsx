@@ -17,7 +17,13 @@ export interface ToolGroup {
     /** A longer heading for the group's settings, if the short name isn't enough (defaults to the label). */
     title?: string;
     icon: ReactNode;
-    content: ReactNode;
+    /** Its settings: a section of the desktop column, and a panel on a phone. */
+    content?: ReactNode;
+    /** For a tool that's a mode (the brush): pressing it in the phone bar switches to it instead of opening a panel. */
+    onPress?: () => void;
+    pressed?: boolean;
+    /** Show the group on one layout only. */
+    only?: 'phone' | 'desktop';
 }
 
 interface StepLayoutProps {
@@ -34,6 +40,8 @@ interface StepLayoutProps {
      * desktop it ends the tools column; on a phone it sits just above the tool bar.
      */
     action?: ReactNode;
+    /** On a phone, a strip just above the tool bar for the current tool's options (brush size, colour). */
+    phoneStrip?: ReactNode;
     /** The canvas: the photo, map, card, pages or table. */
     children: ReactNode;
 }
@@ -57,13 +65,15 @@ export const ControlSection = ({ title, children }: { title: string; children: R
  * facts above it, and the tools beside it. On desktop the tool groups are a column on the left, all open. On a phone
  * they're a bar along the bottom; tapping a group opens its settings in a panel above the bar.
  */
-const StepLayout = ({ alerts, status, facts, groups = [], action, children }: StepLayoutProps) => {
+const StepLayout = ({ alerts, status, facts, groups = [], action, phoneStrip, children }: StepLayoutProps) => {
+    const desktopGroups = groups.filter((g) => g.only !== 'phone' && g.content);
+    const phoneGroups = groups.filter((g) => g.only !== 'desktop');
     const theme = useTheme();
     // without media queries (tests) the desktop layout is used
     const desktop = useMediaQuery(theme.breakpoints.up('md'), { defaultMatches: true, noSsr: true });
     const [open, setOpen] = useState<string | null>(null);
     const panelId = useId();
-    const openGroup = groups.find((g) => g.id === open);
+    const openGroup = phoneGroups.find((g) => g.id === open && g.content);
     // on a phone: how much of the screen bottom the tool bar and the action strip cover
     const [bottomPx, setBottomPx] = useState(0);
     const measureBottom = useCallback((element: HTMLElement | null) => {
@@ -96,14 +106,14 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, children }: St
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: groups.length || action ? '340px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+                    gridTemplateColumns: desktopGroups.length || action ? '340px minmax(0, 1fr)' : 'minmax(0, 1fr)',
                     gap: 2,
                     padding: 2,
                     alignItems: 'start',
                     '@media print': { display: 'block', padding: 0 },
                 }}
             >
-                {(groups.length > 0 || action) && (
+                {(desktopGroups.length > 0 || action) && (
                     <Tray
                         component="aside"
                         aria-label="Tools"
@@ -116,7 +126,7 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, children }: St
                             displayPrint: 'none',
                         }}
                     >
-                        {groups.map((g) => (
+                        {desktopGroups.map((g) => (
                             <ControlSection key={g.id} title={g.title ?? g.label}>
                                 {g.content}
                             </ControlSection>
@@ -135,7 +145,7 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, children }: St
     return (
         <Box sx={{ padding: 1, paddingBottom: `${bottomPx + 8}px` }}>
             {result}
-            {(groups.length > 0 || action) && (
+            {(phoneGroups.length > 0 || action || phoneStrip) && (
                 <Stack
                     ref={measureBottom}
                     sx={{ position: 'fixed', insetInline: 0, bottom: 0, zIndex: 20, displayPrint: 'none' }}
@@ -169,6 +179,17 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, children }: St
                             </Stack>
                         </Paper>
                     )}
+                    {phoneStrip && (
+                        <Box
+                            sx={{
+                                padding: 1,
+                                backgroundColor: tokens.tray,
+                                borderTop: `1px solid ${tokens.groove}`,
+                            }}
+                        >
+                            {phoneStrip}
+                        </Box>
+                    )}
                     {action && (
                         <Stack
                             spacing={1}
@@ -181,7 +202,7 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, children }: St
                             {action}
                         </Stack>
                     )}
-                    {groups.length > 0 && (
+                    {phoneGroups.length > 0 && (
                         <Box
                             role="toolbar"
                             aria-label="Tools"
@@ -192,14 +213,21 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, children }: St
                                 borderTop: `1px solid ${tokens.groove}`,
                             }}
                         >
-                            {groups.map((g) => {
-                                const selected = g.id === open;
+                            {phoneGroups.map((g) => {
+                                // a mode switches on; a group with settings opens its panel
+                                const selected = g.onPress ? !!g.pressed : g.id === open;
                                 return (
                                     <ButtonBase
                                         key={g.id}
-                                        aria-expanded={selected}
-                                        aria-controls={selected ? panelId : undefined}
-                                        onClick={() => setOpen(selected ? null : g.id)}
+                                        aria-pressed={g.onPress ? selected : undefined}
+                                        aria-expanded={g.onPress ? undefined : selected}
+                                        aria-controls={!g.onPress && selected ? panelId : undefined}
+                                        onClick={() => {
+                                            if (g.onPress) {
+                                                g.onPress();
+                                                setOpen(null);
+                                            } else setOpen(selected ? null : g.id);
+                                        }}
                                         sx={{
                                             flex: 1,
                                             flexDirection: 'column',
