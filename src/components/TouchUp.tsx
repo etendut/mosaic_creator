@@ -243,11 +243,11 @@ const BarButton = ({
     </Tooltip>
 );
 
-/** In the app bar, like a photo editor's: undo, redo, and before/after. */
+/** Undo, redo, and before/after, with the tools (on phones they're in the bottom bar instead). */
 export const HistoryActions = ({ mosaic, state, onChange }: ToolProps) => {
     const touched = mosaic.touchUps?.edits.length ?? 0;
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
             <BarButton label="Undo" onClick={mosaic.undo} disabled={!mosaic.canUndo}>
                 <UndoIcon />
             </BarButton>

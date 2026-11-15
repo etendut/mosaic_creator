@@ -91,11 +91,12 @@ describe('Steps on a phone', () => {
             tools()
                 .getAllByRole('button')
                 .map((b) => b.textContent),
-        ).toEqual(['View', 'Brush', 'Eraser', 'Eyedropper', 'Clean up']);
-        // undo, redo and before/after in the app bar
-        const bar = within(screen.getByRole('banner'));
-        expect(bar.getByRole('button', { name: 'Undo' })).toBeDisabled();
-        expect(bar.getByRole('button', { name: 'Before / after' })).toBeInTheDocument();
+        ).toEqual(['View', 'Brush', 'Erase', 'Pick', 'Clean', 'Undo', 'Redo', 'Compare']);
+        // short labels in the bar, full names for screen readers; undo, redo and before/after in the bar too
+        expect(tools().getByRole('button', { name: 'Eyedropper' })).toBeInTheDocument();
+        expect(tools().getByRole('button', { name: 'Undo' })).toBeDisabled();
+        expect(tools().getByRole('button', { name: 'Before / after' })).toBeDisabled();
+        expect(within(screen.getByRole('banner')).queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
 
         // a tool switches on; its options show above the bar
         expect(screen.queryByRole('group', { name: 'Brush size' })).not.toBeInTheDocument();
@@ -116,7 +117,11 @@ describe('Steps on a phone', () => {
         canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
         fireEvent.pointerDown(canvas, { clientX: 15, clientY: 15, pointerId: 1 });
         fireEvent.pointerUp(canvas);
-        expect(bar.getByRole('button', { name: 'Undo' })).toBeEnabled();
+        expect(tools().getByRole('button', { name: 'Undo' })).toBeEnabled();
+        await user.click(tools().getByRole('button', { name: 'Before / after' }));
+        expect(tools().getByRole('button', { name: 'Before / after' })).toHaveAttribute('aria-pressed', 'true');
+        await user.click(tools().getByRole('button', { name: 'Undo' }));
+        await user.click(tools().getByRole('button', { name: 'Redo' }));
         await user.click(screen.getByRole('button', { name: 'Menu' }));
         await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: /^Clear all touch-ups/ }));
         expect(screen.getByText(/^Click or drag on the map to remove bricks\.$/)).toBeInTheDocument();

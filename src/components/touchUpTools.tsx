@@ -12,11 +12,11 @@ const EraserIcon = createSvgIcon(
 );
 
 /** The tools that are modes: what a click on the map does. */
-export const TOOLS: { mode: TouchUpMode; label: string; icon: ReactNode }[] = [
+export const TOOLS: { mode: TouchUpMode; label: string; shortLabel?: string; icon: ReactNode }[] = [
     { mode: 'view', label: 'View', icon: <PanToolIcon /> },
     { mode: 'paint', label: 'Brush', icon: <BrushIcon /> },
-    { mode: 'erase', label: 'Eraser', icon: <EraserIcon /> },
-    { mode: 'pick', label: 'Eyedropper', icon: <ColorizeIcon /> },
+    { mode: 'erase', label: 'Eraser', shortLabel: 'Erase', icon: <EraserIcon /> },
+    { mode: 'pick', label: 'Eyedropper', shortLabel: 'Pick', icon: <ColorizeIcon /> },
 ];
 
 /** The paint colour matters to the brush and the eyedropper. */

@@ -19,9 +19,17 @@ export interface ToolGroup {
     icon: ReactNode;
     /** Its settings: a section of the desktop column, and a panel on a phone. */
     content?: ReactNode;
-    /** For a tool that's a mode (the brush): pressing it in the phone bar switches to it instead of opening a panel. */
+    /**
+     * For a tool or action in the phone bar: pressing it calls this instead of opening a panel. A mode (the brush)
+     * also says whether it's on; an action (undo) leaves `pressed` out.
+     */
     onPress?: () => void;
     pressed?: boolean;
+    disabled?: boolean;
+    /** A shorter name for the phone bar when space is tight; the full label is still read out. */
+    shortLabel?: string;
+    /** Start a new set in the phone bar, after a divider. */
+    divider?: boolean;
     /** Show the group on one layout only. */
     only?: 'phone' | 'desktop';
 }
@@ -214,12 +222,14 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, phoneStrip, ch
                             }}
                         >
                             {phoneGroups.map((g) => {
-                                // a mode switches on; a group with settings opens its panel
+                                // a mode switches on, an action just runs, and a group with settings opens its panel
                                 const selected = g.onPress ? !!g.pressed : g.id === open;
                                 return (
                                     <ButtonBase
                                         key={g.id}
-                                        aria-pressed={g.onPress ? selected : undefined}
+                                        aria-label={g.shortLabel ? g.label : undefined}
+                                        disabled={g.disabled}
+                                        aria-pressed={g.onPress && g.pressed !== undefined ? selected : undefined}
                                         aria-expanded={g.onPress ? undefined : selected}
                                         aria-controls={!g.onPress && selected ? panelId : undefined}
                                         onClick={() => {
@@ -230,16 +240,19 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, phoneStrip, ch
                                         }}
                                         sx={{
                                             flex: 1,
+                                            minWidth: 0,
                                             flexDirection: 'column',
                                             gap: 0.25,
                                             fontSize: 12,
+                                            borderLeft: g.divider ? `1px solid ${tokens.groove}` : undefined,
+                                            '&.Mui-disabled': { opacity: 0.35 },
                                             color: selected ? tokens.azure : tokens.muted,
                                             fontWeight: selected ? 500 : 400,
                                             borderTop: `3px solid ${selected ? tokens.azure : 'transparent'}`,
                                         }}
                                     >
                                         {g.icon}
-                                        {g.label}
+                                        {g.shortLabel ?? g.label}
                                     </ButtonBase>
                                 );
                             })}
