@@ -1,23 +1,12 @@
 import { Box, Typography } from '@mui/material';
-import { formatLength, studsToMm } from '../mosaic/units';
+import { mosaicFacts } from '../mosaic/facts';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
 
 /** The numbers an organiser plans around, as one quiet row. */
 const MosaicSummary = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { grid, cardGrid, cards, plate } = mosaic;
-    if (!grid) return null;
-
-    const brickCount = cards.reduce((sum, card) => sum + card.brickCount, 0);
-    const items = [
-        ['Cards', `${cards.length.toLocaleString()} (${cardGrid.columns} × ${cardGrid.rows})`],
-        ['Bricks', brickCount.toLocaleString()],
-        ['Mosaic', `${grid.width} × ${grid.height} bricks`],
-        [
-            'Finished size',
-            `${formatLength(studsToMm(cardGrid.columns * plate.size))} × ${formatLength(studsToMm(cardGrid.rows * plate.size))}`,
-        ],
-    ];
+    const items = mosaicFacts(mosaic);
+    if (items.length === 0) return null;
 
     return (
         <Box

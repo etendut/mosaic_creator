@@ -206,6 +206,7 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
                     'Frame the part of the picture you want in the mosaic. Drag to move it; scroll or pinch to zoom.'
                 }
                 groups={groups}
+                info={flipped ? [['Picture', `${flipped.width} × ${flipped.height} px`]] : []}
             >
                 <Stage
                     sx={{

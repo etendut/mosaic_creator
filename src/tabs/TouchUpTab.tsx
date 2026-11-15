@@ -65,9 +65,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
         ...asGroups(clearing, true),
     ];
 
-    const status =
-        message ??
-        `${touchUpHint(state)}${touched > 0 && !mosaic.hiddenTouchUps ? ` ${bricks(touched)} touched up.` : ''}`;
+    const status = message ?? touchUpHint(state);
 
     return (
         <StepLayout
@@ -80,6 +78,11 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 )
             }
             status={status}
+            info={[
+                ['Touched up', mosaic.hiddenTouchUps ? 'Hidden at this size' : bricks(touched)],
+                ['Bricks', mosaic.cards.reduce((n, c) => n + c.brickCount, 0).toLocaleString()],
+                ['Colours', used.length.toLocaleString()],
+            ]}
             groups={groups}
             phoneStrip={palette}
             iconOnlyBar

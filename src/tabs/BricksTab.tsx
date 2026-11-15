@@ -5,11 +5,12 @@ import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import { Alert, Slider, Stack, TextField, Typography } from '@mui/material';
 import ColorsUsed from '../components/ColorsUsed';
 import MosaicPreview from '../components/MosaicPreview';
-import MosaicSummary from '../components/MosaicSummary';
 import PaletteEditor from '../components/PaletteEditor';
 import { BrickPicker, PlatePicker } from '../components/PartPickers';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { Stage, Tray } from '../components/Tray';
+import { mosaicFacts, type Fact } from '../mosaic/facts';
+import { colorsUsed } from '../mosaic/partsList';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
 
 /** Choose what to build with and how big, and check the mosaic in bricks. */
@@ -81,20 +82,18 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            status={
-                touched > 0 && !mosaic.hiddenTouchUps
-                    ? `Your picture in bricks, with ${bricks(touched)} touched up on the Touch up step.`
-                    : 'Your picture in bricks. Each square is one card, built on one plate.'
-            }
+            status="Your picture in bricks. Each square is one card, built on one plate."
             facts={
-                <>
-                    <MosaicSummary mosaic={mosaic} />
-                    <Tray>
-                        <ColorsUsed mosaic={mosaic} />
-                    </Tray>
-                </>
+                <Tray>
+                    <ColorsUsed mosaic={mosaic} />
+                </Tray>
             }
             groups={groups}
+            info={[
+                ...mosaicFacts(mosaic),
+                ['Colours', colorsUsed(mosaic.parts, brick.partId).length.toLocaleString()],
+                ...(touched > 0 && !mosaic.hiddenTouchUps ? [['Touched up', bricks(touched)] as Fact] : []),
+            ]}
         >
             <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
                 <MosaicPreview mosaic={mosaic} />

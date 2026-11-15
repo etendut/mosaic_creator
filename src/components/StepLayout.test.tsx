@@ -34,7 +34,7 @@ describe('Steps on a phone', () => {
             tools()
                 .getAllByRole('button')
                 .map((b) => b.textContent),
-        ).toEqual(['Plate', 'Brick', 'Size', 'Colours']);
+        ).toEqual(['Plate', 'Brick', 'Size', 'Colours', 'Info']);
         // nothing open: the canvas has the screen
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
         expect(screen.queryByRole('complementary', { name: 'Tools' })).not.toBeInTheDocument();
@@ -55,6 +55,9 @@ describe('Steps on a phone', () => {
         await user.click(tools().getByRole('button', { name: 'Colours' }));
         await user.click(screen.getByRole('button', { name: 'Close Colours' }));
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
+        // Info is the last button, and opens like any group
+        await user.click(tools().getByRole('button', { name: 'Info' }));
+        expect(within(screen.getByRole('region', { name: 'Info' })).getByText('32 × 20 bricks')).toBeInTheDocument();
         await user.click(tools().getByRole('button', { name: 'Brick' }));
         fireEvent.pointerDown(screen.getByLabelText('Card map'));
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
@@ -99,6 +102,7 @@ describe('Steps on a phone', () => {
             'Clean up single bricks',
             'Clean up single bricks and pairs',
             'Clear all touch-ups',
+            'Info',
         ]);
         expect(buttons.every((b) => b.textContent === '')).toBe(true);
         expect(tools().getByRole('button', { name: 'Undo' })).toBeDisabled();
@@ -140,6 +144,6 @@ describe('Steps on a phone', () => {
             tools()
                 .getAllByRole('button')
                 .map((b) => b.textContent),
-        ).toEqual(['Frame', 'Adjust']);
+        ).toEqual(['Frame', 'Adjust', 'Info']);
     });
 });

@@ -119,9 +119,12 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            status={`${total.toLocaleString()} parts in ${parts.length} lots, ${
-                spares > 0 ? `including ${spares.toLocaleString()} spares` : 'exact counts'
-            }.`}
+            status="The parts to build the mosaic, ready to order with a BrickLink wanted list."
+            info={[
+                ['Parts', total.toLocaleString()],
+                ['Lots', parts.length.toLocaleString()],
+                ['Spares', spares > 0 ? `${spares.toLocaleString()} (${sparesPercent}%)` : 'None: exact counts'],
+            ]}
             groups={[
                 {
                     id: 'spares',

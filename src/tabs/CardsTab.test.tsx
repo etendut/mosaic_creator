@@ -1,5 +1,5 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { goTo, startMosaic } from '../test/app';
+import { goTo, info, startMosaic } from '../test/app';
 
 describe('Cards step', () => {
     it('previews the first card with the card text', async () => {
@@ -29,7 +29,7 @@ describe('Cards step', () => {
         await user.click(screen.getByRole('button', { name: 'Compact' }));
         expect(screen.getByRole('button', { name: 'Compact' })).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText(/Smaller grids and text.*10 cards per page/)).toBeVisible();
-        expect(screen.getByText(/print 10 to a page/)).toBeInTheDocument();
+        expect(info('Per page')).toBe('10 on A4 landscape');
     });
 
     it('adds a bag list to each card, showing what it costs in cards per page', async () => {

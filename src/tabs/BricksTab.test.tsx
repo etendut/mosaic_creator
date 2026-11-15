@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { startMosaic } from '../test/app';
+import { info, startMosaic } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -160,6 +160,18 @@ describe('Bricks step', () => {
         await user.click(within(used).getAllByRole('button')[0]);
         await user.keyboard('{Escape}');
         expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    it('lists the numbers an organiser plans around in Info', async () => {
+        await startMosaic();
+        expect(info('Cards')).toBe('12 (4 × 3)');
+        expect(info('Mosaic')).toBe('32 × 20 bricks');
+        expect(info('Finished size')).toMatch(/^256\s?mm × 192\s?mm$/);
+        expect(Number(info('Colours'))).toBeGreaterThan(0);
+        // the status line only says what the step is for
+        expect(
+            screen.getByText('Your picture in bricks. Each square is one card, built on one plate.'),
+        ).toBeInTheDocument();
     });
 
     it('leaves printing to the Print step', async () => {

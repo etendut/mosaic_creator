@@ -1,7 +1,10 @@
 import { Box, ButtonBase, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useCallback, useId, useState, type ReactNode } from 'react';
 import { tokens } from '../theme';
+import type { Fact } from '../mosaic/facts';
+import InfoList from './InfoList';
 import { Tray } from './Tray';
 
 /** App bar height on desktop; the tools column sticks just under it. */
@@ -52,6 +55,8 @@ interface StepLayoutProps {
     phoneStrip?: ReactNode;
     /** Icons only in the phone tool bar, for a long set of tools; the names are still read out. */
     iconOnlyBar?: boolean;
+    /** The step's information (counts, sizes): the last section of the tools, and an ⓘ panel on a phone. */
+    info?: Fact[];
     /** The canvas: the photo, map, card, pages or table. */
     children: ReactNode;
 }
@@ -83,8 +88,21 @@ const StepLayout = ({
     action,
     phoneStrip,
     iconOnlyBar = false,
+    info = [],
     children,
 }: StepLayoutProps) => {
+    // the information is the last group, after the tools
+    if (info.length)
+        groups = [
+            ...groups,
+            {
+                id: 'info',
+                label: 'Info',
+                icon: <InfoOutlinedIcon />,
+                content: <InfoList facts={info} />,
+                divider: true,
+            },
+        ];
     const desktopGroups = groups.filter((g) => g.only !== 'phone' && g.content);
     const phoneGroups = groups.filter((g) => g.only !== 'desktop');
     const theme = useTheme();
