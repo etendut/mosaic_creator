@@ -50,6 +50,8 @@ interface StepLayoutProps {
     action?: ReactNode;
     /** On a phone, a strip just above the tool bar for the current tool's options (brush size, colour). */
     phoneStrip?: ReactNode;
+    /** Icons only in the phone tool bar, for a long set of tools; the names are still read out. */
+    iconOnlyBar?: boolean;
     /** The canvas: the photo, map, card, pages or table. */
     children: ReactNode;
 }
@@ -73,7 +75,16 @@ export const ControlSection = ({ title, children }: { title: string; children: R
  * facts above it, and the tools beside it. On desktop the tool groups are a column on the left, all open. On a phone
  * they're a bar along the bottom; tapping a group opens its settings in a panel above the bar.
  */
-const StepLayout = ({ alerts, status, facts, groups = [], action, phoneStrip, children }: StepLayoutProps) => {
+const StepLayout = ({
+    alerts,
+    status,
+    facts,
+    groups = [],
+    action,
+    phoneStrip,
+    iconOnlyBar = false,
+    children,
+}: StepLayoutProps) => {
     const desktopGroups = groups.filter((g) => g.only !== 'phone' && g.content);
     const phoneGroups = groups.filter((g) => g.only !== 'desktop');
     const theme = useTheme();
@@ -227,7 +238,7 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, phoneStrip, ch
                                 return (
                                     <ButtonBase
                                         key={g.id}
-                                        aria-label={g.shortLabel ? g.label : undefined}
+                                        aria-label={g.shortLabel || iconOnlyBar ? g.label : undefined}
                                         disabled={g.disabled}
                                         aria-pressed={g.onPress && g.pressed !== undefined ? selected : undefined}
                                         aria-expanded={g.onPress ? undefined : selected}
@@ -252,7 +263,7 @@ const StepLayout = ({ alerts, status, facts, groups = [], action, phoneStrip, ch
                                         }}
                                     >
                                         {g.icon}
-                                        {g.shortLabel ?? g.label}
+                                        {!iconOnlyBar && (g.shortLabel ?? g.label)}
                                     </ButtonBase>
                                 );
                             })}

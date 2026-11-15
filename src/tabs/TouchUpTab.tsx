@@ -1,14 +1,9 @@
-import CompareIcon from '@mui/icons-material/Compare';
-import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
-import RedoIcon from '@mui/icons-material/Redo';
-import UndoIcon from '@mui/icons-material/Undo';
-import { Alert } from '@mui/material';
-import { useState } from 'react';
+import { Alert, Divider, Stack } from '@mui/material';
+import { useEffect, useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
-import StepMenuItems from '../components/StepMenuItems';
-import { BrushOptions, CleanUp, HistoryActions, ToolList, TouchedUp } from '../components/TouchUp';
-import { hasBrushOptions, TOOLS, touchUpHint } from '../components/touchUpTools';
+import { Palette, ToolRow } from '../components/TouchUp';
+import { touchUpActions, touchUpHint, type TouchUpAction } from '../components/touchUpTools';
 import { Stage } from '../components/Tray';
 import { colorsUsed } from '../mosaic/partsList';
 import { brushFor, DEFAULT_TOUCH_UP, type TouchUpState } from '../mosaic/touchUp';
@@ -16,86 +11,63 @@ import type { Mosaic } from '../useMosaic';
 
 const bricks = (n: number) => `${n.toLocaleString()} brick${n === 1 ? '' : 's'}`;
 
+/** How long a message after an action (clean-up, clear) stays in the status line. */
+const MESSAGE_MS = 4000;
+
 /** Fix single bricks on the map: paint, erase, pick colours, clean up strays, and compare before and after. */
 const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const used = colorsUsed(mosaic.parts, mosaic.brick.partId);
     const [touchUp, setTouchUp] = useState<TouchUpState>(DEFAULT_TOUCH_UP);
+    const [message, setMessage] = useState<string | null>(null);
+    useEffect(() => {
+        if (!message) return;
+        const timer = setTimeout(() => setMessage(null), MESSAGE_MS);
+        return () => clearTimeout(timer);
+    }, [message]);
     // until one is chosen, paint with the most used colour
     const state = { ...touchUp, color: touchUp.color ?? used[0]?.color ?? null };
     const onChange = (change: Partial<TouchUpState>) => setTouchUp((t) => ({ ...t, ...change }));
     const touched = mosaic.touchUps?.edits.length ?? 0;
-    const tools = { mosaic, state, onChange };
-    const options = hasBrushOptions(state) ? <BrushOptions {...tools} /> : null;
+    const { history, tools, cleaning, clearing } = touchUpActions(mosaic, state, onChange, setMessage);
+    const palette = <Palette mosaic={mosaic} state={state} onChange={onChange} />;
 
+    // the same buttons in the same order on both layouts: history, tools, palette, clean-up, clearing
+    const asGroups = (actions: TouchUpAction[], divider: boolean): ToolGroup[] =>
+        actions.map((a, i) => ({
+            id: a.id,
+            label: a.label,
+            icon: a.icon,
+            only: 'phone',
+            onPress: a.onPress,
+            pressed: a.pressed,
+            disabled: a.disabled,
+            divider: divider && i === 0,
+        }));
     const groups: ToolGroup[] = [
-        // desktop: the tool list, the current tool's options, clean-up and the touch-up count, all in the column
         {
-            id: 'tool',
-            label: 'Tool',
+            id: 'tools',
+            label: 'Tools',
             icon: null,
             only: 'desktop',
             content: (
-                <>
-                    <ToolList {...tools} />
-                    <HistoryActions {...tools} />
-                </>
+                <Stack spacing={1.5} divider={<Divider flexItem />}>
+                    <ToolRow actions={history} />
+                    <ToolRow actions={tools} />
+                    {palette}
+                    <ToolRow actions={cleaning} />
+                    <ToolRow actions={clearing} />
+                </Stack>
             ),
         },
-        ...(options ? [{ id: 'options', label: 'Brush', icon: null, only: 'desktop' as const, content: options }] : []),
-        // phone: the tools in the bar along the bottom, each switching to its mode
-        ...TOOLS.map((t) => ({
-            id: t.mode,
-            label: t.label,
-            shortLabel: t.shortLabel,
-            icon: t.icon,
-            only: 'phone' as const,
-            pressed: state.mode === t.mode && !state.before,
-            onPress: () => onChange({ mode: t.mode, before: false }),
-        })),
-        {
-            id: 'clean-up',
-            label: 'Clean up',
-            shortLabel: 'Clean',
-            title: 'Clean up stray bricks',
-            icon: <FaceRetouchingNaturalIcon />,
-            content: <CleanUp mosaic={mosaic} onChange={onChange} />,
-        },
-        // phone: history after the tools, like a photo editor's tool bar (desktop has it under the tool list)
-        {
-            id: 'undo',
-            label: 'Undo',
-            icon: <UndoIcon />,
-            only: 'phone',
-            divider: true,
-            disabled: !mosaic.canUndo,
-            onPress: mosaic.undo,
-        },
-        {
-            id: 'redo',
-            label: 'Redo',
-            icon: <RedoIcon />,
-            only: 'phone',
-            disabled: !mosaic.canRedo,
-            onPress: mosaic.redo,
-        },
-        {
-            id: 'compare',
-            label: 'Before / after',
-            shortLabel: 'Compare',
-            icon: <CompareIcon />,
-            only: 'phone',
-            disabled: touched === 0 || mosaic.hiddenTouchUps,
-            pressed: state.before,
-            onPress: () => onChange({ before: !state.before }),
-        },
-        {
-            id: 'touched',
-            label: 'Touch-ups',
-            icon: null,
-            only: 'desktop',
-            content: <TouchedUp mosaic={mosaic} onChange={onChange} />,
-        },
+        ...asGroups(history, false),
+        ...asGroups(tools, true),
+        ...asGroups(cleaning, true),
+        ...asGroups(clearing, true),
     ];
+
+    const status =
+        message ??
+        `${touchUpHint(state)}${touched > 0 && !mosaic.hiddenTouchUps ? ` ${bricks(touched)} touched up.` : ''}`;
 
     return (
         <StepLayout
@@ -107,25 +79,11 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            status={`${touchUpHint(state)}${touched > 0 && !mosaic.hiddenTouchUps ? ` ${bricks(touched)} touched up.` : ''}`}
+            status={status}
             groups={groups}
-            phoneStrip={options}
+            phoneStrip={palette}
+            iconOnlyBar
         >
-            {/* on phones clearing is in the menu; the bottom bar holds the tools and the history */}
-            {touched > 0 && (
-                <StepMenuItems
-                    items={[
-                        {
-                            label: 'Clear all touch-ups',
-                            secondary: 'Undo brings them back',
-                            onClick: () => {
-                                mosaic.clearTouchUps();
-                                onChange({ before: false });
-                            },
-                        },
-                    ]}
-                />
-            )}
             <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
                 <MosaicPreview
                     mosaic={mosaic}

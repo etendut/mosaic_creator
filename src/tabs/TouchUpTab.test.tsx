@@ -52,11 +52,30 @@ const startTouchUp = async () => {
 };
 
 describe('Touch up step', () => {
-    it('says what the step is for, and starts in View so a phone can scroll past the map', async () => {
+    it('lays the tools out in one consistent column: history, tools, palette, clean-up, clearing', async () => {
         await startTouchUp();
         expect(screen.getByRole('heading', { name: 'Touch up' })).toBeInTheDocument();
-        expect(tool('View')).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/Fix single bricks: choose the brush or eraser/)).toBeInTheDocument();
+        const column = within(screen.getByRole('complementary', { name: 'Tools' }));
+        const names = column
+            .getAllByRole('button')
+            .map((b) => b.getAttribute('aria-label'))
+            .filter((n) => n && !/×|brush$/.test(n));
+        expect(names).toEqual([
+            'Undo',
+            'Redo',
+            'Before / after',
+            'Brush',
+            'Eraser',
+            'Eyedropper',
+            expect.stringMatching(/^Paint colour/),
+            'Clean up single bricks',
+            'Clean up single bricks and pairs',
+            'Clear all touch-ups',
+        ]);
+        expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
+        // the brush is on from the start
+        expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByText(/^Click or drag on the map to make bricks/)).toBeInTheDocument();
     });
 
     it('is where touch-ups are made; the Bricks step shows them on its map and says how many', async () => {
@@ -75,11 +94,6 @@ describe('Touch up step', () => {
     it('paints single bricks, drags to paint several, and undoes a drag in one step', async () => {
         const user = await startTouchUp();
         const m = map();
-        // viewing: clicks do nothing
-        expect(tool('View')).toHaveAttribute('aria-pressed', 'true');
-        m.click(4, 4);
-        noneTouchedUp();
-
         await paintWith(user, 'Black');
         expect(tool('Brush')).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText(/make bricks Black/)).toBeInTheDocument();
@@ -113,24 +127,14 @@ describe('Touch up step', () => {
         expect(touchedUp(4)).toBeInTheDocument();
     });
 
-    it('shows the colour and brush options only for the tools that use them', async () => {
+    it('keeps the brush palette in view for every tool', async () => {
         const user = await startTouchUp();
-        const options = () => ({
-            color: screen.queryByRole('button', { name: /^Paint colour/ }),
-            size: screen.queryByRole('group', { name: 'Brush size' }),
-            shape: screen.queryByRole('group', { name: 'Brush shape' }),
-        });
-        const shown = () => Object.entries(options()).flatMap(([name, el]) => (el ? [name] : []));
-
-        expect(shown()).toEqual([]);
-        await user.click(tool('Brush'));
-        expect(shown()).toEqual(['color', 'size', 'shape']);
-        await user.click(tool('Eraser'));
-        expect(shown()).toEqual(['size', 'shape']);
-        await user.click(tool('Eyedropper'));
-        expect(shown()).toEqual(['color']);
-        await user.click(tool('View'));
-        expect(shown()).toEqual([]);
+        for (const name of ['Brush', 'Eraser', 'Eyedropper']) {
+            await user.click(tool(name));
+            expect(screen.getByRole('button', { name: /^Paint colour/ })).toHaveAttribute('aria-haspopup', 'menu');
+            expect(screen.getByRole('group', { name: 'Brush size' })).toBeInTheDocument();
+            expect(screen.getByRole('group', { name: 'Brush shape' })).toBeInTheDocument();
+        }
     });
 
     it('paints with bigger, round or square brushes', async () => {
@@ -226,23 +230,30 @@ describe('Touch up step', () => {
         expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('cleans up stray bricks, after saying how many will change', async () => {
+    it('cleans up stray bricks in one click, saying how many changed', async () => {
         const user = await startTouchUp();
-        expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
-        expect(tool('Apply')).toBeDisabled();
+        await user.click(tool('Clean up single bricks'));
+        expect(screen.getByText('No stray bricks to clean up.')).toBeInTheDocument();
 
         await paintWith(user, 'Black');
         map().click(4, 4);
         expect(blackBricks()).toBe(1);
-        expect(screen.getByText('1 brick would change.')).toBeInTheDocument();
-
-        await user.click(screen.getByRole('radio', { name: 'Single bricks and pairs' }));
-        await user.click(tool('Apply'));
+        await user.click(tool('Clean up single bricks'));
+        expect(screen.getByText('Cleaned up 1 brick.')).toBeInTheDocument();
         expect(blackBricks()).toBe(0);
-        expect(screen.getByText('No stray bricks to change.')).toBeInTheDocument();
+
+        // pairs too
+        await user.click(tool('Undo'));
+        map().click(5, 4);
+        expect(blackBricks()).toBe(2);
+        await user.click(tool('Clean up single bricks'));
+        expect(screen.getByText('No stray bricks to clean up.')).toBeInTheDocument();
+        await user.click(tool('Clean up single bricks and pairs'));
+        expect(screen.getByText('Cleaned up 2 bricks.')).toBeInTheDocument();
+        expect(blackBricks()).toBe(0);
 
         await user.click(tool('Undo'));
-        expect(blackBricks()).toBe(1);
+        expect(blackBricks()).toBe(2);
     });
 
     it('hides touch-ups made at another size until the size comes back, and says so on both steps', async () => {

@@ -27,7 +27,7 @@ export interface TouchUpState {
     before: boolean;
 }
 
-export const DEFAULT_TOUCH_UP: TouchUpState = { mode: 'view', color: null, size: 1, shape: 'square', before: false };
+export const DEFAULT_TOUCH_UP: TouchUpState = { mode: 'paint', color: null, size: 1, shape: 'square', before: false };
 
 /** The brush for the toolbar's state; null when the map only shows the mosaic. */
 export const brushFor = ({ mode, color, size, shape, before }: TouchUpState): BrickTool | null => {

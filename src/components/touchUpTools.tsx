@@ -1,9 +1,15 @@
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AutoAwesomeMotionIcon from '@mui/icons-material/AutoAwesomeMotion';
 import BrushIcon from '@mui/icons-material/Brush';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
 import ColorizeIcon from '@mui/icons-material/Colorize';
-import PanToolIcon from '@mui/icons-material/PanTool';
+import CompareIcon from '@mui/icons-material/Compare';
+import RedoIcon from '@mui/icons-material/Redo';
+import UndoIcon from '@mui/icons-material/Undo';
 import { createSvgIcon } from '@mui/material';
 import type { ReactNode } from 'react';
-import type { TouchUpMode, TouchUpState } from '../mosaic/touchUp';
+import { findStrays, type CleanUpStrength, type TouchUpMode, type TouchUpState } from '../mosaic/touchUp';
+import type { Mosaic } from '../useMosaic';
 
 // Material Icons has no eraser; this is "eraser" from Material Design Icons (Pictogrammers, Apache 2.0)
 const EraserIcon = createSvgIcon(
@@ -11,31 +17,115 @@ const EraserIcon = createSvgIcon(
     'Eraser',
 );
 
+const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? '' : 's'}`;
+
+/** One button in the touch-up tools: an icon, its name, and what it does. */
+export interface TouchUpAction {
+    id: string;
+    label: string;
+    icon: ReactNode;
+    onPress: () => void;
+    /** For a mode or a toggle: whether it's on. Left out for a plain action (undo). */
+    pressed?: boolean;
+    disabled?: boolean;
+}
+
 /** The tools that are modes: what a click on the map does. */
-export const TOOLS: { mode: TouchUpMode; label: string; shortLabel?: string; icon: ReactNode }[] = [
-    { mode: 'view', label: 'View', icon: <PanToolIcon /> },
+const TOOLS: { mode: TouchUpMode; label: string; icon: ReactNode }[] = [
     { mode: 'paint', label: 'Brush', icon: <BrushIcon /> },
-    { mode: 'erase', label: 'Eraser', shortLabel: 'Erase', icon: <EraserIcon /> },
-    { mode: 'pick', label: 'Eyedropper', shortLabel: 'Pick', icon: <ColorizeIcon /> },
+    { mode: 'erase', label: 'Eraser', icon: <EraserIcon /> },
+    { mode: 'pick', label: 'Eyedropper', icon: <ColorizeIcon /> },
 ];
 
-/** The paint colour matters to the brush and the eyedropper. */
-export const showsColor = (state: TouchUpState) => !state.before && (state.mode === 'paint' || state.mode === 'pick');
-/** Brush size and shape matter to the brush and the eraser. */
-export const showsBrush = (state: TouchUpState) => !state.before && (state.mode === 'paint' || state.mode === 'erase');
-export const hasBrushOptions = (state: TouchUpState) => showsColor(state) || showsBrush(state);
+/**
+ * Every touch-up button, in the order the tools show them on desktop and phone alike: history (undo, redo,
+ * before/after), the tools, clean-up, and clearing. `report` puts a short message in the status line.
+ */
+export const touchUpActions = (
+    mosaic: Mosaic,
+    state: TouchUpState,
+    onChange: (change: Partial<TouchUpState>) => void,
+    report: (message: string | null) => void,
+) => {
+    const touched = mosaic.touchUps?.edits.length ?? 0;
+    const cleanUp = (strength: CleanUpStrength) => () => {
+        const strays = mosaic.grid ? findStrays(mosaic.grid, strength) : [];
+        if (strays.length) mosaic.editBricks(strays);
+        onChange({ before: false });
+        report(strays.length ? `Cleaned up ${plural(strays.length, 'brick')}.` : 'No stray bricks to clean up.');
+    };
+    const history: TouchUpAction[] = [
+        // undo and redo clear any message, which would otherwise describe a change they've just reversed
+        {
+            id: 'undo',
+            label: 'Undo',
+            icon: <UndoIcon />,
+            onPress: () => {
+                mosaic.undo();
+                report(null);
+            },
+            disabled: !mosaic.canUndo,
+        },
+        {
+            id: 'redo',
+            label: 'Redo',
+            icon: <RedoIcon />,
+            onPress: () => {
+                mosaic.redo();
+                report(null);
+            },
+            disabled: !mosaic.canRedo,
+        },
+        {
+            id: 'compare',
+            label: 'Before / after',
+            icon: <CompareIcon />,
+            pressed: state.before,
+            onPress: () => onChange({ before: !state.before }),
+            disabled: touched === 0 || mosaic.hiddenTouchUps,
+        },
+    ];
+    const tools: TouchUpAction[] = TOOLS.map((t) => ({
+        id: t.mode,
+        label: t.label,
+        icon: t.icon,
+        pressed: state.mode === t.mode && !state.before,
+        onPress: () => onChange({ mode: t.mode, before: false }),
+    }));
+    const cleaning: TouchUpAction[] = [
+        { id: 'clean-lone', label: 'Clean up single bricks', icon: <AutoAwesomeIcon />, onPress: cleanUp('lone') },
+        {
+            id: 'clean-pairs',
+            label: 'Clean up single bricks and pairs',
+            icon: <AutoAwesomeMotionIcon />,
+            onPress: cleanUp('pairs'),
+        },
+    ];
+    const clearing: TouchUpAction[] = [
+        {
+            id: 'clear',
+            label: 'Clear all touch-ups',
+            icon: <ClearAllIcon />,
+            disabled: touched === 0,
+            onPress: () => {
+                mosaic.clearTouchUps();
+                onChange({ before: false });
+                report('Touch-ups cleared. Undo brings them back.');
+            },
+        },
+    ];
+    return { history, tools, cleaning, clearing };
+};
 
 /** The status line: what a click on the map does now. */
 export const touchUpHint = (state: TouchUpState) => {
     if (state.before) return 'Showing the mosaic before touch-ups. Turn off Before / after to keep editing.';
     switch (state.mode) {
-        case 'paint':
-            return `Click or drag on the map to make bricks ${state.color?.name ?? 'the paint colour'}.`;
         case 'erase':
             return 'Click or drag on the map to remove bricks.';
         case 'pick':
             return `Click a brick on the map to use its colour for the brush. Picked: ${state.color?.name ?? 'none'}.`;
         default:
-            return 'Fix single bricks: choose the brush or eraser, then click or drag on the map.';
+            return `Click or drag on the map to make bricks ${state.color?.name ?? 'the paint colour'}.`;
     }
 };
