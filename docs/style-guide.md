@@ -71,9 +71,10 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
 - **Every setting in an open group is visible.** Don't hide settings behind "More…" disclosures. If a group grows too
   long, the step is doing too much (see [One job per step](#one-job-per-step)).
 - **Help text** goes directly under the control it explains, in `body2` and muted, one or two sentences.
-- **Info** is the step's information: counts, sizes, pages, totals ("Parts 11,988 · Lots 9 · Spares none"). It's the
-  last group of the tools: the end of the column on desktop, and an ⓘ button at the end of the phone bar that opens it
-  as a panel. Labels on the left, values on the right.
+- **Info** is the step's information: counts, sizes, pages, totals ("Parts 11,988 · Lots 9 · Spares none"). On
+  desktop it's the first section of the tools column and sticky, so it stays in view while the rest of the column
+  scrolls and you can watch the numbers change as you adjust settings. On a phone it's an ⓘ button at the end of the
+  bar that opens it as a panel. Labels on the left, values on the right.
 - **Show choices, don't hide them.** A choice of up to about six options is a plain list (radio buttons) or a row of
   toggle buttons, so every option is in view: Paper (A4, Letter, A3), what to print. Not a dropdown.
 - **An action that follows from the tools** (*Print cards*, after Paper and Pages) ends the tools, with a line above
