@@ -82,9 +82,11 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
   away. It's the step's main action, so the app bar has none.
 - **Steps that edit the canvas directly** (Touch up) put all their tools in one set, in the same order on both
   layouts, with dividers between: history (undo, redo, before/after), the tools (brush, eraser, eyedropper), the brush
-  palette (colour ▾, size, shape; always in view), clean-up (one icon button per strength), and clear all. On desktop
-  it's one Tools section in the column; on a phone the palette is a strip above an icons-only bottom bar, with the
-  names read out. A tool is on from the start, so there's no View tool.
+  palette (colour ▾, size, shape; always in view), clean-up (one button per strength), and clear all. Each layout
+  keeps its own style: on desktop it's one Tools section in the column with every button labelled (icon and name),
+  like the rest of the column; on a phone the palette is a compact strip in the bar's style (swatch ▾, − size +, one
+  shape toggle) above an icons-only bottom bar, with the names read out. When the bar would need more than about eight buttons, it takes two rows (history and tools, then
+  clean-up, clearing and Info), so every button stays at least 40 px wide. A tool is on from the start, so there's no View tool.
 - **A canvas you edit zooms and scrolls**, like a document or photo viewer: it fills the space to the bottom of the
   window (or the phone's tools) in a scrolling box, fitted at 100%; zoomed in, it's bigger than the box, with scroll
   bars. Ctrl + wheel or a trackpad pinch zooms around the pointer, and a plain wheel scrolls; pinch and two-finger drag
