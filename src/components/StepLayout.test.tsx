@@ -63,16 +63,17 @@ describe('Steps on a phone', () => {
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 
-    it('offers the step’s secondary action in the menu', async () => {
+    it('keeps Parts’ Download and Copy XML just above the tool bar', async () => {
         const user = await startMosaic();
         await goTo(user, 'Parts');
-        await user.click(screen.getByRole('button', { name: 'Menu' }));
-        await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: /^Copy XML/ }));
+        expect(within(screen.getByRole('banner')).queryByRole('button', { name: /XML/ })).not.toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Copy XML' }));
         expect(await navigator.clipboard.readText()).toMatch(/^<INVENTORY>/);
-        // only while that step is on screen
-        await goTo(user, 'Print');
-        await user.click(screen.getByRole('button', { name: 'Menu' }));
-        expect(within(screen.getByRole('menu')).queryByText('Copy XML')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Download BrickLink XML' })).toBeInTheDocument();
+        // a tool panel opens above them
+        await user.click(tools().getByRole('button', { name: 'Spares' }));
+        expect(screen.getByRole('region', { name: 'Spares' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Copy XML' })).toBeInTheDocument();
     });
 
     it('keeps Print cards just above the tool bar, with what it will print', async () => {

@@ -77,7 +77,8 @@ Everything that changes the canvas. Nothing else goes here, and nothing that cha
   bar that opens it as a panel. Labels on the left, values on the right.
 - **Show choices, don't hide them.** A choice of up to about six options is a plain list (radio buttons) or a row of
   toggle buttons, so every option is in view: Paper (A4, Letter, A3), what to print. Not a dropdown.
-- **An action that follows from the tools** (*Print cards*, after Paper and Pages) ends the tools, with a line above
+- **An action that follows from the tools** (*Print cards*, after Paper and Pages; *Download BrickLink XML*, after
+  Spares) ends the tools, with a line above
   it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page, after a map page.") and any note about
   it. On desktop it's the last block of the column, and on a phone a strip just above the tool bar, so it's one tap
   away. It's the step's main action, so the app bar has none.
@@ -182,7 +183,7 @@ Every step follows this guide (#21). What each one has:
 | Bricks | none | Plate, Brick, Size, Colours, Colours used | Cards, Bricks, Mosaic, Finished size, Colours, Touched up |
 | Touch up | none | Undo, Redo, Before / after; Brush, Eraser, Eyedropper; palette; two clean-ups; Clear all (two-row bar on phones) | Touched up, Bricks, Colours |
 | Cards | none | Card size, Card text, Card colour | Cards, Per page, Pages, Brick on the card |
-| Parts | *Download BrickLink XML* (app bar), *Copy XML* beside it (☰ on phones) | Spares | Parts, Lots, Spares |
+| Parts | *Download BrickLink XML* and *Copy XML*, at the end of the tools under Spares | Spares | Parts, Lots, Spares |
 | Print | *Print map page* / *Print cards*, at the end of the tools under its summary | Paper, Pages | Cards, Card pages, Per page |
 
 Tap targets: the theme gives every button and toggle a 40 px minimum, and colour swatches grow to 44 × 40 px on touch
