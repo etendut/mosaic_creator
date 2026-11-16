@@ -158,7 +158,7 @@ The fix is to split it into two steps, as Bricks and Touch up were split. Don't 
 - From top to bottom: the app bar, then the status line and canvas, then the facts, with the tool bar along the
   bottom. The facts go under the canvas on a phone, so the canvas stays in view above an open tool panel.
 - The tool bar stays at the bottom of the screen, and the canvas fills the space between the bars.
-- Tap targets are at least 40 px.
+- Tap targets are at least 40 px (the theme sets this for buttons and toggles).
 - A canvas that takes drags (painting) scrolls the page in View mode and only captures touch while a tool is on.
 
 ## Checking a change
@@ -172,22 +172,19 @@ For every change to the interface:
 4. Check the step against this guide: the three zones, at most one main action (in the app bar), and settings only in
    the tools zone.
 
-## Where the steps stand
+## The steps
 
-What each step needs to match this guide. Work through these in #21.
+Every step follows this guide (#21). What each one has:
 
-**Every step:** the app bar gets ☰ (in place of *Project*) and the main action, and on a phone the step's name. Page
-headings ("Card map", "Card preview", "Building cards", "Parts", "Touch up") go, and their text becomes the status
-line. On a phone, tool groups move from below the canvas into the bottom bar and panel.
-
-| Step | Main action (app bar) | Tool groups | Also |
+| Step | Main action | Tools (desktop column; phone bar) | Info |
 |---|---|---|---|
-| Image | Use this image | Frame, Adjust | The empty-state card stays. |
-| Bricks | none (*Print map* goes; printing is on Print only) | Plate, Brick, Size, Colours | |
-| Touch up | none | One Tools set: history, tools, palette, clean-up, clear all | Done: one order on both layouts, icons-only bar on phones, palette always in view, 40 px tap targets. |
-| Cards | none | Size, Text, Colour | |
-| Parts | Download BrickLink XML | Spares | Spares moves out of the page header into the tools zone. *Copy XML* is the secondary action. |
-| Print | none in the app bar; *Print cards* ends the tools, with its summary above it | Paper, Pages (map page, batches) | Paper, Map page and batches move out of the page header into the tools zone. |
+| Image | *Use this image* (app bar) | Frame, Adjust | Picture size |
+| Bricks | none | Plate, Brick, Size, Colours, Colours used | Cards, Bricks, Mosaic, Finished size, Colours, Touched up |
+| Touch up | none | Undo, Redo, Before / after; Brush, Eraser, Eyedropper; palette; two clean-ups; Clear all (two-row bar on phones) | Touched up, Bricks, Colours |
+| Cards | none | Card size, Card text, Card colour | Cards, Per page, Pages, Brick on the card |
+| Parts | *Download BrickLink XML* (app bar), *Copy XML* beside it (☰ on phones) | Spares | Parts, Lots, Spares |
+| Print | *Print map page* / *Print cards*, at the end of the tools under its summary | Paper, Pages | Cards, Card pages, Per page |
 
-A shared layout component (app-bar action, status line, canvas and tool groups) will hold the zones in code, so a new
-step can't drift.
+Tap targets: the theme gives every button and toggle a 40 px minimum, and colour swatches grow to 44 × 40 px on touch
+screens. A new step gets these by using the layout (`StepLayout`), `AppBarAction`, `ChoiceRow` and the theme, rather
+than its own controls.
