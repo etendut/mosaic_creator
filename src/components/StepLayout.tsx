@@ -110,6 +110,7 @@ const StepLayout = ({
             },
         ];
     const desktopGroups = groups.filter((g) => g.only !== 'phone' && g.content);
+    const desktopInfo = desktopGroups.find((g) => g.id === 'info');
     const phoneGroups = groups.filter((g) => g.only !== 'desktop');
     const barRows = [1, 2].map((r) => phoneGroups.filter((g) => (g.barRow ?? 1) === r)).filter((row) => row.length > 0);
     const theme = useTheme();
@@ -172,11 +173,29 @@ const StepLayout = ({
                             displayPrint: 'none',
                         }}
                     >
-                        {desktopGroups.map((g) => (
-                            <ControlSection key={g.id} title={g.title ?? g.label}>
-                                {g.content}
-                            </ControlSection>
-                        ))}
+                        {/* Info first, and sticky: it stays in view while the rest of the column scrolls */}
+                        {desktopInfo && (
+                            <Box
+                                sx={{
+                                    position: 'sticky',
+                                    top: 0,
+                                    zIndex: 1,
+                                    backgroundColor: tokens.tray,
+                                    borderBottom: `1px solid ${tokens.groove}`,
+                                }}
+                            >
+                                <ControlSection title={desktopInfo.title ?? desktopInfo.label}>
+                                    {desktopInfo.content}
+                                </ControlSection>
+                            </Box>
+                        )}
+                        {desktopGroups
+                            .filter((g) => g !== desktopInfo)
+                            .map((g) => (
+                                <ControlSection key={g.id} title={g.title ?? g.label}>
+                                    {g.content}
+                                </ControlSection>
+                            ))}
                         {action && (
                             <Stack spacing={1.5} sx={{ padding: 2, borderTop: `1px solid ${tokens.groove}` }}>
                                 {action}

@@ -172,6 +172,9 @@ describe('Bricks step', () => {
         expect(info('Mosaic')).toBe('32 × 20 bricks');
         expect(info('Finished size')).toMatch(/^256\s?mm × 192\s?mm$/);
         expect(Number(info('Colours'))).toBeGreaterThan(0);
+        // Info heads the tools column (and stays there as the column scrolls)
+        const headings = within(screen.getByRole('complementary', { name: 'Tools' })).getAllByRole('heading');
+        expect(headings[0]).toHaveTextContent('Info');
         // no standing text on the page: the numbers are in Info
         expect(screen.queryByText(/Your picture in bricks/)).not.toBeInTheDocument();
     });
