@@ -80,15 +80,13 @@ describe('Parts step', () => {
         expect(quantities()).toEqual(exact);
     });
 
-    it('puts the download in the app bar, with Copy XML beside it', async () => {
+    it('ends the tools with Download and Copy XML, like Print', async () => {
         const user = await startMosaic();
         await goTo(user, 'Parts');
-        const bar = within(screen.getByRole('banner'));
-        expect(bar.getByRole('button', { name: 'Download BrickLink XML' })).toBeInTheDocument();
-        expect(bar.getByRole('button', { name: 'Copy XML' })).toBeInTheDocument();
-        // on desktop the menu doesn't repeat it
-        await user.click(screen.getByRole('button', { name: 'Menu' }));
-        expect(within(screen.getByRole('menu')).queryByText('Copy XML')).not.toBeInTheDocument();
+        const tools = within(screen.getByRole('complementary', { name: 'Tools' }));
+        expect(tools.getByRole('button', { name: 'Download BrickLink XML' })).toBeInTheDocument();
+        expect(tools.getByRole('button', { name: 'Copy XML' })).toBeInTheDocument();
+        expect(within(screen.getByRole('banner')).queryByRole('button', { name: /XML/ })).not.toBeInTheDocument();
     });
 
     it('names the file "mosaic" when the title is empty', async () => {

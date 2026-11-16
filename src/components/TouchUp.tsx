@@ -169,81 +169,109 @@ export const DesktopTools = ({
     actions: { history, tools, cleaning, clearing },
 }: ToolProps & {
     actions: { history: TouchUpAction[]; tools: TouchUpAction[]; cleaning: TouchUpAction[]; clearing: TouchUpAction[] };
-}) => (
-    <Stack spacing={1.5} divider={<Divider flexItem />}>
-        <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
-            {history.map((a) => (
-                <ActionButton key={a.id} action={a} />
-            ))}
-        </Stack>
-        <ToggleButtonGroup
-            exclusive
-            orientation="vertical"
-            fullWidth
-            value={state.before ? null : state.mode}
-            onChange={(_, mode: TouchUpMode | null) => mode && onChange({ mode, before: false })}
-            aria-label="Tool"
-        >
-            {tools.map((t) => (
-                <ToggleButton
-                    key={t.id}
-                    value={t.id}
-                    aria-label={t.label}
-                    sx={{ justifyContent: 'flex-start', gap: 1.5, minHeight: 44 }}
+}) => {
+    const compare = history.find((a) => a.id === 'compare')!;
+    return (
+        <Stack spacing={1.5} divider={<Divider flexItem />}>
+            <Stack spacing={1}>
+                <Stack direction="row" spacing={0.5}>
+                    {history
+                        .filter((a) => a.id !== 'compare')
+                        .map((a) => (
+                            <ActionButton key={a.id} action={a} />
+                        ))}
+                </Stack>
+                {/* before / after: a two-way toggle, like the brush shape */}
+                <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={state.before ? 'before' : 'after'}
+                    onChange={(_, v: 'before' | 'after' | null) => v && onChange({ before: v === 'before' })}
+                    aria-label="Before / after"
+                    disabled={compare.disabled}
                 >
-                    {t.icon}
-                    {t.label}
-                </ToggleButton>
-            ))}
-        </ToggleButtonGroup>
-        <Stack spacing={1}>
-            {label('Colour')}
-            <ColourPicker mosaic={mosaic} state={state} onChange={onChange} compact={false} />
-            {label('Brush size')}
+                    <ToggleButton value="before" sx={{ gap: 1, paddingInline: 1.5 }}>
+                        {compare.icon}
+                        Before
+                    </ToggleButton>
+                    <ToggleButton value="after" sx={{ paddingInline: 1.5 }}>
+                        After
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Stack>
             <ToggleButtonGroup
                 exclusive
-                size="small"
-                value={state.size}
-                onChange={(_, size: number | null) => size && onChange({ size })}
-                aria-label="Brush size"
+                orientation="vertical"
+                fullWidth
+                value={state.before ? null : state.mode}
+                onChange={(_, mode: TouchUpMode | null) => mode && onChange({ mode, before: false })}
+                aria-label="Tool"
             >
-                {BRUSH_SIZES.map((n) => (
-                    <ToggleButton key={n} value={n} aria-label={`${n} × ${n}`} sx={{ minWidth: 40, minHeight: 40 }}>
-                        {n}
+                {tools.map((t) => (
+                    <ToggleButton
+                        key={t.id}
+                        value={t.id}
+                        aria-label={t.label}
+                        sx={{ justifyContent: 'flex-start', gap: 1.5, minHeight: 44 }}
+                    >
+                        {t.icon}
+                        {t.label}
                     </ToggleButton>
                 ))}
             </ToggleButtonGroup>
-            {label('Brush shape')}
-            <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={state.shape}
-                onChange={(_, shape: BrushShape | null) => shape && onChange({ shape })}
-                aria-label="Brush shape"
-            >
-                <ToggleButton value="round" aria-label="Round brush" sx={{ gap: 1, minHeight: 40, paddingInline: 1.5 }}>
-                    <CircleIcon fontSize="small" />
-                    Round
-                </ToggleButton>
-                <ToggleButton
-                    value="square"
-                    aria-label="Square brush"
-                    sx={{ gap: 1, minHeight: 40, paddingInline: 1.5 }}
+            <Stack spacing={1}>
+                {label('Colour')}
+                <ColourPicker mosaic={mosaic} state={state} onChange={onChange} compact={false} />
+                {label('Brush size')}
+                <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={state.size}
+                    onChange={(_, size: number | null) => size && onChange({ size })}
+                    aria-label="Brush size"
                 >
-                    <SquareIcon fontSize="small" />
-                    Square
-                </ToggleButton>
-            </ToggleButtonGroup>
+                    {BRUSH_SIZES.map((n) => (
+                        <ToggleButton key={n} value={n} aria-label={`${n} × ${n}`} sx={{ minWidth: 40, minHeight: 40 }}>
+                            {n}
+                        </ToggleButton>
+                    ))}
+                </ToggleButtonGroup>
+                {label('Brush shape')}
+                <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={state.shape}
+                    onChange={(_, shape: BrushShape | null) => shape && onChange({ shape })}
+                    aria-label="Brush shape"
+                >
+                    <ToggleButton
+                        value="round"
+                        aria-label="Round brush"
+                        sx={{ gap: 1, minHeight: 40, paddingInline: 1.5 }}
+                    >
+                        <CircleIcon fontSize="small" />
+                        Round
+                    </ToggleButton>
+                    <ToggleButton
+                        value="square"
+                        aria-label="Square brush"
+                        sx={{ gap: 1, minHeight: 40, paddingInline: 1.5 }}
+                    >
+                        <SquareIcon fontSize="small" />
+                        Square
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Stack>
+            <Stack spacing={1}>
+                {cleaning.map((a) => (
+                    <ActionButton key={a.id} action={a} variant="outlined" />
+                ))}
+            </Stack>
+            <Stack>
+                {clearing.map((a) => (
+                    <ActionButton key={a.id} action={a} />
+                ))}
+            </Stack>
         </Stack>
-        <Stack spacing={1}>
-            {cleaning.map((a) => (
-                <ActionButton key={a.id} action={a} variant="outlined" />
-            ))}
-        </Stack>
-        <Stack>
-            {clearing.map((a) => (
-                <ActionButton key={a.id} action={a} />
-            ))}
-        </Stack>
-    </Stack>
-);
+    );
+};

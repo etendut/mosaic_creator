@@ -34,6 +34,6 @@ describe('zooming in a scrolling box', () => {
     it('limits the zoom, and redraws in steps', () => {
         expect(clampZoom(0.5)).toBe(1);
         expect(clampZoom(100)).toBe(MAX_ZOOM);
-        expect([1, 1.2, 2, 2.5, 5, 9].map(drawZoom)).toEqual([1, 2, 2, 4, 8, 8]);
+        expect([1, 1.2, 2, 2.5, 5, 9, 20, 50].map(drawZoom)).toEqual([1, 2, 2, 4, 8, 16, 32, 32]);
     });
 });

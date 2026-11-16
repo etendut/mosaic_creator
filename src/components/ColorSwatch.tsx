@@ -30,7 +30,8 @@ const ColorSwatch = ({ color, disabled, onClick, title, showName }: ColorSwatchP
             paddingInline: showName ? 1 : 0,
             whiteSpace: 'nowrap',
             // big enough to tap when it does something
-            ...(onClick && { '@media (pointer: coarse)': { minWidth: 44, height: 36 } }),
+            // a finger needs at least 40 px; a mouse is fine with the compact size
+            ...(onClick && { '@media (pointer: coarse)': { minWidth: 44, height: 40 } }),
             border: '1px solid black',
             backgroundColor: color.hex,
             color: contrastTextColor(color.hex),

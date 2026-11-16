@@ -3,7 +3,8 @@
  * scrolls. When it's smaller than the box along an axis, it's centred along that axis.
  */
 export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 8;
+/** Up to 2000%, so single bricks are easy to hit with a finger on a phone. */
+export const MAX_ZOOM = 20;
 
 export const clampZoom = (zoom: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 
@@ -34,5 +35,5 @@ export const scrollToPut = (content: number, zoom: number, point: number, base: 
         Math.max(0, content * zoom + Math.max(0, (box - base * zoom) / 2) - point),
     );
 
-/** The resolution to draw at for a zoom: steps of 1, 2, 4 and 8, so zooming redraws only now and then. */
+/** The resolution to draw at for a zoom: steps of 1, 2, 4, 8, 16 and 32, so zooming redraws only now and then. */
 export const drawZoom = (zoom: number) => 2 ** Math.ceil(Math.log2(clampZoom(zoom)));

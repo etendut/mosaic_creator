@@ -16,11 +16,9 @@ import {
 } from '@mui/material';
 import { Fragment, useState } from 'react';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
-import AppBarAction from '../components/AppBarAction';
 import ColorSwatch from '../components/ColorSwatch';
 import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
 import StepLayout from '../components/StepLayout';
-import StepMenuItems from '../components/StepMenuItems';
 import { Tray } from '../components/Tray';
 import { catalog } from '../data/catalog';
 import { downloadFile } from '../download';
@@ -124,6 +122,17 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 ['Lots', parts.length.toLocaleString()],
                 ['Spares', spares > 0 ? `${spares.toLocaleString()} (${sparesPercent}%)` : 'None: exact counts'],
             ]}
+            // like Print: the order follows from the tools, so it ends them (a strip above the bar on phones)
+            action={
+                <Stack direction={{ xs: 'row', md: 'column' }} spacing={1}>
+                    <Button variant="contained" onClick={download} sx={{ flex: 1 }}>
+                        Download BrickLink XML
+                    </Button>
+                    <Button variant="outlined" onClick={copy} sx={{ flex: { xs: '0 0 auto', md: 1 } }}>
+                        Copy XML
+                    </Button>
+                </Stack>
+            }
             groups={[
                 {
                     id: 'spares',
@@ -142,18 +151,6 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 },
             ]}
         >
-            <AppBarAction>
-                {/* on phones the bar has room for one button; Copy XML is in the menu instead */}
-                <Button variant="outlined" onClick={copy} sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
-                    Copy XML
-                </Button>
-                <Button variant="contained" onClick={download}>
-                    Download BrickLink XML
-                </Button>
-            </AppBarAction>
-            <StepMenuItems
-                items={[{ label: 'Copy XML', secondary: 'For BrickLink’s wanted list upload', onClick: copy }]}
-            />
             <Tray sx={{ padding: 0, overflow: 'hidden' }}>
                 <Table size="small">
                     <TableHead>

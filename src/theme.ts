@@ -52,9 +52,14 @@ const theme = createTheme({
         button: { textTransform: 'none', fontWeight: 500, fontSize: 15 },
     },
     components: {
-        MuiButton: { defaultProps: { disableElevation: true } },
+        // every button and toggle is at least 40 px, the style guide's tap size
+        MuiButton: { defaultProps: { disableElevation: true }, styleOverrides: { root: { minHeight: 40 } } },
         MuiTab: { styleOverrides: { root: { textTransform: 'none', fontSize: 15 } } },
-        MuiToggleButton: { styleOverrides: { root: { textTransform: 'none', fontSize: 14, paddingBlock: 5 } } },
+        MuiToggleButton: {
+            styleOverrides: {
+                root: { textTransform: 'none', fontSize: 14, paddingBlock: 5, minHeight: 40, minWidth: 40 },
+            },
+        },
         MuiPaper: { defaultProps: { elevation: 0 } },
         MuiTableCell: { styleOverrides: { head: { fontWeight: 500, color: tokens.muted } } },
         MuiCssBaseline: {

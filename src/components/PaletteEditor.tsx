@@ -111,7 +111,8 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                         control={
                             <Switch size="small" checked={showNames} onChange={(e) => setShowNames(e.target.checked)} />
                         }
-                        sx={{ flexShrink: 0, marginRight: 0 }}
+                        // the whole label takes the tap, at least 40 px tall
+                        sx={{ flexShrink: 0, marginRight: 0, minHeight: 40 }}
                     />
                 </Stack>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>

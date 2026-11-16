@@ -430,7 +430,7 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
                     onClick={() => zoomAround(1 / ZOOM_STEP)}
                     disabled={zoom <= 1}
                 />
-                <Typography variant="body2" aria-label="Zoom level" sx={{ minWidth: 44, textAlign: 'center' }}>
+                <Typography variant="body2" aria-label="Zoom level" sx={{ minWidth: 52, textAlign: 'center' }}>
                     {Math.round(zoom * 100)}%
                 </Typography>
                 <ZoomButton
