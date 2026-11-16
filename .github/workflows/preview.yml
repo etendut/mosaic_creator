@@ -3,6 +3,7 @@ name: PR preview
 # Publishes each PR's build to https://<owner>.github.io/<repo>/pr-preview/pr-<number>/ and links it in a PR comment.
 # The preview updates on every push to the PR and is removed when the PR is merged or closed.
 # PRs from forks can't write to gh-pages, so they get no preview; CI still uploads their build as an artifact.
+# Dependabot's PRs get a read-only token, so they get no preview either.
 on:
   pull_request:
     types: [opened, reopened, synchronize, closed]
@@ -18,7 +19,7 @@ concurrency:
 
 jobs:
   preview:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
