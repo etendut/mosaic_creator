@@ -44,8 +44,6 @@ export interface ToolGroup {
 interface StepLayoutProps {
     /** Warnings and errors about the result. */
     alerts?: ReactNode;
-    /** One sentence: what the step is for, or what a click does now. */
-    status?: ReactNode;
     /** Facts about the result: stats, colours used. */
     facts?: ReactNode;
     /** The tools that change the canvas, in the order you'd decide them. */
@@ -86,7 +84,6 @@ export const ControlSection = ({ title, children }: { title: string; children: R
  */
 const StepLayout = ({
     alerts,
-    status,
     facts,
     groups = [],
     action,
@@ -133,11 +130,6 @@ const StepLayout = ({
     const result = (
         <Stack spacing={2} sx={{ minWidth: 0, '@media print': { display: 'block' } }}>
             {alerts && <Box sx={{ displayPrint: 'none' }}>{alerts}</Box>}
-            {status && (
-                <Typography variant="body2" color="text.secondary" sx={{ displayPrint: 'none' }}>
-                    {status}
-                </Typography>
-            )}
             {desktop && facts && <Box sx={{ displayPrint: 'none' }}>{facts}</Box>}
             {/* on a phone, touching the canvas closes the open tool panel, so the canvas is never stuck behind it */}
             <Box onPointerDown={() => setOpen(null)}>{children}</Box>

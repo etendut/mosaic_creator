@@ -64,7 +64,8 @@ describe('Touch up step', () => {
         expect(names).toEqual([
             'Undo',
             'Redo',
-            'Before / after',
+            'Before',
+            'After',
             'Brush',
             'Eraser',
             'Eyedropper',
@@ -75,7 +76,7 @@ describe('Touch up step', () => {
         ]);
         expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
         // on desktop every tool shows its name, not just an icon
-        for (const name of ['Undo', 'Redo', 'Before / after', 'Brush', 'Eraser', 'Eyedropper', 'Clear all touch-ups'])
+        for (const name of ['Undo', 'Redo', 'Before', 'After', 'Brush', 'Eraser', 'Eyedropper', 'Clear all touch-ups'])
             expect(column.getByRole('button', { name })).toHaveTextContent(name);
         expect(column.getByText('Brush size')).toBeInTheDocument();
         expect(column.getByRole('button', { name: 'Round brush' })).toHaveTextContent('Round');
@@ -219,18 +220,20 @@ describe('Touch up step', () => {
 
     it('compares before and after, without painting while showing before', async () => {
         const user = await startTouchUp();
-        expect(tool('Before / after')).toBeDisabled();
+        // before / after is a two-way toggle, like the brush shape; nothing to compare yet
+        expect(tool('Before')).toBeDisabled();
+        expect(tool('After')).toHaveAttribute('aria-pressed', 'true');
         await paintWith(user, 'Black');
         map().click(4, 4);
 
-        await user.click(tool('Before / after'));
-        expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'true');
+        await user.click(tool('Before'));
+        expect(tool('Before')).toHaveAttribute('aria-pressed', 'true');
         map().click(8, 8);
         touchedUp(1);
 
         // picking a tool goes back to editing
         await user.click(tool('Eraser'));
-        expect(tool('Before / after')).toHaveAttribute('aria-pressed', 'false');
+        expect(tool('After')).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('cleans up stray bricks in one click, saying how many changed', async () => {
@@ -272,6 +275,11 @@ describe('Touch up step', () => {
         expect(screen.getByLabelText('Zoom level')).toHaveTextContent('150%');
         await user.click(tool('Zoom out'));
         expect(zoom()).toBe(1);
+
+        // zoom in as far as it goes: 2000%, for hitting single bricks with a finger
+        while (!(tool('Zoom in') as HTMLButtonElement).disabled) await user.click(tool('Zoom in'));
+        expect(screen.getByLabelText('Zoom level')).toHaveTextContent('2000%');
+        await user.click(tool('Fit to screen'));
 
         // a plain wheel scrolls; Ctrl + wheel (or a trackpad pinch) zooms around the pointer
         fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100 });
@@ -356,7 +364,7 @@ describe('Touch up step', () => {
         expect(screen.getByText(hidden)).toBeInTheDocument();
         await goTo(user, 'Touch up');
         expect(screen.getByText(hidden)).toBeInTheDocument();
-        expect(tool('Before / after')).toBeDisabled();
+        expect(tool('Before')).toBeDisabled();
 
         await goTo(user, 'Bricks');
         setAcross(4);

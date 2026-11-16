@@ -51,9 +51,9 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 The result of the step, as large as fits: the photo, map, card, printed pages or the parts table. From top to bottom:
 
 1. **Alerts** about the result: warnings and errors, as an MUI `Alert`.
-2. **Status line:** only briefly, after an action, saying what just happened ("Cleaned up 7 bricks.", "Touch-ups
-   cleared. Undo brings them back."). No standing text on any page: no purpose sentences, no instructions the tools
-   already show (a pressed tool, a colour button), and no counts or sizes, which go in Info.
+2. **No standing text** on any page: no purpose sentences, no instructions the tools already show (a pressed tool, a
+   colour button), and no counts or sizes, which go in Info. What just happened after an action ("Cleaned up 7
+   bricks.", "Touch-ups cleared. Undo brings them back.") is a toast at the bottom, above the tools on a phone.
 3. **Facts that are also tools**, such as the colours used on Bricks (tap one to swap it). Plain numbers go in Info.
 4. **Canvas:** in a `Stage` (on the page's studs) or a `Tray`. Full width on a phone, with only the 8 px gutter.
 

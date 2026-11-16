@@ -1,5 +1,5 @@
-import { Alert } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Alert, Snackbar } from '@mui/material';
+import { useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { DesktopTools, PhonePalette } from '../components/TouchUp';
@@ -11,7 +11,7 @@ import type { Mosaic } from '../useMosaic';
 
 const bricks = (n: number) => `${n.toLocaleString()} brick${n === 1 ? '' : 's'}`;
 
-/** How long a message after an action (clean-up, clear) stays in the status line. */
+/** How long a message after an action (clean-up, clear) stays up. */
 const MESSAGE_MS = 4000;
 
 /** Fix single bricks on the map: paint, erase, pick colours, clean up strays, and compare before and after. */
@@ -19,11 +19,6 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const used = colorsUsed(mosaic.parts, mosaic.brick.partId);
     const [touchUp, setTouchUp] = useState<TouchUpState>(DEFAULT_TOUCH_UP);
     const [message, setMessage] = useState<string | null>(null);
-    useEffect(() => {
-        if (!message) return;
-        const timer = setTimeout(() => setMessage(null), MESSAGE_MS);
-        return () => clearTimeout(timer);
-    }, [message]);
     // until one is chosen, paint with the most used colour
     const state = { ...touchUp, color: touchUp.color ?? used[0]?.color ?? null };
     const onChange = (change: Partial<TouchUpState>) => setTouchUp((t) => ({ ...t, ...change }));
@@ -75,8 +70,6 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     </Alert>
                 )
             }
-            // only a brief message after clean-up or clearing; the pressed tool says what a click does
-            status={message}
             info={[
                 ['Touched up', mosaic.hiddenTouchUps ? 'Hidden at this size' : bricks(touched)],
                 ['Bricks', mosaic.cards.reduce((n, c) => n + c.brickCount, 0).toLocaleString()],
@@ -87,6 +80,16 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
             iconOnlyBar
         >
             {/* no padding: the map's own scrolling box is the canvas area, filling down to the window's bottom */}
+            {/* a message after clean-up or clearing, as a toast; on a phone, just above the tools */}
+            <Snackbar
+                open={!!message}
+                message={message}
+                autoHideDuration={MESSAGE_MS}
+                // it times out; the click that caused it mustn't close it straight away
+                onClose={(_, reason) => reason !== 'clickaway' && setMessage(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                sx={{ bottom: 'calc(var(--bottom-reserve, 16px) + 8px) !important' }}
+            />
             <Stage sx={{ padding: { xs: 0, sm: 0 } }}>
                 <MosaicPreview
                     mosaic={mosaic}
