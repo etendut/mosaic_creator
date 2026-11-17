@@ -57,7 +57,32 @@ const theme = createTheme({
         MuiTab: { styleOverrides: { root: { textTransform: 'none', fontSize: 15 } } },
         MuiToggleButton: {
             styleOverrides: {
-                root: { textTransform: 'none', fontSize: 14, paddingBlock: 5, minHeight: 40, minWidth: 40 },
+                root: {
+                    textTransform: 'none',
+                    fontSize: 14,
+                    paddingBlock: 5,
+                    minHeight: 40,
+                    minWidth: 40,
+                    // the design system's one selected state, not MUI's grey (which reads as disabled next to azure)
+                    '&.Mui-selected, &.Mui-selected:hover': {
+                        color: tokens.azure,
+                        fontWeight: 500,
+                        backgroundColor: tokens.azureWash,
+                        borderColor: tokens.azure,
+                    },
+                },
+            },
+        },
+        MuiToggleButtonGroup: {
+            styleOverrides: {
+                // in a group, a button's leading border is transparent and tucked under its neighbour; the chosen one
+                // shows all four sides, on top
+                grouped: { '&.Mui-selected': { borderColor: tokens.azure, position: 'relative', zIndex: 1 } },
+            },
+        },
+        MuiMenuItem: {
+            styleOverrides: {
+                root: { '&.Mui-selected, &.Mui-selected:hover': { backgroundColor: tokens.azureWash } },
             },
         },
         MuiPaper: { defaultProps: { elevation: 0 } },
