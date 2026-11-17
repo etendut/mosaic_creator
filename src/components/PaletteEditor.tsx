@@ -8,7 +8,6 @@ import {
     TextField,
     ToggleButton,
     ToggleButtonGroup,
-    Typography,
 } from '@mui/material';
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
@@ -25,6 +24,7 @@ import {
 import type { Mosaic } from '../useMosaic';
 import ChoiceRow from './ChoiceRow';
 import ColorSwatch from './ColorSwatch';
+import HelpText from './HelpText';
 
 const DITHERING_HELP: Record<Dithering, string> = {
     none: 'Each brick takes its closest colour. Best for logos and flat art.',
@@ -103,9 +103,9 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
             )}
             <Box>
                 <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', paddingBottom: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <HelpText>
                         {allowed.size} of {brick.colors.length} colours on. Click a colour to turn it on or off.
-                    </Typography>
+                    </HelpText>
                     <FormControlLabel
                         label="Names"
                         control={

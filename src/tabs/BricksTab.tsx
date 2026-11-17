@@ -3,7 +3,7 @@ import GridOnIcon from '@mui/icons-material/GridOn';
 import InvertColorsIcon from '@mui/icons-material/InvertColors';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
-import { Alert, Slider, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Slider, Stack, TextField } from '@mui/material';
 import ColorsUsed from '../components/ColorsUsed';
 import MosaicPreview from '../components/MosaicPreview';
 import PaletteEditor from '../components/PaletteEditor';
@@ -13,10 +13,13 @@ import { Stage } from '../components/Tray';
 import { mosaicFacts, type Fact } from '../mosaic/facts';
 import { colorsUsed } from '../mosaic/partsList';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
+import HelpText from '../components/HelpText';
 
 /** Choose what to build with and how big, and check the mosaic in bricks. */
 const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { brick, plate, platesAcross, setPlatesAcross, cardGrid } = mosaic;
+    const { brick, plate, platesAcross, setPlatesAcross } = mosaic;
+    // each card is one plate, covered in bricks
+    const bricksPerCard = (plate.size / brick.size) ** 2;
     const touched = mosaic.touchUps?.edits.length ?? 0;
     const bricks = (n: number) => `${n.toLocaleString()} brick${n === 1 ? '' : 's'}`;
 
@@ -29,7 +32,14 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
             label: 'Plate',
             title: 'Backing plate',
             icon: <GridOnIcon />,
-            content: <PlatePicker value={plate} onChange={mosaic.setPlateId} />,
+            content: (
+                <>
+                    <PlatePicker value={plate} onChange={mosaic.setPlateId} />
+                    <HelpText>
+                        Each card is one {plate.size} × {plate.size} plate: {bricksPerCard.toLocaleString()} bricks.
+                    </HelpText>
+                </>
+            ),
         },
         {
             id: 'brick',
@@ -62,10 +72,7 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             sx={{ width: 84, flexShrink: 0 }}
                         />
                     </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                        {platesAcross} plates across, {cardGrid.rows} down. The height follows the image; crop it on the
-                        Image step to change it.
-                    </Typography>
+                    <HelpText>The height follows the image; crop it on the Image step to change it.</HelpText>
                 </>
             ),
         },

@@ -27,6 +27,7 @@ import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
+import HelpText from '../components/HelpText';
 
 const BRICKLINK_UPLOAD_URL = 'https://www.bricklink.com/v2/wanted/upload.page';
 
@@ -141,11 +142,11 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     content: (
                         <>
                             <SparesControl percent={sparesPercent} onChange={setSparesPercent} />
-                            <Typography variant="body2" color="text.secondary">
+                            <HelpText>
                                 {sparesPercent > 0
                                     ? `${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates stay exact, and the cards still show exact counts.`
                                     : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
-                            </Typography>
+                            </HelpText>
                         </>
                     ),
                 },
@@ -173,7 +174,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                                     <Typography variant="subtitle1" component="div">
                                                         {first.name}
                                                     </Typography>
-                                                    <Typography variant="caption" color="text.secondary">
+                                                    <Typography variant="caption" color="textSecondary">
                                                         BrickLink part {first.partId}
                                                     </Typography>
                                                 </Box>
@@ -203,7 +204,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                                     <Typography
                                                         component="span"
                                                         variant="caption"
-                                                        color="text.secondary"
+                                                        color="textSecondary"
                                                         sx={{ display: 'block', whiteSpace: 'nowrap' }}
                                                     >
                                                         incl. {line.spares.toLocaleString()} spare

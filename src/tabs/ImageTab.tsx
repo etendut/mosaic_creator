@@ -83,7 +83,7 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
         <Box>
             <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
                 <Typography variant="body2">{label}</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="textSecondary">
                     {Math.round(value * 100) / 100}
                     {unit}
                 </Typography>
@@ -227,13 +227,13 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
                                 <Typography variant="h2" component="p" gutterBottom>
                                     Start with a picture
                                 </Typography>
-                                <Typography color="text.secondary" sx={{ paddingBottom: 2.5 }}>
+                                <Typography color="textSecondary" sx={{ paddingBottom: 2.5 }}>
                                     Drop one here, or choose one from this device.
                                 </Typography>
                                 <Button variant="contained" size="large" onClick={chooseFile}>
                                     Choose an image
                                 </Button>
-                                <Typography variant="body2" color="text.secondary" sx={{ paddingTop: 2.5 }}>
+                                <Typography variant="body2" color="textSecondary" sx={{ paddingTop: 2.5 }}>
                                     A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics.
                                     Your image stays on this device.
                                 </Typography>

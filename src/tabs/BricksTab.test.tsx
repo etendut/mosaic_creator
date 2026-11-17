@@ -36,21 +36,32 @@ describe('Bricks step', () => {
         expect(screen.getByRole('button', { name: 'Tile round 1×1' })).toHaveAttribute('aria-pressed', 'false');
     });
 
+    it('explains the backing plate in muted help text', async () => {
+        await startMosaic();
+        const help = screen.getByText('Each card is one 8 × 8 plate: 64 bricks.');
+        // text.secondary (MUI's default here: tests render without the app theme), where MUI 9 ignored the dotted
+        // color="text.secondary" and left help in the body colour
+        expect(help).toHaveStyle({ color: 'rgba(0, 0, 0, 0.6)' });
+    });
+
     it('sets the size from the box or the slider, within limits', async () => {
         const user = await startMosaic();
         const box = screen.getByRole('spinbutton', { name: 'Plates across' });
         await user.clear(box);
+        // a cleared box snaps to 1, so typing 6 after it makes 16
         await user.type(box, '6');
-        expect(screen.getByText(/6 plates across/)).toBeInTheDocument();
+        expect(box).toHaveValue(16);
+        expect(info('Cards')).toMatch(/\(16 × \d+\)/);
         await user.clear(box);
         await user.type(box, '99');
-        expect(screen.getByText(/40 plates across/)).toBeInTheDocument();
+        expect(box).toHaveValue(40);
+        expect(info('Cards')).toMatch(/\(40 × \d+\)/);
         await user.clear(box);
-        expect(screen.getByText(/1 plates across/)).toBeInTheDocument();
+        expect(info('Cards')).toMatch(/\(1 × \d+\)/);
 
         screen.getByRole('slider', { name: 'Plates across slider' }).focus();
         await user.keyboard('{ArrowRight}');
-        expect(screen.getByText(/2 plates across/)).toBeInTheDocument();
+        expect(info('Cards')).toMatch(/\(2 × \d+\)/);
     });
 
     it('switches colour sets and turns single colours on and off', async () => {

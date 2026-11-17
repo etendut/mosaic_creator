@@ -1,4 +1,4 @@
-import { Alert, Box, Button, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import { Alert, Box, Button, FormControlLabel, Radio, RadioGroup } from '@mui/material';
 import { useState, type ReactNode } from 'react';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -13,6 +13,7 @@ import type { MosaicCard, PaperSize } from '../mosaic/types';
 import { tokens } from '../theme';
 import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
+import HelpText from '../components/HelpText';
 
 /** Large print jobs are split into batches; Chrome gets slow rendering hundreds of card pages at once. */
 const PAGES_PER_BATCH = 20;
@@ -117,9 +118,9 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                         ))}
                     </RadioGroup>
                     {!layout.usesPaper && (
-                        <Typography variant="body2" color="text.secondary">
+                        <HelpText>
                             These cards are too big for {settings.paperSize}, so they print on {layout.sheet}.
-                        </Typography>
+                        </HelpText>
                     )}
                 </>
             ),
@@ -135,9 +136,9 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             <FormControlLabel key={c.id} value={c.id} control={<Radio />} label={c.label} />
                         ))}
                     </RadioGroup>
-                    <Typography variant="body2" color="text.secondary">
+                    <HelpText>
                         The map page shows the whole mosaic with every card marked, to put up at the event.
-                    </Typography>
+                    </HelpText>
                 </>
             ),
         },
@@ -153,9 +154,7 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             ]}
             action={
                 <>
-                    <Typography variant="body2" color="text.secondary">
-                        {summary}
-                    </Typography>
+                    <HelpText>{summary}</HelpText>
                     {cardBatches.length > 1 && (
                         <Alert severity="info">
                             Large jobs print in parts: the map page, then the cards {PAGES_PER_BATCH} pages at a time.

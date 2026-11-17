@@ -7,7 +7,6 @@ import {
     TextField,
     ToggleButton,
     ToggleButtonGroup,
-    Typography,
 } from '@mui/material';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 import PhotoSizeSelectLargeIcon from '@mui/icons-material/PhotoSizeSelectLarge';
@@ -16,10 +15,11 @@ import BuildingCard from '../components/BuildingCard';
 import { Stage } from '../components/Tray';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { CARD_TEXT, MAX_MESSAGE_LINES, messageLines, mmToPx } from '../mosaic/layout';
-import type { CardSettings, CardSize } from '../mosaic/types';
+import type { CardSize } from '../mosaic/types';
 import { tokens } from '../theme';
 import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
+import HelpText from '../components/HelpText';
 
 const TEXT_FIELDS: {
     key: 'title' | 'topMessage' | 'bottomMessage' | 'clubEvent';
@@ -37,13 +37,10 @@ const SIZES: { value: CardSize; label: string }[] = [
     { value: 'compact', label: 'Compact' },
 ];
 
-const perPage = (n: number) => `${n} card${n === 1 ? '' : 's'} per page`;
-
 const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { settings, updateSettings, cards, brick, layout, layoutFor } = mosaic;
+    const { settings, updateSettings, cards, brick, layout } = mosaic;
     const [firstCard] = cards;
     const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.cardWidthMm));
-    const withoutBagList = layoutFor({ ...settings, bagList: !settings.bagList } as CardSettings);
 
     /** Messages longer than the card has room for get cut off; say so while they can still be shortened. */
     const tooLong = (text: string) =>
@@ -71,12 +68,11 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>
-                    <Typography variant="body2" color="text.secondary">
+                    <HelpText>
                         {settings.cardSize === 'real'
-                            ? 'Each brick on the card is the size of the real brick, so bricks can be laid straight on it.'
-                            : 'Smaller grids and text, to fit more cards on a page.'}{' '}
-                        {perPage(layout.cardsPerPage)} on {layout.label}, {layout.cellMm.toFixed(1)} mm per brick.
-                    </Typography>
+                            ? 'Bricks are printed at real size, so they can be laid straight on the card.'
+                            : 'Smaller grids and text, to fit more cards on a page.'}
+                    </HelpText>
                     <FormControlLabel
                         label="Bag list"
                         control={
@@ -86,13 +82,9 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             />
                         }
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ marginTop: '0 !important' }}>
-                        How many bricks of each colour a card needs, for packing a bag per card.{' '}
-                        {withoutBagList.cardsPerPage !== layout.cardsPerPage &&
-                            (settings.bagList
-                                ? `Without it: ${perPage(withoutBagList.cardsPerPage)}.`
-                                : `With it: ${perPage(withoutBagList.cardsPerPage)}.`)}
-                    </Typography>
+                    <HelpText sx={{ marginTop: '0 !important' }}>
+                        Adds how many bricks of each colour the card needs, for packing a bag per card.
+                    </HelpText>
                 </>
             ),
         },
@@ -153,10 +145,7 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                 cursor: 'pointer',
                             }}
                         />
-                        <Typography variant="body2" color="text.secondary">
-                            {settings.backgroundColor.toUpperCase()}. Text on the card switches between black and white
-                            to stay readable.
-                        </Typography>
+                        <HelpText>Text on the card turns black or white to stay readable.</HelpText>
                     </Stack>
                 </>
             ),

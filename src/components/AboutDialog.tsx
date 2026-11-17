@@ -30,7 +30,7 @@ const AboutDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) 
                     </Link>
                     , where the source code lives under the MIT licence.
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="textSecondary">
                     LEGO® is a trademark of the LEGO Group, which does not sponsor, authorize or endorse this project.
                     Part and colour data comes from the{' '}
                     <Link href="https://www.bricklink.com" target="_blank" rel="noreferrer">
