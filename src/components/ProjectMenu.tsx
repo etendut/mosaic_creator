@@ -1,5 +1,4 @@
 import {
-    Alert,
     Button,
     Dialog,
     DialogActions,
@@ -11,11 +10,11 @@ import {
     ListItemText,
     Menu,
     MenuItem,
-    Snackbar,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useRef, useState } from 'react';
 import { downloadFile } from '../download';
+import Toast, { type ToastMessage } from './Toast';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import { canvasToPng, pngToImage } from '../mosaic/image';
 import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '../mosaic/project';
@@ -37,7 +36,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [confirmReset, setConfirmReset] = useState(false);
     const [about, setAbout] = useState(false);
-    const [message, setMessage] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
+    const [message, setMessage] = useState<ToastMessage | null>(null);
 
     /** A template is the settings alone: no image, and so no parts list either. */
     const save = async (template: boolean) => {
@@ -48,11 +47,10 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
             const zip = packProject({ settings: mosaic.project, image }, wantedList);
             downloadFile(zip, projectFileName(mosaic.settings.title, !image), 'application/zip');
             setMessage({
-                severity: 'success',
                 text: image ? 'Project saved.' : 'Template saved: your settings, without an image.',
             });
         } catch (e) {
-            setMessage({ severity: 'error', text: e instanceof Error ? e.message : String(e) });
+            setMessage({ error: true, text: e instanceof Error ? e.message : String(e) });
         }
     };
 
@@ -65,18 +63,17 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
             if (image) onImageOpened(image);
             const kept = mosaic.image ? ' Your current image is kept.' : ' Choose an image to use it.';
             setMessage({
-                severity: 'success',
                 text: image ? `Opened ${file.name}.` : `Opened template ${file.name}.${kept}`,
             });
         } catch (e) {
-            setMessage({ severity: 'error', text: e instanceof Error ? e.message : String(e) });
+            setMessage({ error: true, text: e instanceof Error ? e.message : String(e) });
         }
     };
 
     const reset = () => {
         mosaic.setProject(DEFAULT_PROJECT);
         setConfirmReset(false);
-        setMessage({ severity: 'success', text: 'Settings reset to defaults.' });
+        setMessage({ text: 'Settings reset to defaults.' });
     };
 
     return (
@@ -124,7 +121,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                     onClick={() => {
                         setAnchor(null);
                         onForgetImage();
-                        setMessage({ severity: 'success', text: 'Image cleared. This browser no longer keeps it.' });
+                        setMessage({ text: 'Image cleared. This browser no longer keeps it.' });
                     }}
                 >
                     <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
@@ -166,18 +163,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                 </DialogActions>
             </Dialog>
             <AboutDialog open={about} onClose={() => setAbout(false)} />
-            <Snackbar
-                open={!!message}
-                autoHideDuration={message?.severity === 'error' ? null : 4000}
-                onClose={() => setMessage(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                {message ? (
-                    <Alert severity={message.severity} onClose={() => setMessage(null)} variant="filled">
-                        {message.text}
-                    </Alert>
-                ) : undefined}
-            </Snackbar>
+            <Toast message={message} onClose={() => setMessage(null)} />
         </>
     );
 };

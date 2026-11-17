@@ -7,6 +7,7 @@ import { drawPreview } from '../mosaic/image';
 import { brushCells, type BrickTool, type Edit } from '../mosaic/touchUp';
 import type { Cell, PixelGrid } from '../mosaic/types';
 import { clampZoom, contentAt, drawZoom, fitScale, MAX_ZOOM, scrollForZoom, scrollToPut } from '../mosaic/view';
+import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
 
 /** Target on-screen width of the preview; the canvas is scaled down with CSS if the window is narrower. */
@@ -412,8 +413,10 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
                     {brushOutline}
                 </Box>
             </Box>
+            {/* the ZoomControl: a tray bar floating in the corner, the only shadow besides toasts and phone panels */}
             <Paper
-                elevation={2}
+                role="group"
+                aria-label="Zoom"
                 sx={{
                     position: 'absolute',
                     // clear of the scroll bars
@@ -421,7 +424,10 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
                     bottom: 20,
                     display: 'flex',
                     alignItems: 'center',
-                    borderRadius: 2,
+                    backgroundColor: tokens.tray,
+                    border: `1px solid ${tokens.groove}`,
+                    borderRadius: 1.5,
+                    boxShadow: 2,
                 }}
             >
                 <ZoomButton
@@ -430,7 +436,12 @@ const MosaicPreview = ({ mosaic, tool = null, showGrid, onPick = null, zoomable 
                     onClick={() => zoomAround(1 / ZOOM_STEP)}
                     disabled={zoom <= 1}
                 />
-                <Typography variant="body2" aria-label="Zoom level" sx={{ minWidth: 52, textAlign: 'center' }}>
+                <Typography
+                    variant="body2"
+                    aria-label="Zoom level"
+                    // a fixed width and even figures, so the buttons don't move as it changes
+                    sx={{ minWidth: 52, textAlign: 'center', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}
+                >
                     {Math.round(zoom * 100)}%
                 </Typography>
                 <ZoomButton

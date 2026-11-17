@@ -19,6 +19,11 @@ export const tokens = {
     azureWash: '#E3F2F4',
     /** The inset edge of a colour swatch, so white bricks show on a white tray. */
     swatchEdge: 'rgba(0, 0, 0, 0.2)',
+    /** A text action on a toast, which is an ink fill. */
+    toastAction: '#7FD3DE',
+    /** Errors only, always with an icon and words. */
+    danger: '#B3261E',
+    onDanger: '#FFFFFF',
 };
 
 /** A subtle grid of studs: every page sits on it, like a baseplate. */

@@ -147,7 +147,8 @@ describe('Steps on a phone', () => {
         await user.click(tools().getByRole('button', { name: 'Clean up single bricks' }));
         expect(screen.getByText(/Cleaned up|No stray bricks/)).toBeInTheDocument();
         await user.click(tools().getByRole('button', { name: 'Clear all touch-ups' }));
-        expect(screen.getByText('Touch-ups cleared. Undo brings them back.')).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent('Touch-ups cleared.');
+        expect(within(screen.getByRole('status')).getByRole('button', { name: 'Undo' })).toBeInTheDocument();
     });
 
     it("shows the step's name and main action in the app bar", async () => {
