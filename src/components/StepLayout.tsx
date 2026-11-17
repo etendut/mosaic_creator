@@ -112,7 +112,16 @@ const StepLayout = ({
     }, []);
 
     const result = (
-        <Stack spacing={2} sx={{ minWidth: 0, '@media print': { display: 'block' } }}>
+        <Stack
+            spacing={2}
+            sx={{
+                minWidth: 0,
+                // down to the window's bottom, so a Stage can centre its result in the space
+                minHeight: desktop ? `calc(100dvh - ${HEADER_PX + 32}px)` : undefined,
+                flexGrow: 1,
+                '@media print': { display: 'block', minHeight: 0 },
+            }}
+        >
             {/* the numbers first, in view as the page scrolls; on a phone they're under the app bar instead */}
             {desktop && info.length > 0 && (
                 <Box sx={{ position: 'sticky', top: HEADER_PX + 16, zIndex: 2 }}>
@@ -122,7 +131,12 @@ const StepLayout = ({
             {alerts && <Box sx={{ displayPrint: 'none' }}>{alerts}</Box>}
             {desktop && facts && <Box sx={{ displayPrint: 'none' }}>{facts}</Box>}
             {/* on a phone, touching the canvas closes the open tool panel, so the canvas is never stuck behind it */}
-            <Box onPointerDown={() => setOpen(null)}>{children}</Box>
+            <Box
+                onPointerDown={() => setOpen(null)}
+                sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', '@media print': { display: 'block' } }}
+            >
+                {children}
+            </Box>
             {/* on a phone the facts go under the canvas, so the canvas stays in view above an open tool panel */}
             {!desktop && facts && <Box sx={{ displayPrint: 'none' }}>{facts}</Box>}
         </Stack>
@@ -178,6 +192,12 @@ const StepLayout = ({
                 paddingBottom: `${bottomPx + 8}px`,
                 // a canvas that fills the window stops above the phone's tools
                 '--bottom-reserve': `${bottomPx + 8}px`,
+                // the space between the app bar and the tools, for a Stage to centre its result in
+                boxSizing: 'border-box',
+                minHeight: 'calc(100dvh - var(--app-bar-height, 0px))',
+                display: 'flex',
+                flexDirection: 'column',
+                '@media print': { display: 'block', minHeight: 0 },
             }}
         >
             {/* flush under the app bar, edge to edge, and in view as the page scrolls */}

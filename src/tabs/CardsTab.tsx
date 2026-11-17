@@ -162,7 +162,7 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 ['Brick on the card', `${layout.cellMm.toFixed(1)} mm`],
             ]}
         >
-            <Stage ref={measureStage} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Stage ref={measureStage} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {firstCard && (
                     <Box
                         sx={{

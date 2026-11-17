@@ -24,6 +24,8 @@ export const tokens = {
     /** Errors only, always with an icon and words. */
     danger: '#B3261E',
     onDanger: '#FFFFFF',
+    /** What dims outside the crop on the Image step: ink at 70%, dark in either theme. */
+    shade: 'rgba(34, 38, 42, 0.7)',
 };
 
 /** A subtle grid of studs: every page sits on it, like a baseplate. */

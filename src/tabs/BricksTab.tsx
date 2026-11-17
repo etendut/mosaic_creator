@@ -104,7 +104,7 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
                 ...(touched > 0 && !mosaic.hiddenTouchUps ? [['Touched up', bricks(touched)] as Fact] : []),
             ]}
         >
-            <Stage sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Stage sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <MosaicPreview mosaic={mosaic} />
             </Stage>
         </StepLayout>
