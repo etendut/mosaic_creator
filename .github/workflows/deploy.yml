@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Dependabot's auto-merges are made with the Actions token, which doesn't start other workflows, so they don't
+  # trigger the push above. A daily deploy picks them up; on a day with no change it republishes the same site.
+  schedule:
+    - cron: '17 3 * * *'
 
 permissions:
   contents: write
