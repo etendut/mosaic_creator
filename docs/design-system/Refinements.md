@@ -10,12 +10,12 @@ Where the app as shipped (checked on the live site, 17 November 2026) falls shor
 
 | Step     | Facts, in order                                                        |
 | -------- | ---------------------------------------------------------------------- |
-| Image    | Picture 640 × 480 px · Crop Original                                   |
+| Image    | Picture 640 × 480 px                                                   |
 | Bricks   | Cards 12 (4 × 3) · Bricks 768 · Mosaic 32 × 24 · Finished 256 × 192 mm |
 | Touch up | Touched up 0 · Bricks 768 · Colours 12                                 |
 | Cards    | Cards 12 · Pages 2 · Per page 8 · Brick 8.0 mm                         |
 | Parts    | Parts 780 · Lots 13                                                    |
-| Print    | Cards 12 · Card pages 2 · Per page 8 on A4 landscape                   |
+| Print    | Cards 12 · Card pages 2 · Per page 8                                   |
 
 ## 2. Help text renders as body text
 

@@ -47,7 +47,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 Every step is laid out like a photo editor, with three zones that never move.
 
 - **App bar** (`tray`, `groove` bottom border, sticky): ☰ menu at the left, the step tabs, and at most one contained main action at the right.
-- **Canvas**: the result as large as it fits. Above it only alerts and facts that are also tools. Full width on a phone, with the 8px gutter.
+- **Canvas**: the result as large as it fits, full width on a phone with the 8px gutter. Above it, in this order and nothing else: the Info bar, alerts about the result, and facts that are also tools (Colours used).
 - **Tools**: everything that changes the canvas, in groups in the order you'd decide them. On desktop (from `breakpoint-desktop`, 900px) a 340px `tools-column` Tray with every group open as a ControlSection, holding only tools. On a phone a bottom tool bar (`tool-bar`, 60px) with icon and label per group; a group opens a panel above it, at most 45% of the screen high.
 - **Info bar**: the step's numbers, at most four, in one strip pinned to the top of the canvas column on desktop and flush under the app bar on a phone, always in view. Never in the tools, never behind a button, never a fact that repeats a setting.
 - **Canvas placement**: centre the result in the Stage, both ways. A single small result (one card) is centred, not parked at the top.
@@ -131,7 +131,7 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 
 | Step     | Main action                                                            | Tools (desktop column; phone bar)                                                        | Info bar                           |
 | -------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
-| Image    | _Use this image_ (app bar)                                             | Frame, Adjust                                                                            | Picture · Crop                     |
+| Image    | _Use this image_ (app bar)                                             | Frame, Adjust                                                                            | Picture                            |
 | Bricks   | none                                                                   | Plate, Brick, Size, Colours, Colours used                                                | Cards · Bricks · Mosaic · Finished |
 | Touch up | none                                                                   | Undo, Redo, Before / after; Brush, Eraser, Eyedropper; palette; two clean-ups; Clear all | Touched up · Bricks · Colours      |
 | Cards    | none                                                                   | Card size, Card text, Card colour                                                        | Cards · Pages · Per page · Brick   |
