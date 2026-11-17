@@ -33,8 +33,9 @@ npm run typecheck
 npm run build      # dist/index.html, a single self-contained file
 ```
 
-Interface changes follow the [style guide](docs/style-guide.md): the zones every step has, where actions and settings
-go, and how text reads.
+Interface changes follow the [design system](docs/design-system/README.md): the tokens, the zones every step has, where
+actions, settings and numbers go, and how text reads. [Refinements](docs/design-system/Refinements.md) lists where the
+app doesn't match it yet.
 
 Pushes to `main` deploy to GitHub Pages through the `gh-pages` branch. Each pull request gets a preview at
 `https://etendut.github.io/mosaic_creator/pr-preview/pr-<number>/`, linked in a comment on the PR and removed when

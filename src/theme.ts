@@ -52,7 +52,7 @@ const theme = createTheme({
         button: { textTransform: 'none', fontWeight: 500, fontSize: 15 },
     },
     components: {
-        // every button and toggle is at least 40 px, the style guide's tap size
+        // every button and toggle is at least 40 px, the design system's `tap-target`
         MuiButton: { defaultProps: { disableElevation: true }, styleOverrides: { root: { minHeight: 40 } } },
         MuiTab: { styleOverrides: { root: { textTransform: 'none', fontSize: 15 } } },
         MuiToggleButton: {

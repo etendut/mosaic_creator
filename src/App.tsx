@@ -105,7 +105,7 @@ const App = () => {
 
     return (
         <Box sx={{ minHeight: '100dvh', '@media print': { backgroundColor: 'white' } }}>
-            {/* the app bar: the menu, the steps and the step's main action (see docs/style-guide.md) */}
+            {/* the app bar: the menu, the steps and the step's main action (see docs/design-system/README.md) */}
             <Box
                 component="header"
                 sx={{
