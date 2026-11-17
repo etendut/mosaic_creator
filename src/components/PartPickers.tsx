@@ -89,6 +89,7 @@ const shortName = (brick: BrickOption) =>
     brick.name
         .replace(/ with Bottom Stud Holder| with Axle Hole| with Groove| \(\d+\)/g, '')
         .replace(', Round', ' round')
+        // eslint-disable-next-line sonarjs/super-linear-regex -- runs on short catalog names, never on user input
         .replace(/(\d+) x (\d+)/, '$1×$2');
 
 export const BrickPicker = ({ value, onChange }: { value: BrickOption; onChange: (partId: string) => void }) => (

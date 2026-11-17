@@ -9,6 +9,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 const commit = () => {
     if (process.env.COMMIT_SHA) return process.env.COMMIT_SHA;
     try {
+        // eslint-disable-next-line sonarjs/no-os-command-from-path -- build time only, on the developer's or CI's own git
         return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
             .toString()
             .trim();
