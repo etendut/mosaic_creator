@@ -1,0 +1,27 @@
+name: Dependabot auto-merge
+
+# Turns on auto-merge for Dependabot's minor and patch updates and its GitHub Actions updates. GitHub then merges
+# each one by itself once the required `build` check (lint, type check, tests, coverage, build) passes; if it
+# fails, the PR stays open. Major npm updates can break things, so they're left for a person to review and merge.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v2
+      # for a grouped PR, update-type is the biggest update in the group
+      - if: >-
+          steps.meta.outputs.package-ecosystem == 'github_actions' ||
+          steps.meta.outputs.update-type == 'version-update:semver-minor' ||
+          steps.meta.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --merge "$PR"
+        env:
+          PR: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
