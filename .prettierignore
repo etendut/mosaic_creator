@@ -1,0 +1,7 @@
+# written by tools, not people
+package-lock.json
+eslint-suppressions.json
+dist/
+coverage/
+temp/
+src/data/catalog.json

@@ -9,7 +9,7 @@ your machine. Supported browsers: Chrome and Edge.
 
 1. Open https://etendut.github.io/mosaic_creator/ in Chrome or Edge. To use it offline, save the page (Ctrl+S) and
    open the saved file; it's one self-contained HTML file.
-2. **Image** — choose or drop a picture, crop/rotate/adjust it, then *Use this image*.
+2. **Image** — choose or drop a picture, crop/rotate/adjust it, then _Use this image_.
 3. **Bricks** — pick the backing plate, the brick, and how many plates wide the mosaic is.
 4. **Cards** — set the title, messages and card colour.
 5. **Parts** — download or copy a BrickLink wanted-list XML.

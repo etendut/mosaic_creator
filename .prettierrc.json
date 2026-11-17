@@ -1,6 +1,12 @@
 {
-  "singleQuote": true,
-  "tabWidth": 4,
-  "printWidth": 120,
-  "trailingComma": "all"
+    "singleQuote": true,
+    "tabWidth": 4,
+    "printWidth": 120,
+    "trailingComma": "all",
+    "overrides": [
+        {
+            "files": ["*.yml", "*.yaml", "*.md", "package.json"],
+            "options": { "tabWidth": 2 }
+        }
+    ]
 }
