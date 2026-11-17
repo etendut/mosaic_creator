@@ -15,3 +15,9 @@ Any change to what the app looks like or says follows the design system in `docs
 The system is also published, with live previews in light and dark, at
 https://claude.ai/artifact/6SByDsUBYrwJH4LfsQFxa1. The files here are the source; after changing them, republish the
 artifact (read it, update the changed `project/` files) so the two match.
+
+## Visibility
+
+Public (github.com/etendut/mosaic_creator). Claude's memory for this repo stays outside it, at the harness default
+path; `.claude/` holds only what's fine to publish: these instructions, plans (`.claude/plans/`) and working docs
+(`.claude/work/`). Keep session IDs, quoted conversation and anything personal out of them.
