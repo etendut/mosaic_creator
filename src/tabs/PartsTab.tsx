@@ -25,8 +25,11 @@ import { downloadFile } from '../download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
+import type { Fact } from '../mosaic/facts';
+import { partName } from '../mosaic/units';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
+import HelpText from '../components/HelpText';
 
 const BRICKLINK_UPLOAD_URL = 'https://www.bricklink.com/v2/wanted/upload.page';
 
@@ -120,7 +123,8 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
             info={[
                 ['Parts', total.toLocaleString()],
                 ['Lots', parts.length.toLocaleString()],
-                ['Spares', spares > 0 ? `${spares.toLocaleString()} (${sparesPercent}%)` : 'None: exact counts'],
+                // only when there are some: 'None' would just repeat the Spares setting
+                ...(spares > 0 ? [['Spares', spares.toLocaleString()] as Fact] : []),
             ]}
             // like Print: the order follows from the tools, so it ends them (a strip above the bar on phones)
             action={
@@ -141,11 +145,11 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                     content: (
                         <>
                             <SparesControl percent={sparesPercent} onChange={setSparesPercent} />
-                            <Typography variant="body2" color="text.secondary">
+                            <HelpText>
                                 {sparesPercent > 0
                                     ? `${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates stay exact, and the cards still show exact counts.`
                                     : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
-                            </Typography>
+                            </HelpText>
                         </>
                     ),
                 },
@@ -171,9 +175,9 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                                 {iconFor(first.partId)}
                                                 <Box>
                                                     <Typography variant="subtitle1" component="div">
-                                                        {first.name}
+                                                        {partName(first.name)}
                                                     </Typography>
-                                                    <Typography variant="caption" color="text.secondary">
+                                                    <Typography variant="caption" color="textSecondary">
                                                         BrickLink part {first.partId}
                                                     </Typography>
                                                 </Box>
@@ -203,7 +207,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                                     <Typography
                                                         component="span"
                                                         variant="caption"
-                                                        color="text.secondary"
+                                                        color="textSecondary"
                                                         sx={{ display: 'block', whiteSpace: 'nowrap' }}
                                                     >
                                                         incl. {line.spares.toLocaleString()} spare

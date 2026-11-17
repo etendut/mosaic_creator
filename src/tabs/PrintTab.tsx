@@ -1,4 +1,4 @@
-import { Alert, Box, Button, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import { Alert, Box, Button, FormControlLabel, Radio, RadioGroup } from '@mui/material';
 import { useState, type ReactNode } from 'react';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -10,9 +10,10 @@ import { Stage } from '../components/Tray';
 import { CARD_GAP_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
-import { tokens } from '../theme';
+import { COLOR_SCHEME_ATTRIBUTE, tokens } from '../theme';
 import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
+import HelpText from '../components/HelpText';
 
 /** Large print jobs are split into batches; Chrome gets slow rendering hundreds of card pages at once. */
 const PAGES_PER_BATCH = 20;
@@ -23,6 +24,8 @@ const chunk = <T,>(items: T[], size: number) =>
 /** One sheet of paper: on screen with its margin drawn, in print one page with the @page margin around it. */
 const Sheet = ({ layout, children }: { layout: PageLayout; children: ReactNode }) => (
     <Box
+        // paper is white whatever the screen's theme, on screen and printed
+        {...{ [COLOR_SCHEME_ATTRIBUTE]: 'light' }}
         sx={{
             width: `${layout.pageWidthMm}mm`,
             height: `${layout.pageHeightMm}mm`,
@@ -117,9 +120,9 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                         ))}
                     </RadioGroup>
                     {!layout.usesPaper && (
-                        <Typography variant="body2" color="text.secondary">
+                        <HelpText>
                             These cards are too big for {settings.paperSize}, so they print on {layout.sheet}.
-                        </Typography>
+                        </HelpText>
                     )}
                 </>
             ),
@@ -135,9 +138,9 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
                             <FormControlLabel key={c.id} value={c.id} control={<Radio />} label={c.label} />
                         ))}
                     </RadioGroup>
-                    <Typography variant="body2" color="text.secondary">
+                    <HelpText>
                         The map page shows the whole mosaic with every card marked, to put up at the event.
-                    </Typography>
+                    </HelpText>
                 </>
             ),
         },
@@ -149,13 +152,12 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             info={[
                 ['Cards', cards.length.toLocaleString()],
                 ['Card pages', cardPages.length.toLocaleString()],
-                ['Per page', `${layout.cardsPerPage} on ${layout.label}`],
+                // the paper is a setting on this step, so not repeated here
+                ['Per page', layout.cardsPerPage.toLocaleString()],
             ]}
             action={
                 <>
-                    <Typography variant="body2" color="text.secondary">
-                        {summary}
-                    </Typography>
+                    <HelpText>{summary}</HelpText>
                     {cardBatches.length > 1 && (
                         <Alert severity="info">
                             Large jobs print in parts: the map page, then the cards {PAGES_PER_BATCH} pages at a time.

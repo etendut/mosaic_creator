@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { goTo, info, startMosaic } from '../test/app';
+import { goTo, info, infoLabels, startMosaic } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 describe('Parts step', () => {
@@ -9,7 +9,8 @@ describe('Parts step', () => {
         expect(screen.getByText('BrickLink part 98138')).toBeInTheDocument();
         expect(screen.getByText('BrickLink part 41539')).toBeInTheDocument();
         expect(Number(info('Lots'))).toBeGreaterThan(0);
-        expect(info('Spares')).toBe('None: exact counts');
+        // no spares: the Spares setting says so, and Info doesn't repeat it
+        expect(infoLabels()).toEqual(['Parts', 'Lots']);
     });
 
     it('adds the pins for plates that need them', async () => {
@@ -51,10 +52,11 @@ describe('Parts step', () => {
         };
         const exactLegend = await legend();
         const exact = quantities();
-        expect(info('Spares')).toBe('None: exact counts');
+        expect(infoLabels()).not.toContain('Spares');
 
         await user.click(screen.getByRole('button', { name: '10%' }));
-        expect(info('Spares')).toMatch(/^[\d,]+ \(10%\)$/);
+        // how many extra: a number the setting doesn't show
+        expect(info('Spares')).toMatch(/^[\d,]+$/);
         expect(screen.getByText(/10% extra of each brick colour/)).toBeInTheDocument();
         // the plates (their part row and colour row) stay exact; every other row grows by at least 10%
         const grown = quantities();

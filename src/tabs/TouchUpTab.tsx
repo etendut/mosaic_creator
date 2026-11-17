@@ -1,9 +1,10 @@
-import { Alert, Snackbar } from '@mui/material';
+import { Alert } from '@mui/material';
 import { useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
+import Toast, { type ToastMessage } from '../components/Toast';
 import { DesktopTools, PhonePalette } from '../components/TouchUp';
-import { touchUpActions, type TouchUpAction } from '../components/touchUpTools';
+import { touchUpActions, UNDO, type TouchUpAction } from '../components/touchUpTools';
 import { Stage } from '../components/Tray';
 import { colorsUsed } from '../mosaic/partsList';
 import { brushFor, DEFAULT_TOUCH_UP, type TouchUpState } from '../mosaic/touchUp';
@@ -11,19 +12,18 @@ import type { Mosaic } from '../useMosaic';
 
 const bricks = (n: number) => `${n.toLocaleString()} brick${n === 1 ? '' : 's'}`;
 
-/** How long a message after an action (clean-up, clear) stays up. */
-const MESSAGE_MS = 4000;
-
 /** Fix single bricks on the map: paint, erase, pick colours, clean up strays, and compare before and after. */
 const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     const used = colorsUsed(mosaic.parts, mosaic.brick.partId);
     const [touchUp, setTouchUp] = useState<TouchUpState>(DEFAULT_TOUCH_UP);
-    const [message, setMessage] = useState<string | null>(null);
+    const [message, setMessage] = useState<ToastMessage | null>(null);
     // until one is chosen, paint with the most used colour
     const state = { ...touchUp, color: touchUp.color ?? used[0]?.color ?? null };
     const onChange = (change: Partial<TouchUpState>) => setTouchUp((t) => ({ ...t, ...change }));
     const touched = mosaic.touchUps?.edits.length ?? 0;
     const { history, tools, cleaning, clearing } = touchUpActions(mosaic, state, onChange, setMessage);
+    // a toast's Undo, bound on every render to undo as things are now (the message itself is from an earlier one)
+    const shown = message?.action === UNDO ? { ...message, action: { ...UNDO, onClick: mosaic.undo } } : message;
 
     // the same buttons in the same order on both layouts: history, tools, palette, clean-up, clearing
     const asGroups = (actions: TouchUpAction[], divider: boolean, barRow: 1 | 2 = 1): ToolGroup[] =>
@@ -55,7 +55,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
         },
         ...asGroups(history, false),
         ...asGroups(tools, true),
-        // on a phone, two rows keep every button wide: history and tools, then clean-up, clearing and Info
+        // on a phone, two rows keep every button wide: history and tools, then clean-up and clearing
         ...asGroups(cleaning, true, 2),
         ...asGroups(clearing, true, 2),
     ];
@@ -81,15 +81,7 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
         >
             {/* no padding: the map's own scrolling box is the canvas area, filling down to the window's bottom */}
             {/* a message after clean-up or clearing, as a toast; on a phone, just above the tools */}
-            <Snackbar
-                open={!!message}
-                message={message}
-                autoHideDuration={MESSAGE_MS}
-                // it times out; the click that caused it mustn't close it straight away
-                onClose={(_, reason) => reason !== 'clickaway' && setMessage(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                sx={{ bottom: 'calc(var(--bottom-reserve, 16px) + 8px) !important' }}
-            />
+            <Toast message={shown} onClose={() => setMessage(null)} />
             <Stage sx={{ padding: { xs: 0, sm: 0 } }}>
                 <MosaicPreview
                     mosaic={mosaic}

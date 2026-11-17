@@ -1,5 +1,5 @@
 import type { MosaicCard, PixelGrid, PlateOption } from './types';
-import { formatLength, studsToMm } from './units';
+import { formatSize, studsToMm } from './units';
 
 /** One fact about the mosaic: a label and its value, for a step's Info and the printed map page. */
 export type Fact = [label: string, value: string];
@@ -18,9 +18,6 @@ export const mosaicFacts = (mosaic: {
         ['Cards', `${cards.length.toLocaleString()} (${cardGrid.columns} × ${cardGrid.rows})`],
         ['Bricks', bricks.toLocaleString()],
         ['Mosaic', `${grid.width} × ${grid.height} bricks`],
-        [
-            'Finished size',
-            `${formatLength(studsToMm(cardGrid.columns * plate.size))} × ${formatLength(studsToMm(cardGrid.rows * plate.size))}`,
-        ],
+        ['Finished size', formatSize(studsToMm(cardGrid.columns * plate.size), studsToMm(cardGrid.rows * plate.size))],
     ];
 };

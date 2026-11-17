@@ -22,13 +22,13 @@ describe('Cards step', () => {
     it('switches between real size and compact cards', async () => {
         const user = await startMosaic();
         await goTo(user, 'Cards');
-        expect(
-            screen.getByText(/size of the real brick.*8 cards per page on A4 landscape, 8\.0 mm per brick/),
-        ).toBeVisible();
+        expect(screen.getByText(/printed at real size/)).toBeVisible();
+        expect(info('Per page')).toBe('8 on A4 landscape');
+        expect(info('Brick on the card')).toBe('8.0 mm');
 
         await user.click(screen.getByRole('button', { name: 'Compact' }));
         expect(screen.getByRole('button', { name: 'Compact' })).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText(/Smaller grids and text.*10 cards per page/)).toBeVisible();
+        expect(screen.getByText(/Smaller grids and text/)).toBeVisible();
         expect(info('Per page')).toBe('10 on A4 landscape');
     });
 
@@ -36,12 +36,13 @@ describe('Cards step', () => {
         const user = await startMosaic();
         await goTo(user, 'Cards');
         expect(screen.queryByRole('list', { name: 'Bricks for card A1' })).not.toBeInTheDocument();
-        expect(screen.getByText(/With it: \d+ cards per page/)).toBeInTheDocument();
+        expect(info('Per page')).toBe('8 on A4 landscape');
 
         await user.click(screen.getByRole('checkbox', { name: 'Bag list' }));
         const bag = screen.getByRole('list', { name: 'Bricks for card A1' });
         expect(bag.children.length).toBeGreaterThan(0);
-        expect(screen.getByText(/Without it: 8 cards per page/)).toBeInTheDocument();
+        // the bag list takes room on each card, so fewer fit a page
+        expect(info('Per page')).not.toBe('8 on A4 landscape');
     });
 
     it('warns when instructions are too long for the card', async () => {
@@ -57,6 +58,6 @@ describe('Cards step', () => {
         const user = await startMosaic();
         await goTo(user, 'Cards');
         fireEvent.input(screen.getByLabelText('Card colour'), { target: { value: '#112233' } });
-        expect(screen.getByText(/#112233/)).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'Card A1' })).toHaveStyle({ backgroundColor: '#112233' });
     });
 });

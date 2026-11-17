@@ -8,6 +8,7 @@ import AppBarAction from '../components/AppBarAction';
 import ChoiceRow from '../components/ChoiceRow';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { applyEdits, filterCss, flipImage, loadImage } from '../mosaic/image';
+import { tokens } from '../theme';
 
 const ASPECTS = [
     { label: 'Original', value: 0 },
@@ -83,7 +84,7 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
         <Box>
             <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
                 <Typography variant="body2">{label}</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="textSecondary">
                     {Math.round(value * 100) / 100}
                     {unit}
                 </Typography>
@@ -201,8 +202,7 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
                 <Stage
                     sx={{
                         position: 'relative',
-                        // fill the screen between the bars, with the status line above
-                        height: { xs: 'calc(100dvh - 240px)', md: 'calc(100dvh - 150px)' },
+                        // a Stage fills the canvas area down to the window's bottom (or the phone's tools)
                         minHeight: 300,
                         padding: 0,
                         overflow: 'hidden',
@@ -219,7 +219,11 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
                             onZoomChange={setZoom}
                             onRotationChange={setRotation}
                             onCropComplete={(_, pixels) => setArea(pixels)}
-                            style={{ mediaStyle: { filter: filterCss(adjustments) } }}
+                            style={{
+                                mediaStyle: { filter: filterCss(adjustments) },
+                                // outside the crop, the page dims in the palette's shade, not plain black
+                                cropAreaStyle: { color: tokens.shade },
+                            }}
                         />
                     ) : (
                         <Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', padding: 1 }}>
@@ -227,13 +231,13 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
                                 <Typography variant="h2" component="p" gutterBottom>
                                     Start with a picture
                                 </Typography>
-                                <Typography color="text.secondary" sx={{ paddingBottom: 2.5 }}>
+                                <Typography color="textSecondary" sx={{ paddingBottom: 2.5 }}>
                                     Drop one here, or choose one from this device.
                                 </Typography>
                                 <Button variant="contained" size="large" onClick={chooseFile}>
                                     Choose an image
                                 </Button>
-                                <Typography variant="body2" color="text.secondary" sx={{ paddingTop: 2.5 }}>
+                                <Typography variant="body2" color="textSecondary" sx={{ paddingTop: 2.5 }}>
                                     A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics.
                                     Your image stays on this device.
                                 </Typography>

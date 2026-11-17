@@ -24,7 +24,11 @@ const map = () => {
 };
 
 /** A tool or action by name: the tools are in the left column, undo, redo and before/after in the app bar. */
-const tool = (name: string | RegExp) => screen.getByRole('button', { name });
+/** A button in the tools column (a toast can have its own Undo). */
+const tool = (name: string | RegExp) =>
+    within(screen.getByRole('complementary', { name: 'Tools' })).getByRole('button', { name });
+/** The toast's action button. */
+const toastAction = (name: string) => within(screen.getByRole('status')).getByRole('button', { name });
 /** Bricks touched up to black (BrickLink 11), from the saved touch-ups. */
 const blackBricks = (): number =>
     (JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps?.edits ?? []).filter(
@@ -182,6 +186,13 @@ describe('Touch up step', () => {
         noneTouchedUp();
         await user.click(tool('Undo'));
         touchedUp(2);
+
+        // the toast's Undo does the same, with the history as it is when pressed, not when the toast was made
+        await user.click(tool('Clear all touch-ups'));
+        expect(screen.getByRole('status')).toHaveTextContent('Touch-ups cleared.');
+        noneTouchedUp();
+        await user.click(toastAction('Undo'));
+        touchedUp(2);
     });
 
     it('picks the paint colour from a brick with the eyedropper, and stays on it like the other tools', async () => {
@@ -247,6 +258,11 @@ describe('Touch up step', () => {
         await user.click(tool('Clean up single bricks'));
         expect(screen.getByText('Cleaned up 1 brick.')).toBeInTheDocument();
         expect(blackBricks()).toBe(0);
+        // the toast offers Undo
+        await user.click(toastAction('Undo'));
+        expect(blackBricks()).toBe(1);
+        await user.click(tool('Clean up single bricks'));
+        expect(blackBricks()).toBe(0);
 
         // pairs too
         await user.click(tool('Undo'));
@@ -269,28 +285,29 @@ describe('Touch up step', () => {
         box.getBoundingClientRect = () => ({ left: 0, top: 0, width: 320, height: 200 }) as DOMRect;
         const zoom = () => Number(frame.dataset.zoom);
         expect(screen.getByLabelText('Zoom level')).toHaveTextContent('100%');
-        expect(tool('Zoom out')).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Zoom out' })).toBeDisabled();
 
-        await user.click(tool('Zoom in'));
+        await user.click(screen.getByRole('button', { name: 'Zoom in' }));
         expect(screen.getByLabelText('Zoom level')).toHaveTextContent('150%');
-        await user.click(tool('Zoom out'));
+        await user.click(screen.getByRole('button', { name: 'Zoom out' }));
         expect(zoom()).toBe(1);
 
         // zoom in as far as it goes: 2000%, for hitting single bricks with a finger
-        while (!(tool('Zoom in') as HTMLButtonElement).disabled) await user.click(tool('Zoom in'));
+        while (!(screen.getByRole('button', { name: 'Zoom in' }) as HTMLButtonElement).disabled)
+            await user.click(screen.getByRole('button', { name: 'Zoom in' }));
         expect(screen.getByLabelText('Zoom level')).toHaveTextContent('2000%');
-        await user.click(tool('Fit to screen'));
+        await user.click(screen.getByRole('button', { name: 'Fit to screen' }));
 
         // a plain wheel scrolls; Ctrl + wheel (or a trackpad pinch) zooms around the pointer
         fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100 });
         expect(zoom()).toBe(1);
         fireEvent.wheel(box, { deltaY: -500, clientX: 160, clientY: 100, ctrlKey: true });
         expect(zoom()).toBeGreaterThan(1);
-        await user.click(tool('Fit to screen'));
+        await user.click(screen.getByRole('button', { name: 'Fit to screen' }));
         expect(zoom()).toBe(1);
 
         // Space and drag scrolls the map, without painting
-        await user.click(tool('Zoom in'));
+        await user.click(screen.getByRole('button', { name: 'Zoom in' }));
         box.scrollLeft = 100;
         box.scrollTop = 50;
         fireEvent.keyDown(window, { code: 'Space' });

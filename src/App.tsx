@@ -1,5 +1,5 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
 import ProjectMenu from './components/ProjectMenu';
 import { recallImage } from './imageStore';
@@ -46,7 +46,7 @@ const StepLabel = ({ number, name, state }: { number: number; name: string; stat
                 fontWeight: 700,
                 border: `2px solid ${state === 'todo' ? tokens.groove : tokens.azure}`,
                 backgroundColor: state === 'current' ? tokens.azure : 'transparent',
-                color: state === 'current' ? '#FFFFFF' : state === 'done' ? tokens.azure : tokens.muted,
+                color: state === 'current' ? tokens.onAzure : state === 'done' ? tokens.azure : tokens.muted,
             }}
         >
             {state === 'done' ? '✓' : number}
@@ -103,10 +103,23 @@ const App = () => {
         }
     };
 
+    // the app bar's height, for what sticks just under it (the phone's Info bar); it grows when the steps wrap
+    const measureHeader = useCallback((header: HTMLElement | null) => {
+        if (!header) return;
+        const publish = () =>
+            document.documentElement.style.setProperty('--app-bar-height', `${header.offsetHeight}px`);
+        publish();
+        if (typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(publish);
+        observer.observe(header);
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <Box sx={{ minHeight: '100dvh', '@media print': { backgroundColor: 'white' } }}>
             {/* the app bar: the menu, the steps and the step's main action (see docs/design-system/README.md) */}
             <Box
+                ref={measureHeader}
                 component="header"
                 sx={{
                     position: 'sticky',
@@ -136,20 +149,13 @@ const App = () => {
                         setStep('Image');
                     }}
                 />
-                {/* the step's name: shown on phones, where the tabs scroll; on desktop the highlighted tab says it */}
-                <Typography
-                    variant="h3"
-                    component="h1"
-                    sx={{
-                        flexGrow: 1,
-                        minHeight: 52,
-                        display: 'flex',
-                        alignItems: 'center',
-                        '@media (min-width: 900px)': visuallyHidden,
-                    }}
-                >
+                {/* the step's name, for screen readers: on screen the highlighted tab names it, on both layouts */}
+                <Typography variant="h3" component="h1" sx={visuallyHidden}>
                     {step}
                 </Typography>
+                {/* on a phone, the first row is ☰ and the step's action, at the ends */}
+                <Box sx={{ flexGrow: 1, minHeight: 52, display: { md: 'none' } }} />
+
                 <Tabs
                     value={step}
                     onChange={(_, value: Step) => setStep(value)}

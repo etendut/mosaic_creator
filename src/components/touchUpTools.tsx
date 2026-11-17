@@ -10,12 +10,19 @@ import { createSvgIcon } from '@mui/material';
 import type { ReactNode } from 'react';
 import { findStrays, type CleanUpStrength, type TouchUpMode, type TouchUpState } from '../mosaic/touchUp';
 import type { Mosaic } from '../useMosaic';
+import type { ToastMessage } from './Toast';
 
 // Material Icons has no eraser; this is "eraser" from Material Design Icons (Pictogrammers, Apache 2.0)
 const EraserIcon = createSvgIcon(
     <path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0M4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" />,
     'Eraser',
 );
+
+/**
+ * A toast's Undo. It runs after later renders, so the step binds it to the mosaic's undo as it is then, not as it was
+ * when the message was made (see TouchUpTab).
+ */
+export const UNDO = { label: 'Undo', onClick: () => {} };
 
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? '' : 's'}`;
 
@@ -39,20 +46,24 @@ const TOOLS: { mode: TouchUpMode; label: string; icon: ReactNode }[] = [
 
 /**
  * Every touch-up button, in the order the tools show them on desktop and phone alike: history (undo, redo,
- * before/after), the tools, clean-up, and clearing. `report` puts a short message in the status line.
+ * before/after), the tools, clean-up, and clearing. `report` shows a short message as a toast.
  */
 export const touchUpActions = (
     mosaic: Mosaic,
     state: TouchUpState,
     onChange: (change: Partial<TouchUpState>) => void,
-    report: (message: string | null) => void,
+    report: (message: ToastMessage | null) => void,
 ) => {
     const touched = mosaic.touchUps?.edits.length ?? 0;
     const cleanUp = (strength: CleanUpStrength) => () => {
         const strays = mosaic.grid ? findStrays(mosaic.grid, strength) : [];
         if (strays.length) mosaic.editBricks(strays);
         onChange({ before: false });
-        report(strays.length ? `Cleaned up ${plural(strays.length, 'brick')}.` : 'No stray bricks to clean up.');
+        report(
+            strays.length
+                ? { text: `Cleaned up ${plural(strays.length, 'brick')}.`, action: UNDO }
+                : { text: 'No stray bricks to clean up.' },
+        );
     };
     const history: TouchUpAction[] = [
         // undo and redo clear any message, which would otherwise describe a change they've just reversed
@@ -110,7 +121,7 @@ export const touchUpActions = (
             onPress: () => {
                 mosaic.clearTouchUps();
                 onChange({ before: false });
-                report('Touch-ups cleared. Undo brings them back.');
+                report({ text: 'Touch-ups cleared.', action: UNDO });
             },
         },
     ];

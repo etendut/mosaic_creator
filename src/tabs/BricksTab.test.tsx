@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { info, startMosaic } from '../test/app';
+import { info, infoLabels, startMosaic } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -36,21 +36,32 @@ describe('Bricks step', () => {
         expect(screen.getByRole('button', { name: 'Tile round 1×1' })).toHaveAttribute('aria-pressed', 'false');
     });
 
+    it('explains the backing plate in muted help text', async () => {
+        await startMosaic();
+        const help = screen.getByText('Each card is one 8 × 8 plate: 64 bricks.');
+        // text.secondary (MUI's default here: tests render without the app theme), where MUI 9 ignored the dotted
+        // color="text.secondary" and left help in the body colour
+        expect(help).toHaveStyle({ color: 'rgba(0, 0, 0, 0.6)' });
+    });
+
     it('sets the size from the box or the slider, within limits', async () => {
         const user = await startMosaic();
         const box = screen.getByRole('spinbutton', { name: 'Plates across' });
         await user.clear(box);
+        // a cleared box snaps to 1, so typing 6 after it makes 16
         await user.type(box, '6');
-        expect(screen.getByText(/6 plates across/)).toBeInTheDocument();
+        expect(box).toHaveValue(16);
+        expect(info('Cards')).toMatch(/\(16 × \d+\)/);
         await user.clear(box);
         await user.type(box, '99');
-        expect(screen.getByText(/40 plates across/)).toBeInTheDocument();
+        expect(box).toHaveValue(40);
+        expect(info('Cards')).toMatch(/\(40 × \d+\)/);
         await user.clear(box);
-        expect(screen.getByText(/1 plates across/)).toBeInTheDocument();
+        expect(info('Cards')).toMatch(/\(1 × \d+\)/);
 
         screen.getByRole('slider', { name: 'Plates across slider' }).focus();
         await user.keyboard('{ArrowRight}');
-        expect(screen.getByText(/2 plates across/)).toBeInTheDocument();
+        expect(info('Cards')).toMatch(/\(2 × \d+\)/);
     });
 
     it('switches colour sets and turns single colours on and off', async () => {
@@ -70,16 +81,19 @@ describe('Bricks step', () => {
 
     it('shows colour names on request, for touch screens', async () => {
         const user = await startMosaic();
-        expect(within(palette()).queryByText('1 White')).not.toBeInTheDocument();
+        expect(within(palette()).queryByText('White')).not.toBeInTheDocument();
         await user.click(screen.getByRole('switch', { name: 'Names' }));
-        expect(within(palette()).getByText('1 White')).toBeInTheDocument();
+        // beside the chip, never printed on the brick colour
+        const white = within(palette()).getByRole('button', { name: /^White/ });
+        expect(within(white).getByText('White')).toBeInTheDocument();
+        expect(within(white).getByText('1')).toBeInTheDocument();
     });
 
     it('limits the number of colours and changes how they are matched', async () => {
         const user = await startMosaic();
         const max = screen.getByRole('spinbutton', { name: 'Max colours' });
         await user.type(max, '2');
-        expect(info('Colours')).toBe('2');
+        expect(within(screen.getByRole('group', { name: 'Colours used' })).getAllByRole('button')).toHaveLength(2);
         await user.clear(max);
         expect(max).toHaveValue(null);
 
@@ -153,9 +167,12 @@ describe('Bricks step', () => {
         const used = screen.getByRole('group', { name: 'Colours used' });
         const [first] = within(used).getAllByRole('button');
         const fromName = first.getAttribute('aria-label')!.split(':')[0];
+        expect(first).not.toHaveAttribute('aria-current');
         await user.click(first);
         const menu = screen.getByRole('menu');
         expect(within(menu).getByText(`Use instead of ${fromName}`)).toBeInTheDocument();
+        // the colour being swapped is ringed while its menu is open
+        expect(first).toHaveAttribute('aria-current', 'true');
         await user.click(within(menu).getByRole('menuitem', { name: /Magenta/ }));
         const chip = screen.getByRole('button', { name: `${fromName} → Magenta` });
         await user.click(within(chip).getByTestId('CancelIcon'));
@@ -170,11 +187,11 @@ describe('Bricks step', () => {
         await startMosaic();
         expect(info('Cards')).toBe('12 (4 × 3)');
         expect(info('Mosaic')).toBe('32 × 20 bricks');
-        expect(info('Finished size')).toMatch(/^256\s?mm × 192\s?mm$/);
-        expect(Number(info('Colours'))).toBeGreaterThan(0);
-        // Info heads the tools column (and stays there as the column scrolls)
+        expect(info('Finished size')).toBe('256 × 192 mm');
+        expect(infoLabels()).toEqual(['Cards', 'Bricks', 'Mosaic', 'Finished size']);
+        // Info isn't a tool: the tools column starts with the first decision
         const headings = within(screen.getByRole('complementary', { name: 'Tools' })).getAllByRole('heading');
-        expect(headings[0]).toHaveTextContent('Info');
+        expect(headings[0]).toHaveTextContent('Backing plate');
         // no standing text on the page: the numbers are in Info
         expect(screen.queryByText(/Your picture in bricks/)).not.toBeInTheDocument();
     });

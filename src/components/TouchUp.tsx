@@ -24,6 +24,7 @@ import type { PaletteColor } from '../mosaic/types';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
+import HelpText from './HelpText';
 import type { TouchUpAction } from './touchUpTools';
 
 interface ToolProps {
@@ -32,11 +33,8 @@ interface ToolProps {
     onChange: (change: Partial<TouchUpState>) => void;
 }
 
-const label = (text: string) => (
-    <Typography variant="body2" color="text.secondary">
-        {text}
-    </Typography>
-);
+/** A setting's name, like a ChoiceRow's label. */
+const label = (text: string) => <Typography variant="body2">{text}</Typography>;
 
 /** The paint colour button and its list: colours used first, then the rest of the brick's colours. */
 const ColourPicker = ({ mosaic, state, onChange, compact }: ToolProps & { compact: boolean }) => {
@@ -266,6 +264,9 @@ export const DesktopTools = ({
                 {cleaning.map((a) => (
                     <ActionButton key={a.id} action={a} variant="outlined" />
                 ))}
+                <HelpText>
+                    Changes bricks that match none of their neighbours; the second also changes pairs that stand alone.
+                </HelpText>
             </Stack>
             <Stack>
                 {clearing.map((a) => (

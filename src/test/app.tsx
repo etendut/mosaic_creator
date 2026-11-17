@@ -33,15 +33,19 @@ export const startMosaic = async () => {
 export const goTo = (user: User, step: 'Image' | 'Bricks' | 'Touch up' | 'Cards' | 'Parts' | 'Print') =>
     user.click(screen.getByRole('tab', { name: step }));
 
-/** A value from the step's Info list, by its label (the Info section is open on desktop). */
+/** The step's Info bar: the visible one (the image step stays mounted, hidden, with its own). */
+const infoBar = () => screen.getAllByLabelText('Info').find((el) => !isInaccessible(el))!;
+
+/** A value from the step's Info bar, by its label. */
 export const info = (label: string) => {
-    // the visible one: the image step stays mounted, hidden, with its own
-    const list = screen.getAllByLabelText('Info').find((el) => !isInaccessible(el))!;
-    const term = within(list)
+    const term = within(infoBar())
         .getAllByText(label)
         .find((el) => el.tagName === 'DT');
     return term?.nextElementSibling?.textContent ?? null;
 };
+
+/** The labels in the step's Info bar, in order. */
+export const infoLabels = () => [...infoBar().querySelectorAll('dt')].map((dt) => dt.textContent);
 
 /** Open the Project menu and pick an item by (part of) its label. */
 export const projectMenu = async (user: User, item: RegExp) => {

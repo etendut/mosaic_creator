@@ -21,6 +21,8 @@ export const Stage = ({ sx, ...props }: BoxProps) => (
         {...props}
         sx={[
             {
+                // fills the canvas area; a step that wants its result centred adds alignItems: 'center'
+                flexGrow: 1,
                 borderRadius: 2.5,
                 padding: { xs: 1.5, sm: 3 },
                 '@media print': { padding: 0, borderRadius: 0 },

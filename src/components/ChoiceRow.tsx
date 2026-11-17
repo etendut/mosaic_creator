@@ -1,4 +1,5 @@
 import { Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import HelpText from './HelpText';
 
 interface ChoiceRowProps {
     label: string;
@@ -31,11 +32,7 @@ const ChoiceRow = ({ label, value, onChange, options, help }: ChoiceRowProps) =>
                 </ToggleButton>
             ))}
         </ToggleButtonGroup>
-        {help && (
-            <Typography variant="body2" color="text.secondary">
-                {help}
-            </Typography>
-        )}
+        {help && <HelpText>{help}</HelpText>}
     </Stack>
 );
 

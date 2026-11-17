@@ -5,9 +5,10 @@ import '@fontsource/rubik/latin-700.css';
 
 /**
  * The interface stays in baseplate greys with one azure accent, so the mosaic itself carries all the colour.
- * Names follow the LEGO workbench: plate (background), tray (working surfaces), groove (borders).
+ * Names follow the LEGO workbench: plate (background), tray (working surfaces), groove (borders). The values are
+ * docs/design-system/tokens.json, in its two themes.
  */
-export const tokens = {
+const light = {
     plate: '#DDE1E6',
     plateDot: '#CDD2D8',
     tray: '#FFFFFF',
@@ -15,9 +16,56 @@ export const tokens = {
     ink: '#22262A',
     muted: '#5B636B',
     azure: '#00788A',
+    /** The hover step of azure fills: darker in light, lighter in dark, away from the ground either way. */
     azureDark: '#00616F',
     azureWash: '#E3F2F4',
+    /** Text and icons on an azure fill. */
+    onAzure: '#FFFFFF',
+    /** The inset edge of a colour swatch, so white bricks show on a white tray. */
+    swatchEdge: 'rgba(0, 0, 0, 0.2)',
+    /** A text action on a toast, which is an ink fill. */
+    toastAction: '#7FD3DE',
+    /** Errors only, always with an icon and words. */
+    danger: '#B3261E',
+    onDanger: '#FFFFFF',
+    /** What dims outside the crop on the Image step: ink at 70%, dark in either theme. */
+    shade: 'rgba(34, 38, 42, 0.7)',
 };
+
+/** The same roles on a dark baseplate: a lighter azure that takes dark text, and a light ink. */
+const dark: typeof light = {
+    plate: '#1A1D20',
+    plateDot: '#25292D',
+    tray: '#24282C',
+    groove: '#5A6168',
+    ink: '#E6E9EC',
+    muted: '#A4ACB4',
+    azure: '#3FB6C7',
+    azureDark: '#6FCBD8',
+    azureWash: '#173A40',
+    onAzure: '#0B1D20',
+    swatchEdge: 'rgba(255, 255, 255, 0.28)',
+    toastAction: '#00616F',
+    danger: '#F2B8B5',
+    onDanger: '#5C1210',
+    shade: 'rgba(34, 38, 42, 0.7)',
+};
+
+type TokenName = keyof typeof light;
+
+/**
+ * The tokens as CSS variables, for styles: each follows the theme in force where it's used, so a printed page marked
+ * light stays light inside a dark screen.
+ */
+export const tokens = Object.fromEntries(
+    (Object.keys(light) as TokenName[]).map((name) => [name, `var(--mc-${name})`]),
+) as Record<TokenName, string>;
+
+const variables = (values: typeof light) =>
+    Object.fromEntries(Object.entries(values).map(([name, value]) => [`--mc-${name}`, value]));
+
+/** The attribute MUI puts on <html> for the colour scheme; a printed page sets it to light on itself. */
+export const COLOR_SCHEME_ATTRIBUTE = 'data-mui-color-scheme';
 
 /** A subtle grid of studs: every page sits on it, like a baseplate. */
 export const studTexture = {
@@ -27,13 +75,17 @@ export const studTexture = {
     backgroundPosition: '8px 8px',
 };
 
+const palette = (values: typeof light) => ({
+    primary: { main: values.azure, dark: values.azureDark, contrastText: values.onAzure },
+    text: { primary: values.ink, secondary: values.muted },
+    background: { default: values.plate, paper: values.tray },
+    divider: values.groove,
+});
+
 const theme = createTheme({
-    palette: {
-        primary: { main: tokens.azure, dark: tokens.azureDark, contrastText: '#FFFFFF' },
-        text: { primary: tokens.ink, secondary: tokens.muted },
-        background: { default: tokens.plate, paper: tokens.tray },
-        divider: tokens.groove,
-    },
+    // light and dark, following the system; MUI's own colours switch with ours
+    cssVariables: { colorSchemeSelector: COLOR_SCHEME_ATTRIBUTE },
+    colorSchemes: { light: { palette: palette(light) }, dark: { palette: palette(dark) } },
     shape: { borderRadius: 6 },
     typography: {
         fontFamily: '"Rubik", system-ui, sans-serif',
@@ -57,13 +109,41 @@ const theme = createTheme({
         MuiTab: { styleOverrides: { root: { textTransform: 'none', fontSize: 15 } } },
         MuiToggleButton: {
             styleOverrides: {
-                root: { textTransform: 'none', fontSize: 14, paddingBlock: 5, minHeight: 40, minWidth: 40 },
+                root: {
+                    textTransform: 'none',
+                    fontSize: 14,
+                    paddingBlock: 5,
+                    minHeight: 40,
+                    minWidth: 40,
+                    // the design system's one selected state, not MUI's grey (which reads as disabled next to azure)
+                    '&.Mui-selected, &.Mui-selected:hover': {
+                        color: tokens.azure,
+                        fontWeight: 500,
+                        backgroundColor: tokens.azureWash,
+                        borderColor: tokens.azure,
+                    },
+                },
+            },
+        },
+        MuiToggleButtonGroup: {
+            styleOverrides: {
+                // in a group, a button's leading border is transparent and tucked under its neighbour; the chosen one
+                // shows all four sides, on top
+                grouped: { '&.Mui-selected': { borderColor: tokens.azure, position: 'relative', zIndex: 1 } },
+            },
+        },
+        MuiMenuItem: {
+            styleOverrides: {
+                root: { '&.Mui-selected, &.Mui-selected:hover': { backgroundColor: tokens.azureWash } },
             },
         },
         MuiPaper: { defaultProps: { elevation: 0 } },
         MuiTableCell: { styleOverrides: { head: { fontWeight: 500, color: tokens.muted } } },
         MuiCssBaseline: {
             styleOverrides: {
+                // the tokens for each theme; an element marked light (a printed page) gets the light ones
+                [`:root, [${COLOR_SCHEME_ATTRIBUTE}="light"]`]: variables(light),
+                [`[${COLOR_SCHEME_ATTRIBUTE}="dark"]`]: variables(dark),
                 ':focus-visible': { outline: `2px solid ${tokens.azure}`, outlineOffset: 2 },
                 // the whole page is a baseplate; plain white on paper
                 body: { ...studTexture, '@media print': { background: 'white' } },

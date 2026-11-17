@@ -4,6 +4,7 @@ import { colorsUsed } from '../mosaic/partsList';
 import type { PaletteColor } from '../mosaic/types';
 import type { Mosaic } from '../useMosaic';
 import ColorSwatch from './ColorSwatch';
+import HelpText from './HelpText';
 
 /** The colours the mosaic ended up using, with counts. Click one to build it in a different colour instead. */
 const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
@@ -19,9 +20,7 @@ const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
 
     return (
         <Box>
-            <Typography variant="body2" color="text.secondary" sx={{ paddingBottom: 1 }}>
-                Click a colour to build it in a different colour instead.
-            </Typography>
+            <HelpText sx={{ paddingBottom: 1 }}>Click a colour to build it in a different colour instead.</HelpText>
             <Box
                 role="group"
                 aria-label="Colours used"
@@ -32,6 +31,7 @@ const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
                         <ColorSwatch
                             color={line.color}
                             title={`${line.color.name}: ${line.quantity}`}
+                            current={swapping?.color.id === line.color.id}
                             onClick={(e) => setSwapping({ anchor: e.currentTarget, color: line.color })}
                         />
                         <Typography variant="caption">{line.quantity}</Typography>

@@ -49,7 +49,7 @@ Every step is laid out like a photo editor, with three zones that never move.
 - **App bar** (`tray`, `groove` bottom border, sticky): ☰ menu at the left, the step tabs, and at most one contained main action at the right.
 - **Canvas**: the result as large as it fits, full width on a phone with the 8px gutter. Above it, in this order and nothing else: the Info bar, alerts about the result, and facts that are also tools (Colours used).
 - **Tools**: everything that changes the canvas, in groups in the order you'd decide them. On desktop (from `breakpoint-desktop`, 900px) a 340px `tools-column` Tray with every group open as a ControlSection, holding only tools. On a phone a bottom tool bar (`tool-bar`, 60px) with icon and label per group; a group opens a panel above it, at most 45% of the screen high.
-- **Info bar**: the step's numbers, at most four, in one strip pinned to the top of the canvas column on desktop and flush under the app bar on a phone, always in view. Never in the tools, never behind a button, never a fact that repeats a setting.
+- **Info bar**: the step's numbers, four at most (plus one that only shows when it applies), in one strip pinned to the top of the canvas column on desktop and flush under the app bar on a phone, always in view. Never in the tools, never behind a button, never a fact that repeats a setting.
 - **Canvas placement**: centre the result in the Stage, both ways. A single small result (one card) is centred, not parked at the top.
 - Show choices, don't hide them: up to about six options is a ChoiceRow of toggles or radios, never a dropdown. No "More…" disclosures; a step whose tools need hiding is doing two jobs: split it.
 - Spacing in 8px units: `space-2` between zones and groups, `space-1`–`space-1.5` inside a group.
@@ -130,14 +130,14 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 
 ## The steps
 
-| Step     | Main action                                                            | Tools (desktop column; phone bar)                                                        | Info bar                           |
-| -------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
-| Image    | _Use this image_ (app bar)                                             | Frame, Adjust                                                                            | Picture                            |
-| Bricks   | none                                                                   | Plate, Brick, Size, Colours, Colours used                                                | Cards · Bricks · Mosaic · Finished |
-| Touch up | none                                                                   | Undo, Redo, Before / after; Brush, Eraser, Eyedropper; palette; two clean-ups; Clear all | Touched up · Bricks · Colours      |
-| Cards    | none                                                                   | Card size, Card text, Card colour                                                        | Cards · Pages · Per page · Brick   |
-| Parts    | _Download BrickLink XML_ and _Copy XML_, ending the tools under Spares | Spares                                                                                   | Parts · Lots                       |
-| Print    | _Print map page_ / _Print cards_, ending the tools under its summary   | Paper, Pages                                                                             | Cards · Card pages · Per page      |
+| Step     | Main action                                                            | Tools (desktop column; phone bar)                                                        | Info bar                                                                      |
+| -------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Image    | _Use this image_ (app bar)                                             | Frame, Adjust                                                                            | Picture                                                                       |
+| Bricks   | none                                                                   | Plate, Brick, Size, Colours, Colours used                                                | Cards · Bricks · Mosaic · Finished size; Touched up while there are touch-ups |
+| Touch up | none                                                                   | Undo, Redo, Before / after; Brush, Eraser, Eyedropper; palette; two clean-ups; Clear all | Touched up · Bricks · Colours                                                 |
+| Cards    | none                                                                   | Card size, Card text, Card colour                                                        | Cards · Pages · Per page · Brick                                              |
+| Parts    | _Download BrickLink XML_ and _Copy XML_, ending the tools under Spares | Spares                                                                                   | Parts · Lots                                                                  |
+| Print    | _Print map page_ / _Print cards_, ending the tools under its summary   | Paper, Pages                                                                             | Cards · Card pages · Per page                                                 |
 
 A new step gets the layout, tap targets and states by using `StepLayout`, `AppBarAction`, `ChoiceRow` and the theme, not its own controls.
 
