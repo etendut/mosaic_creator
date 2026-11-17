@@ -11,8 +11,8 @@ interface ChoiceRowProps {
 }
 
 /**
- * A short choice shown as a row of buttons, every option in view (docs/style-guide.md: show choices, don't hide them
- * in a dropdown).
+ * A short choice shown as a row of buttons, every option in view (docs/design-system/README.md: show choices, don't
+ * hide them in a dropdown).
  */
 const ChoiceRow = ({ label, value, onChange, options, help }: ChoiceRowProps) => (
     <Stack spacing={0.75}>

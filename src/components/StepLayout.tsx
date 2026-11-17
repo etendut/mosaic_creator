@@ -78,7 +78,7 @@ export const ControlSection = ({ title, children }: { title: string; children: R
 );
 
 /**
- * A step laid out like a photo editor (see docs/style-guide.md): the canvas in the middle, with the status line and
+ * A step laid out like a photo editor (see docs/design-system/README.md): the canvas in the middle, with the status line and
  * facts above it, and the tools beside it. On desktop the tool groups are a column on the left, all open. On a phone
  * they're a bar along the bottom; tapping a group opens its settings in a panel above the bar.
  */
