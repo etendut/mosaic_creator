@@ -10,7 +10,7 @@ import { Stage } from '../components/Tray';
 import { CARD_GAP_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
-import { tokens } from '../theme';
+import { COLOR_SCHEME_ATTRIBUTE, tokens } from '../theme';
 import { useFitScale } from '../useFitScale';
 import type { Mosaic } from '../useMosaic';
 import HelpText from '../components/HelpText';
@@ -24,6 +24,8 @@ const chunk = <T,>(items: T[], size: number) =>
 /** One sheet of paper: on screen with its margin drawn, in print one page with the @page margin around it. */
 const Sheet = ({ layout, children }: { layout: PageLayout; children: ReactNode }) => (
     <Box
+        // paper is white whatever the screen's theme, on screen and printed
+        {...{ [COLOR_SCHEME_ATTRIBUTE]: 'light' }}
         sx={{
             width: `${layout.pageWidthMm}mm`,
             height: `${layout.pageHeightMm}mm`,

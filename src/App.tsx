@@ -46,7 +46,7 @@ const StepLabel = ({ number, name, state }: { number: number; name: string; stat
                 fontWeight: 700,
                 border: `2px solid ${state === 'todo' ? tokens.groove : tokens.azure}`,
                 backgroundColor: state === 'current' ? tokens.azure : 'transparent',
-                color: state === 'current' ? '#FFFFFF' : state === 'done' ? tokens.azure : tokens.muted,
+                color: state === 'current' ? tokens.onAzure : state === 'done' ? tokens.azure : tokens.muted,
             }}
         >
             {state === 'done' ? '✓' : number}

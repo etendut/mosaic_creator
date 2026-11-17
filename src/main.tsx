@@ -6,7 +6,8 @@ import theme from './theme';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <ThemeProvider theme={theme}>
+        {/* light or dark, as the system is set */}
+        <ThemeProvider theme={theme} defaultMode="system">
             <CssBaseline />
             <App />
         </ThemeProvider>
