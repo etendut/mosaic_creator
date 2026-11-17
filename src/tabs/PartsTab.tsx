@@ -26,6 +26,7 @@ import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
+import { partName } from '../mosaic/units';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
 import HelpText from '../components/HelpText';
@@ -174,7 +175,7 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
                                                 {iconFor(first.partId)}
                                                 <Box>
                                                     <Typography variant="subtitle1" component="div">
-                                                        {first.name}
+                                                        {partName(first.name)}
                                                     </Typography>
                                                     <Typography variant="caption" color="textSecondary">
                                                         BrickLink part {first.partId}

@@ -25,6 +25,7 @@ import type { Mosaic } from '../useMosaic';
 import ChoiceRow from './ChoiceRow';
 import ColorSwatch from './ColorSwatch';
 import HelpText from './HelpText';
+import { partName } from '../mosaic/units';
 
 const DITHERING_HELP: Record<Dithering, string> = {
     none: 'Each brick takes its closest colour. Best for logos and flat art.',
@@ -58,14 +59,15 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
         try {
             const palette = parseSavedPalette(await file.text());
             const { ids, missing } = resolveSavedPalette(palette, brick.colors);
-            if (ids.length === 0) throw new Error(`None of the colours in "${palette.name}" come in ${brick.name}.`);
+            if (ids.length === 0)
+                throw new Error(`None of the colours in "${palette.name}" come in ${partName(brick.name)}.`);
             setCustomPalette(ids);
             const verb = missing.length === 1 ? "doesn't" : "don't";
             setMessage(
                 missing.length > 0
                     ? {
                           severity: 'info',
-                          text: `Loaded "${palette.name}". ${listNames(missing)} ${verb} come in ${brick.name}.`,
+                          text: `Loaded "${palette.name}". ${listNames(missing)} ${verb} come in ${partName(brick.name)}.`,
                       }
                     : null,
             );
@@ -97,8 +99,8 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
             </ToggleButtonGroup>
             {presetIsEmpty && (
                 <Alert severity="warning">
-                    {brick.name} has no {PRESETS.find((p) => p.value === preset)?.label.toLowerCase()} colours in the
-                    catalog, so solid colours are used instead.
+                    {partName(brick.name)} has no {PRESETS.find((p) => p.value === preset)?.label.toLowerCase()} colours
+                    in the catalog, so solid colours are used instead.
                 </Alert>
             )}
             <Box>

@@ -181,7 +181,7 @@ describe('Bricks step', () => {
         await startMosaic();
         expect(info('Cards')).toBe('12 (4 × 3)');
         expect(info('Mosaic')).toBe('32 × 20 bricks');
-        expect(info('Finished size')).toMatch(/^256\s?mm × 192\s?mm$/);
+        expect(info('Finished size')).toBe('256 × 192 mm');
         expect(infoLabels()).toEqual(['Cards', 'Bricks', 'Mosaic', 'Finished size']);
         // Info isn't a tool: the tools column starts with the first decision
         const headings = within(screen.getByRole('complementary', { name: 'Tools' })).getAllByRole('heading');

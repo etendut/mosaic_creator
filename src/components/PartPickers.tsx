@@ -2,6 +2,7 @@ import { Box, ButtonBase, Stack, ToggleButton, ToggleButtonGroup, Typography } f
 import type { ReactNode } from 'react';
 import { catalog } from '../data/catalog';
 import type { BrickOption, PlateOption } from '../mosaic/types';
+import { partName } from '../mosaic/units';
 import { PART_ICON_BLUE, PartIcon } from './PartIcon';
 import { tokens } from '../theme';
 
@@ -60,8 +61,14 @@ export const PlatePicker = ({ value, onChange }: { value: PlateOption; onChange:
                 aria-label="Plate size"
             >
                 {PLATE_SIZES.map((size) => (
-                    <ToggleButton key={size} value={size} aria-label={`${size} by ${size} studs`}>
-                        {size}×{size}
+                    <ToggleButton
+                        key={size}
+                        value={size}
+                        aria-label={`${size} by ${size} studs`}
+                        // five across a 340 px column: one line each, as ChoiceRow does
+                        sx={{ paddingInline: 0.5, whiteSpace: 'nowrap' }}
+                    >
+                        {`${size} × ${size}`}
                     </ToggleButton>
                 ))}
             </ToggleButtonGroup>
@@ -75,7 +82,7 @@ export const PlatePicker = ({ value, onChange }: { value: PlateOption; onChange:
                     >
                         <Typography variant="body2">{p.color.name}</Typography>
                         <Typography variant="caption" color="textSecondary" component="div">
-                            {p.name}
+                            {partName(p.name)}
                             {p.pinsPerPlate > 0 && `, joined with ${p.pinsPerPlate} pins`}
                         </Typography>
                     </Choice>
