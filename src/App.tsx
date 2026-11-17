@@ -149,20 +149,13 @@ const App = () => {
                         setStep('Image');
                     }}
                 />
-                {/* the step's name: shown on phones, where the tabs scroll; on desktop the highlighted tab says it */}
-                <Typography
-                    variant="h3"
-                    component="h1"
-                    sx={{
-                        flexGrow: 1,
-                        minHeight: 52,
-                        display: 'flex',
-                        alignItems: 'center',
-                        '@media (min-width: 900px)': visuallyHidden,
-                    }}
-                >
+                {/* the step's name, for screen readers: on screen the highlighted tab names it, on both layouts */}
+                <Typography variant="h3" component="h1" sx={visuallyHidden}>
                     {step}
                 </Typography>
+                {/* on a phone, the first row is ☰ and the step's action, at the ends */}
+                <Box sx={{ flexGrow: 1, minHeight: 52, display: { md: 'none' } }} />
+
                 <Tabs
                     value={step}
                     onChange={(_, value: Step) => setStep(value)}
