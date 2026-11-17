@@ -1,0 +1,32 @@
+{
+    "src/components/MosaicPreview.tsx": {
+        "sonarjs/cognitive-complexity": {
+            "count": 1
+        }
+    },
+    "src/mosaic/cards.ts": {
+        "sonarjs/cognitive-complexity": {
+            "count": 1
+        }
+    },
+    "src/mosaic/layout.ts": {
+        "sonarjs/cognitive-complexity": {
+            "count": 1
+        }
+    },
+    "src/mosaic/partsList.ts": {
+        "sonarjs/cognitive-complexity": {
+            "count": 1
+        }
+    },
+    "src/mosaic/quantize.ts": {
+        "sonarjs/cognitive-complexity": {
+            "count": 1
+        }
+    },
+    "src/mosaic/touchUp.ts": {
+        "sonarjs/cognitive-complexity": {
+            "count": 1
+        }
+    }
+}
