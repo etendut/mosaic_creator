@@ -40,7 +40,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 - **Stud texture.** The body is a baseplate: `plate` with `plateDot` dots of 3px radius every `stud-pitch` (16px), offset 8px. Print is plain white.
 - **Tray**: `tray` fill, 1px `groove` border, `radius-tray`, `space-2` padding, no shadow. For the tools column, panels and lists.
 - **Stage** holds the canvas with no background of its own, so the studs run through it unbroken: `radius-stage`, `space-1.5` padding on phones, `space-3` from 600px.
-- Shadows: `shadow-none` everywhere except the phone tool panel over the canvas (`shadow-panel`).
+- Shadows only on what floats over the canvas: the phone tool panel (`shadow-panel`), toasts and the zoom control (`shadow-float`). Everything else is `shadow-none`.
 
 ## Layout
 
@@ -83,11 +83,11 @@ A step does one job, named by its tab. The signs it's doing two: its tools need 
 - All the tools are one set, in the same order on both layouts, with dividers between: history (undo, redo, before/after), the tools (brush, eraser, eyedropper), the brush palette (colour ▾, size, shape; always in view), clean-up (one button per strength), and clear all.
 - Desktop: one Tools section in the column, every button labelled with icon and name. Phone: the palette is a compact strip in the bar's style (swatch ▾, − size +, one shape toggle) above an icons-only bottom bar, with the names read out. Past about eight buttons the bar takes two rows (history and tools, then clean-up and clearing), so every button stays at least 40px wide.
 - A tool is on from the start, so there is no View tool.
-- After an action, a toast says what happened: "Cleaned up 7 bricks." "Touch-ups cleared. Undo brings them back." On a phone it sits just above the tools.
+- After an action, a Toast says what happened: "Cleaned up 7 bricks." "Touch-ups cleared." with an Undo action. On a phone it sits just above the tools.
 
 ### A canvas you edit zooms and scrolls
 
-Like a document or photo viewer: it fills the space to the bottom of the window (or the phone's tools) in a scrolling box, fitted at 100%; zoomed in, it's bigger than the box, with scroll bars. Ctrl + wheel or a trackpad pinch zooms around the pointer, and a plain wheel scrolls; pinch and two-finger drag on touch screens; Space or middle-button drags scroll; a small zoom control sits in the corner (− · % · + · fit). The canvas redraws sharper as it zooms. One finger still paints: it waits until it moves or lifts, so a pinch never paints.
+Like a document or photo viewer: it fills the space to the bottom of the window (or the phone's tools) in a scrolling box, fitted at 100%; zoomed in, it's bigger than the box, with scroll bars. Ctrl + wheel or a trackpad pinch zooms around the pointer, and a plain wheel scrolls; pinch and two-finger drag on touch screens; Space or middle-button drags scroll; a ZoomControl sits in the corner (− · % · + · fit). The canvas redraws sharper as it zooms. One finger still paints: it waits until it moves or lifts, so a pinch never paints.
 
 ### Empty states
 
@@ -120,6 +120,7 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 - **One selected state** for toggles, tiles (plate, brick) and tool lists: `azureWash` fill, `azure` text at weight 500, `azure` border. Never MUI's grey selected, which reads as disabled next to azure.
 - Selected tool-bar item: `azure` text, weight 500, a 3px `azure` top border. Unselected: `muted`.
 - Disabled: 35% opacity in the tool bar; a turned-off swatch is 30% opacity and struck through.
+- Messages after an action are a Toast: one look, `ink` with `tray` text; errors in `danger` with an icon, staying until closed. `danger` is for errors only.
 - No motion beyond MUI's defaults.
 
 ## Iconography
