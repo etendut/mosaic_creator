@@ -151,11 +151,15 @@ export const findStrays = (grid: PixelGrid, strength: CleanUpStrength): Edit[] =
             }
             if (bricks < 5 || same > allowed || counts.size === 0) continue;
             const own = hexToRgb(cell.hex);
-            const best = [...counts.values()].reduce((a, b) =>
-                b.n > a.n ||
-                (b.n === a.n && colorDistance(own, hexToRgb(b.color.hex)) < colorDistance(own, hexToRgb(a.color.hex)))
-                    ? b
-                    : a,
+            const [first, ...rest] = counts.values();
+            const best = rest.reduce(
+                (a, b) =>
+                    b.n > a.n ||
+                    (b.n === a.n &&
+                        colorDistance(own, hexToRgb(b.color.hex)) < colorDistance(own, hexToRgb(a.color.hex)))
+                        ? b
+                        : a,
+                first,
             );
             edits.push([x, y, best.color.id]);
         }
