@@ -56,13 +56,14 @@ const PLATE_PROFILES = { 3811: 'baseplate', 4186: 'baseplate', 65803: 'technic' 
 const read = (file) => readFileSync(join(sourceDir, file), 'utf8');
 const items = (xml) => xml.match(/<ITEM>[\s\S]*?<\/ITEM>/g) ?? [];
 const field = (item, tag) => item.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1].trim() ?? '';
+// &amp; last, so "&amp;lt;" decodes once to "&lt;", not twice to "<"
 const decode = (text) =>
     text
-        .replace(/&amp;/g, '&')
         .replace(/&quot;/g, '"')
         .replace(/&apos;|&#39;/g, "'")
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
         .replace(/\s+/g, ' ');
 
 const colors = new Map();
