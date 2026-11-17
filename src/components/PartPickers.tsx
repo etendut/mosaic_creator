@@ -68,7 +68,7 @@ export const PlatePicker = ({ value, onChange }: { value: PlateOption; onChange:
                         // five across a 340 px column: one line each, as ChoiceRow does
                         sx={{ paddingInline: 0.5, whiteSpace: 'nowrap' }}
                     >
-                        {`${size} × ${size}`}
+                        {size}&nbsp;×&nbsp;{size}
                     </ToggleButton>
                 ))}
             </ToggleButtonGroup>
