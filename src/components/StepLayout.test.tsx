@@ -1,5 +1,5 @@
 import { fireEvent, screen, within } from '@testing-library/react';
-import { chooseImage, goTo, renderApp, startMosaic } from '../test/app';
+import { chooseImage, goTo, info, infoLabels, renderApp, startMosaic } from '../test/app';
 
 /** Make the screen phone-sized: media queries for desktop widths stop matching. */
 const asPhone = () => {
@@ -34,7 +34,10 @@ describe('Steps on a phone', () => {
             tools()
                 .getAllByRole('button')
                 .map((b) => b.textContent),
-        ).toEqual(['Plate', 'Brick', 'Size', 'Colours', 'Used', 'Info']);
+        ).toEqual(['Plate', 'Brick', 'Size', 'Colours', 'Used']);
+        // the numbers aren't a tool: they're in the Info bar, always in view
+        expect(infoLabels()).toEqual(['Cards', 'Bricks', 'Mosaic', 'Finished size']);
+        expect(info('Mosaic')).toBe('32 × 20 bricks');
         // nothing open: the canvas has the screen
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
         expect(screen.queryByRole('complementary', { name: 'Tools' })).not.toBeInTheDocument();
@@ -55,9 +58,6 @@ describe('Steps on a phone', () => {
         await user.click(tools().getByRole('button', { name: 'Colours' }));
         await user.click(screen.getByRole('button', { name: 'Close Colours' }));
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
-        // Info is the last button, and opens like any group
-        await user.click(tools().getByRole('button', { name: 'Info' }));
-        expect(within(screen.getByRole('region', { name: 'Info' })).getByText('32 × 20 bricks')).toBeInTheDocument();
         await user.click(tools().getByRole('button', { name: 'Brick' }));
         fireEvent.pointerDown(screen.getByLabelText('Card map'));
         expect(screen.queryByRole('region')).not.toBeInTheDocument();
@@ -103,10 +103,9 @@ describe('Steps on a phone', () => {
             'Clean up single bricks',
             'Clean up single bricks and pairs',
             'Clear all touch-ups',
-            'Info',
         ]);
         expect(buttons.every((b) => b.textContent === '')).toBe(true);
-        // two rows, so every button stays wide: history and tools, then clean-up, clearing and Info
+        // two rows, so every button stays wide: history and tools, then clean-up and clearing
         const rows = [...screen.getByRole('toolbar', { name: 'Tools' }).children].map((row) =>
             within(row as HTMLElement)
                 .getAllByRole('button')
@@ -114,7 +113,7 @@ describe('Steps on a phone', () => {
         );
         expect(rows).toEqual([
             ['Undo', 'Redo', 'Before / after', 'Brush', 'Eraser', 'Eyedropper'],
-            ['Clean up single bricks', 'Clean up single bricks and pairs', 'Clear all touch-ups', 'Info'],
+            ['Clean up single bricks', 'Clean up single bricks and pairs', 'Clear all touch-ups'],
         ]);
         expect(tools().getByRole('button', { name: 'Undo' })).toBeDisabled();
         expect(tools().getByRole('button', { name: 'Clear all touch-ups' })).toBeDisabled();
@@ -163,6 +162,7 @@ describe('Steps on a phone', () => {
             tools()
                 .getAllByRole('button')
                 .map((b) => b.textContent),
-        ).toEqual(['Frame', 'Adjust', 'Info']);
+        ).toEqual(['Frame', 'Adjust']);
+        expect(info('Picture')).toMatch(/× .* px$/);
     });
 });

@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { info, startMosaic } from '../test/app';
+import { info, infoLabels, startMosaic } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -90,7 +90,7 @@ describe('Bricks step', () => {
         const user = await startMosaic();
         const max = screen.getByRole('spinbutton', { name: 'Max colours' });
         await user.type(max, '2');
-        expect(info('Colours')).toBe('2');
+        expect(within(screen.getByRole('group', { name: 'Colours used' })).getAllByRole('button')).toHaveLength(2);
         await user.clear(max);
         expect(max).toHaveValue(null);
 
@@ -182,10 +182,10 @@ describe('Bricks step', () => {
         expect(info('Cards')).toBe('12 (4 × 3)');
         expect(info('Mosaic')).toBe('32 × 20 bricks');
         expect(info('Finished size')).toMatch(/^256\s?mm × 192\s?mm$/);
-        expect(Number(info('Colours'))).toBeGreaterThan(0);
-        // Info heads the tools column (and stays there as the column scrolls)
+        expect(infoLabels()).toEqual(['Cards', 'Bricks', 'Mosaic', 'Finished size']);
+        // Info isn't a tool: the tools column starts with the first decision
         const headings = within(screen.getByRole('complementary', { name: 'Tools' })).getAllByRole('heading');
-        expect(headings[0]).toHaveTextContent('Info');
+        expect(headings[0]).toHaveTextContent('Backing plate');
         // no standing text on the page: the numbers are in Info
         expect(screen.queryByText(/Your picture in bricks/)).not.toBeInTheDocument();
     });

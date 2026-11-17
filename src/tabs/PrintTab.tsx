@@ -150,7 +150,8 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
             info={[
                 ['Cards', cards.length.toLocaleString()],
                 ['Card pages', cardPages.length.toLocaleString()],
-                ['Per page', `${layout.cardsPerPage} on ${layout.label}`],
+                // the paper is a setting on this step, so not repeated here
+                ['Per page', layout.cardsPerPage.toLocaleString()],
             ]}
             action={
                 <>

@@ -1,10 +1,9 @@
 import { Box, ButtonBase, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useCallback, useId, useState, type ReactNode } from 'react';
 import { tokens } from '../theme';
 import type { Fact } from '../mosaic/facts';
-import InfoList from './InfoList';
+import InfoBar from './InfoBar';
 import { Tray } from './Tray';
 
 /** App bar height on desktop; the tools column sticks just under it. */
@@ -57,7 +56,7 @@ interface StepLayoutProps {
     phoneStrip?: ReactNode;
     /** Icons only in the phone tool bar, for a long set of tools; the names are still read out. */
     iconOnlyBar?: boolean;
-    /** The step's information (counts, sizes): the last section of the tools, and an ⓘ panel on a phone. */
+    /** The step's numbers (counts, sizes), at most four: the Info bar above the canvas, never in the tools. */
     info?: Fact[];
     /** The canvas: the photo, map, card, pages or table. */
     children: ReactNode;
@@ -92,22 +91,7 @@ const StepLayout = ({
     info = [],
     children,
 }: StepLayoutProps) => {
-    // the information is the last group, after the tools
-    if (info.length)
-        groups = [
-            ...groups,
-            {
-                id: 'info',
-                label: 'Info',
-                icon: <InfoOutlinedIcon />,
-                content: <InfoList facts={info} />,
-                divider: true,
-                // on the bar's last row
-                barRow: groups.some((g) => g.barRow === 2) ? 2 : 1,
-            },
-        ];
     const desktopGroups = groups.filter((g) => g.only !== 'phone' && g.content);
-    const desktopInfo = desktopGroups.find((g) => g.id === 'info');
     const phoneGroups = groups.filter((g) => g.only !== 'desktop');
     const barRows = [1, 2].map((r) => phoneGroups.filter((g) => (g.barRow ?? 1) === r)).filter((row) => row.length > 0);
     const theme = useTheme();
@@ -129,6 +113,12 @@ const StepLayout = ({
 
     const result = (
         <Stack spacing={2} sx={{ minWidth: 0, '@media print': { display: 'block' } }}>
+            {/* the numbers first, in view as the page scrolls; on a phone they're under the app bar instead */}
+            {desktop && info.length > 0 && (
+                <Box sx={{ position: 'sticky', top: HEADER_PX + 16, zIndex: 2 }}>
+                    <InfoBar facts={info} />
+                </Box>
+            )}
             {alerts && <Box sx={{ displayPrint: 'none' }}>{alerts}</Box>}
             {desktop && facts && <Box sx={{ displayPrint: 'none' }}>{facts}</Box>}
             {/* on a phone, touching the canvas closes the open tool panel, so the canvas is never stuck behind it */}
@@ -165,29 +155,11 @@ const StepLayout = ({
                             displayPrint: 'none',
                         }}
                     >
-                        {/* Info first, and sticky: it stays in view while the rest of the column scrolls */}
-                        {desktopInfo && (
-                            <Box
-                                sx={{
-                                    position: 'sticky',
-                                    top: 0,
-                                    zIndex: 1,
-                                    backgroundColor: tokens.tray,
-                                    borderBottom: `1px solid ${tokens.groove}`,
-                                }}
-                            >
-                                <ControlSection title={desktopInfo.title ?? desktopInfo.label}>
-                                    {desktopInfo.content}
-                                </ControlSection>
-                            </Box>
-                        )}
-                        {desktopGroups
-                            .filter((g) => g !== desktopInfo)
-                            .map((g) => (
-                                <ControlSection key={g.id} title={g.title ?? g.label}>
-                                    {g.content}
-                                </ControlSection>
-                            ))}
+                        {desktopGroups.map((g) => (
+                            <ControlSection key={g.id} title={g.title ?? g.label}>
+                                {g.content}
+                            </ControlSection>
+                        ))}
                         {action && (
                             <Stack spacing={1.5} sx={{ padding: 2, borderTop: `1px solid ${tokens.groove}` }}>
                                 {action}
@@ -208,6 +180,21 @@ const StepLayout = ({
                 '--bottom-reserve': `${bottomPx + 8}px`,
             }}
         >
+            {/* flush under the app bar, edge to edge, and in view as the page scrolls */}
+            {info.length > 0 && (
+                <Box
+                    sx={{
+                        position: 'sticky',
+                        top: 'var(--app-bar-height, 0px)',
+                        zIndex: 5,
+                        marginInline: -1,
+                        marginTop: -1,
+                        marginBottom: 1,
+                    }}
+                >
+                    <InfoBar facts={info} phone />
+                </Box>
+            )}
             {result}
             {(phoneGroups.length > 0 || action || phoneStrip) && (
                 <Stack

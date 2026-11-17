@@ -25,6 +25,7 @@ import { downloadFile } from '../download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
+import type { Fact } from '../mosaic/facts';
 import { tokens } from '../theme';
 import type { Mosaic } from '../useMosaic';
 import HelpText from '../components/HelpText';
@@ -121,7 +122,8 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
             info={[
                 ['Parts', total.toLocaleString()],
                 ['Lots', parts.length.toLocaleString()],
-                ['Spares', spares > 0 ? `${spares.toLocaleString()} (${sparesPercent}%)` : 'None: exact counts'],
+                // only when there are some: 'None' would just repeat the Spares setting
+                ...(spares > 0 ? [['Spares', spares.toLocaleString()] as Fact] : []),
             ]}
             // like Print: the order follows from the tools, so it ends them (a strip above the bar on phones)
             action={

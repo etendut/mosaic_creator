@@ -11,7 +11,6 @@ import { BrickPicker, PlatePicker } from '../components/PartPickers';
 import StepLayout, { type ToolGroup } from '../components/StepLayout';
 import { Stage } from '../components/Tray';
 import { mosaicFacts, type Fact } from '../mosaic/facts';
-import { colorsUsed } from '../mosaic/partsList';
 import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
 import HelpText from '../components/HelpText';
 
@@ -101,7 +100,7 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
             groups={groups}
             info={[
                 ...mosaicFacts(mosaic),
-                ['Colours', colorsUsed(mosaic.parts, brick.partId).length.toLocaleString()],
+                // only while there are some: changes here can hide them, so the count belongs here too
                 ...(touched > 0 && !mosaic.hiddenTouchUps ? [['Touched up', bricks(touched)] as Fact] : []),
             ]}
         >

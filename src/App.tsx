@@ -1,5 +1,5 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
 import ProjectMenu from './components/ProjectMenu';
 import { recallImage } from './imageStore';
@@ -103,10 +103,23 @@ const App = () => {
         }
     };
 
+    // the app bar's height, for what sticks just under it (the phone's Info bar); it grows when the steps wrap
+    const measureHeader = useCallback((header: HTMLElement | null) => {
+        if (!header) return;
+        const publish = () =>
+            document.documentElement.style.setProperty('--app-bar-height', `${header.offsetHeight}px`);
+        publish();
+        if (typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(publish);
+        observer.observe(header);
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <Box sx={{ minHeight: '100dvh', '@media print': { backgroundColor: 'white' } }}>
             {/* the app bar: the menu, the steps and the step's main action (see docs/design-system/README.md) */}
             <Box
+                ref={measureHeader}
                 component="header"
                 sx={{
                     position: 'sticky',
