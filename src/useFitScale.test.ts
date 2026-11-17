@@ -3,6 +3,7 @@ import { useFitScale } from './useFitScale';
 
 /** Lets the test say how wide the observed element is. */
 class FakeResizeObserver {
+    // eslint-disable-next-line sonarjs/public-static-readonly -- each new observer sets it
     static last: FakeResizeObserver;
     observed: Element[] = [];
     disconnected = false;

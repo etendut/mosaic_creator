@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Dependabot's auto-merges are made with the Actions token, which doesn't start other workflows, so they don't
+  # trigger the push above. A daily deploy picks them up; on a day with no change it republishes the same site.
+  schedule:
+    - cron: '17 3 * * *'
 
 permissions:
   contents: write
@@ -20,8 +24,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -30,7 +34,7 @@ jobs:
       - run: npm run build
       # serve files as they are, without a Jekyll build
       - run: touch dist/.nojekyll
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445 # v4.9.0
         with:
           branch: gh-pages
           folder: dist

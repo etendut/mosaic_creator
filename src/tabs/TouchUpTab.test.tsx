@@ -60,7 +60,7 @@ describe('Touch up step', () => {
         const names = column
             .getAllByRole('button')
             .map((b) => b.getAttribute('aria-label') ?? b.textContent)
-            .filter((n) => n && !/×|brush$/.test(n));
+            .filter((n) => n && !/×/.test(n) && !/brush$/.test(n));
         expect(names).toEqual([
             'Undo',
             'Redo',
