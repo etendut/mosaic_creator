@@ -117,7 +117,14 @@ const PaletteEditor = ({ mosaic }: { mosaic: Mosaic }) => {
                         sx={{ flexShrink: 0, marginRight: 0, minHeight: 40 }}
                     />
                 </Stack>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {/* chips in rows; with names, a two-column list of chip and name */}
+                <Box
+                    sx={
+                        showNames
+                            ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75 }
+                            : { display: 'flex', flexWrap: 'wrap', gap: 0.75 }
+                    }
+                >
                     {brick.colors.map((c) => (
                         <ColorSwatch
                             key={c.id}

@@ -31,6 +31,7 @@ const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {
                         <ColorSwatch
                             color={line.color}
                             title={`${line.color.name}: ${line.quantity}`}
+                            current={swapping?.color.id === line.color.id}
                             onClick={(e) => setSwapping({ anchor: e.currentTarget, color: line.color })}
                         />
                         <Typography variant="caption">{line.quantity}</Typography>

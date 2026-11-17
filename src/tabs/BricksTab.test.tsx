@@ -81,9 +81,12 @@ describe('Bricks step', () => {
 
     it('shows colour names on request, for touch screens', async () => {
         const user = await startMosaic();
-        expect(within(palette()).queryByText('1 White')).not.toBeInTheDocument();
+        expect(within(palette()).queryByText('White')).not.toBeInTheDocument();
         await user.click(screen.getByRole('switch', { name: 'Names' }));
-        expect(within(palette()).getByText('1 White')).toBeInTheDocument();
+        // beside the chip, never printed on the brick colour
+        const white = within(palette()).getByRole('button', { name: /^White/ });
+        expect(within(white).getByText('White')).toBeInTheDocument();
+        expect(within(white).getByText('1')).toBeInTheDocument();
     });
 
     it('limits the number of colours and changes how they are matched', async () => {
@@ -164,9 +167,12 @@ describe('Bricks step', () => {
         const used = screen.getByRole('group', { name: 'Colours used' });
         const [first] = within(used).getAllByRole('button');
         const fromName = first.getAttribute('aria-label')!.split(':')[0];
+        expect(first).not.toHaveAttribute('aria-current');
         await user.click(first);
         const menu = screen.getByRole('menu');
         expect(within(menu).getByText(`Use instead of ${fromName}`)).toBeInTheDocument();
+        // the colour being swapped is ringed while its menu is open
+        expect(first).toHaveAttribute('aria-current', 'true');
         await user.click(within(menu).getByRole('menuitem', { name: /Magenta/ }));
         const chip = screen.getByRole('button', { name: `${fromName} → Magenta` });
         await user.click(within(chip).getByTestId('CancelIcon'));

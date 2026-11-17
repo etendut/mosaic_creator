@@ -17,6 +17,8 @@ export const tokens = {
     azure: '#00788A',
     azureDark: '#00616F',
     azureWash: '#E3F2F4',
+    /** The inset edge of a colour swatch, so white bricks show on a white tray. */
+    swatchEdge: 'rgba(0, 0, 0, 0.2)',
 };
 
 /** A subtle grid of studs: every page sits on it, like a baseplate. */
