@@ -38,9 +38,13 @@ interface MosaicPreviewProps {
  */
 const cellPixels = (grid: PixelGrid | null, zoomable: boolean, scale: number, zoom: number) => {
     if (!grid) return 4;
-    if (!zoomable || scale === 0) return Math.max(4, Math.min(24, Math.floor(PREVIEW_WIDTH_PX / grid.width)));
+    // a fixed map: 4–24 px a brick for its preview width, but never past the canvas size limit (a 1,920-brick-wide
+    // mosaic at 4 px would be a 44-megapixel canvas, shown a few hundred pixels wide)
+    const fitCanvas = Math.max(1, Math.floor(MAX_CANVAS_PX / Math.max(grid.width, grid.height)));
+    if (!zoomable || scale === 0)
+        return Math.min(fitCanvas, Math.max(4, Math.min(24, Math.floor(PREVIEW_WIDTH_PX / grid.width))));
     const wanted = Math.round(scale * drawZoom(zoom) * (window.devicePixelRatio || 1));
-    return Math.max(4, Math.min(wanted, Math.floor(MAX_CANVAS_PX / Math.max(grid.width, grid.height))));
+    return Math.min(fitCanvas, Math.max(4, wanted));
 };
 
 /** The outline of the brush around the bricks it covers (one brick for the eyedropper), positioned in % of the map. */

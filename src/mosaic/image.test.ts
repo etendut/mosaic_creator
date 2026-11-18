@@ -12,6 +12,7 @@ import {
     resizeCanvas,
     shrinkToBricks,
 } from './image';
+import { hexToRgb } from './color';
 import type { PixelGrid } from './types';
 
 const canvas = (width: number, height: number) => {
@@ -122,6 +123,8 @@ describe('drawPreview', () => {
         ],
     };
 
+    const colours = new Set(grid.rows.flat().flatMap((c) => (c ? [c.hex] : []))).size;
+
     const recording = () => {
         const calls: string[] = [];
         const original = HTMLCanvasElement.prototype.getContext;
@@ -149,7 +152,9 @@ describe('drawPreview', () => {
         drawPreview(c, grid, { cellPx: 10, isRound: false, background: '#000', cellsPerCard: 2 });
         restore();
         expect([c.width, c.height]).toEqual([40, 30]);
-        expect(calls.filter((x) => x === 'fillRect').length).toBeGreaterThan(10);
+        // every brick goes into its colour's path, and each colour is filled once
+        expect(calls.filter((x) => x === 'rect')).toHaveLength(10);
+        expect(calls.filter((x) => x === 'fill')).toHaveLength(colours);
         expect(calls).toContain('fillText');
         expect(calls).not.toContain('arc');
     });
@@ -173,11 +178,54 @@ describe('drawPreview', () => {
         expect(calls).toContain('fillText');
     });
 
+    it("draws small bricks as pixels, anti-aliased into the plate colour at a round brick's edge", () => {
+        let put: ImageData | null = null;
+        const ctx = {
+            createImageData: (w: number, h: number) => ({
+                width: w,
+                height: h,
+                data: new Uint8ClampedArray(w * h * 4),
+            }),
+            putImageData: (image: ImageData) => (put = image),
+        };
+        const spy = vi
+            .spyOn(HTMLCanvasElement.prototype, 'getContext')
+            .mockImplementation(() => ctx as unknown as CanvasRenderingContext2D);
+        try {
+            const two: PixelGrid = { width: 2, height: 1, rows: [[RED, null]] };
+            const pixel = (x: number, y: number) => {
+                const i = (y * put!.width + x) * 4;
+                return [...put!.data.slice(i, i + 4)];
+            };
+            const red = hexToRgb(RED.hex);
+            const plate = [0, 0, 128, 255];
+
+            drawPreview(canvas(1, 1), two, { cellPx: 8, isRound: true, background: '#000080', cellsPerCard: 0 });
+            expect([put!.width, put!.height]).toEqual([16, 8]);
+            expect(pixel(4, 4)).toEqual([red.r, red.g, red.b, 255]);
+            // the corner of a round brick, and the empty cell, show the plate
+            expect(pixel(0, 0)).toEqual(plate);
+            expect(pixel(12, 4)).toEqual(plate);
+            // an edge pixel is part brick, part plate
+            const [r, , b] = pixel(0, 3);
+            expect(r).toBeGreaterThan(0);
+            expect(r).toBeLessThan(red.r);
+            expect(b).toBeGreaterThan(0);
+            expect(b).toBeLessThan(128);
+
+            drawPreview(canvas(1, 1), two, { cellPx: 8, isRound: false, background: '#000080', cellsPerCard: 0 });
+            expect(pixel(0, 0)).toEqual([red.r, red.g, red.b, 255]);
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
     it('draws round bricks, and no card overlay when asked', () => {
         const { calls, restore } = recording();
         drawPreview(canvas(1, 1), grid, { cellPx: 10, isRound: true, background: '#000', cellsPerCard: 0 });
         restore();
         expect(calls.filter((x) => x === 'arc')).toHaveLength(10);
+        expect(calls.filter((x) => x === 'fill')).toHaveLength(colours);
         expect(calls).not.toContain('fillText');
     });
 });
