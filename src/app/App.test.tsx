@@ -1,11 +1,12 @@
 import { act, render, screen } from '@testing-library/react';
 import App from './App';
+import AppProviders from './AppProviders';
 import { rememberImage } from '../lib/imageStore';
 import { goTo, projectMenu, startMosaic } from '../test/app';
 
 describe('<App />', () => {
     it('starts on the image step, with the menu, the steps and no title bar', () => {
-        render(<App />);
+        render(<App />, { wrapper: AppProviders });
         expect(screen.getByRole('heading', { name: 'Image', level: 1 })).toBeInTheDocument();
         expect(screen.queryByText('Mosaic Creator')).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Menu' })).toBeInTheDocument();
@@ -17,7 +18,7 @@ describe('<App />', () => {
     });
 
     it.each(['Bricks', 'Touch up', 'Cards', 'Parts', 'Print'])('keeps %s locked until there is an image', (step) => {
-        render(<App />);
+        render(<App />, { wrapper: AppProviders });
         expect(screen.getByRole('tab', { name: step })).toBeDisabled();
     });
 
@@ -39,7 +40,7 @@ describe('<App />', () => {
     it('picks up the image remembered from the last visit', async () => {
         const canvas = document.createElement('canvas');
         await rememberImage(canvas);
-        render(<App />);
+        render(<App />, { wrapper: AppProviders });
         expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
     });
 
@@ -60,7 +61,7 @@ describe('<App />', () => {
     it('comes back to the step in the URL after a refresh', async () => {
         await rememberImage(document.createElement('canvas'));
         window.history.replaceState(null, '', '#/parts');
-        render(<App />);
+        render(<App />, { wrapper: AppProviders });
         expect(await screen.findByRole('heading', { name: 'Parts', level: 1 })).toBeInTheDocument();
         // restoring doesn't add a history entry
         expect(window.location.hash).toBe('#/parts');
@@ -68,7 +69,7 @@ describe('<App />', () => {
 
     it('shows Image for a step in the URL while there is no image', () => {
         window.history.replaceState(null, '', '#/cards');
-        render(<App />);
+        render(<App />, { wrapper: AppProviders });
         expect(screen.getByRole('heading', { name: 'Image', level: 1 })).toBeInTheDocument();
         expect(screen.getByText('Start with a picture')).toBeVisible();
     });

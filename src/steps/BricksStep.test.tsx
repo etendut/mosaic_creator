@@ -39,9 +39,9 @@ describe('Bricks step', () => {
     it('explains the backing plate in muted help text', async () => {
         await startMosaic();
         const help = screen.getByText('Each card is one 8 × 8 plate: 64 bricks.');
-        // text.secondary (MUI's default here: tests render without the app theme), where MUI 9 ignored the dotted
-        // color="text.secondary" and left help in the body colour
-        expect(help).toHaveStyle({ color: 'rgba(0, 0, 0, 0.6)' });
+        // `muted` (#5B636B in light), where MUI 9 ignored the dotted color="text.secondary" and left help in the body
+        // colour
+        expect(help).toHaveStyle({ color: 'rgb(91, 99, 107)' });
     });
 
     it('sets the size from the box or the slider, within limits', async () => {

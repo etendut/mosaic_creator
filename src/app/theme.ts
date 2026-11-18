@@ -134,7 +134,15 @@ const theme = createTheme({
         },
         MuiMenuItem: {
             styleOverrides: {
-                root: { '&.Mui-selected, &.Mui-selected:hover': { backgroundColor: tokens.azureWash } },
+                // the one selected state: azureWash fill, azure text and icon at weight 500; a secondary line stays muted
+                root: {
+                    '&.Mui-selected, &.Mui-selected:hover': {
+                        backgroundColor: tokens.azureWash,
+                        color: tokens.azure,
+                        '& .MuiListItemIcon-root': { color: tokens.azure },
+                        '& .MuiListItemText-primary': { color: tokens.azure, fontWeight: 500 },
+                    },
+                },
             },
         },
         MuiPaper: { defaultProps: { elevation: 0 } },

@@ -1,6 +1,7 @@
 import { isInaccessible, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../app/App';
+import AppProviders from '../app/AppProviders';
 import { FAKE_PNG } from './fakes';
 
 export type User = ReturnType<typeof userEvent.setup>;
@@ -9,7 +10,7 @@ export const imageFile = (name = 'photo.png') => new File([FAKE_PNG], name, { ty
 
 export const renderApp = () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<App />, { wrapper: AppProviders });
     return user;
 };
 
