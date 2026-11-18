@@ -34,6 +34,13 @@ const fakeContext = () => ({
     fillText: () => {},
     beginPath: () => {},
     arc: () => {},
+    rect: () => {},
+    createImageData: (width: number, height: number) => ({
+        width,
+        height,
+        data: new Uint8ClampedArray(width * height * 4),
+    }),
+    putImageData: () => {},
     fill: () => {},
     moveTo: () => {},
     lineTo: () => {},

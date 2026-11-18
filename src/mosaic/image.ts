@@ -1,4 +1,5 @@
 import { rowLabel } from './cards';
+import { hexToRgb } from './color';
 import type { PixelGrid } from './types';
 
 /** Edited images are capped to this many pixels on the long side; mosaics are far smaller than this. */
@@ -177,27 +178,108 @@ export const printLabelPx = (cardPx: number, canvasWidthPx: number, printWidthMm
 };
 
 /** Draw the quantised mosaic as bricks on the plate colour, with the card grid overlaid. */
+/** Bricks this small or smaller are drawn as pixels: a circle can't be told from a square at that size anyway. */
+const PIXEL_BRICK_MAX_PX = 8;
+
+/**
+ * How much of each pixel of a `cellPx` square a brick covers, 0–1: a circle 90% across, sampled 4 × 4 per pixel so
+ * its edge is anti-aliased like a canvas path; or the whole square.
+ */
+const brickCoverage = (cellPx: number, isRound: boolean) => {
+    const coverage = new Float32Array(cellPx * cellPx);
+    if (!isRound) return coverage.fill(1);
+    const c = cellPx / 2;
+    const r2 = (cellPx * 0.45) ** 2;
+    const S = 4;
+    /** The share of the pixel at (x, y) inside the circle, from S × S samples across it. */
+    const covered = (x: number, y: number) => {
+        let inside = 0;
+        for (let i = 0; i < S * S; i++) {
+            const dx = x + ((i % S) + 0.5) / S - c;
+            const dy = y + (Math.floor(i / S) + 0.5) / S - c;
+            if (dx * dx + dy * dy <= r2) inside++;
+        }
+        return inside / (S * S);
+    };
+    for (let y = 0; y < cellPx; y++) for (let x = 0; x < cellPx; x++) coverage[y * cellPx + x] = covered(x, y);
+    return coverage;
+};
+
+/**
+ * Small bricks as pixels in one ImageData: a big mosaic has millions of bricks, which as canvas paths take seconds
+ * to build and rasterise, and as pixels take milliseconds. Each colour's brick is worked out once, blended into the
+ * plate colour at its edge, then copied into place.
+ */
+const drawBrickPixels = (
+    ctx: CanvasRenderingContext2D,
+    grid: PixelGrid,
+    cellPx: number,
+    isRound: boolean,
+    background: string,
+) => {
+    const width = grid.width * cellPx;
+    const image = ctx.createImageData(width, grid.height * cellPx);
+    const pixels = new Uint32Array(image.data.buffer);
+    const plate = hexToRgb(background);
+    // a 32-bit RGBA value in the byte order the canvas stores (little-endian: A, B, G, R)
+    const pack = (r: number, g: number, b: number) => ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0;
+    pixels.fill(pack(plate.r, plate.g, plate.b));
+    const coverage = brickCoverage(cellPx, isRound);
+    const mix = (from: number, to: number, t: number) => Math.round(from + (to - from) * t);
+    const brickOf = (hex: string) => {
+        const { r, g, b } = hexToRgb(hex);
+        return Uint32Array.from(coverage, (t) => pack(mix(plate.r, r, t), mix(plate.g, g, t), mix(plate.b, b, t)));
+    };
+    const bricks = new Map<string, Uint32Array>();
+    grid.rows.forEach((row, y) =>
+        row.forEach((cell, x) => {
+            if (!cell) return;
+            const brick = bricks.get(cell.hex) ?? brickOf(cell.hex);
+            bricks.set(cell.hex, brick);
+            for (let dy = 0; dy < cellPx; dy++)
+                pixels.set(brick.subarray(dy * cellPx, (dy + 1) * cellPx), (y * cellPx + dy) * width + x * cellPx);
+        }),
+    );
+    ctx.putImageData(image, 0, 0);
+};
+
+/** Bigger bricks as shapes, one path per colour filled once, so circles stay smooth. */
+const drawBrickShapes = (ctx: CanvasRenderingContext2D, grid: PixelGrid, cellPx: number, isRound: boolean) => {
+    const byColour = new Map<string, number[]>();
+    grid.rows.forEach((row, y) =>
+        row.forEach((cell, x) => {
+            if (!cell) return;
+            const at = byColour.get(cell.hex);
+            if (at) at.push(x, y);
+            else byColour.set(cell.hex, [x, y]);
+        }),
+    );
+    const r = cellPx * 0.45;
+    for (const [hex, at] of byColour) {
+        ctx.fillStyle = hex;
+        ctx.beginPath();
+        for (let i = 0; i < at.length; i += 2) {
+            const [x, y] = [at[i], at[i + 1]];
+            if (isRound) {
+                ctx.moveTo((x + 0.5) * cellPx + r, (y + 0.5) * cellPx);
+                ctx.arc((x + 0.5) * cellPx, (y + 0.5) * cellPx, r, 0, Math.PI * 2);
+            } else ctx.rect(x * cellPx, y * cellPx, cellPx, cellPx);
+        }
+        ctx.fill();
+    }
+};
+
 export const drawPreview = (canvas: HTMLCanvasElement, grid: PixelGrid, options: PreviewOptions) => {
     const { cellPx, isRound, background, cellsPerCard, labelPx } = options;
     canvas.width = grid.width * cellPx;
     canvas.height = grid.height * cellPx;
     const ctx = context2d(canvas);
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    grid.rows.forEach((row, y) =>
-        row.forEach((cell, x) => {
-            if (!cell) return;
-            ctx.fillStyle = cell.hex;
-            if (isRound) {
-                ctx.beginPath();
-                ctx.arc((x + 0.5) * cellPx, (y + 0.5) * cellPx, cellPx * 0.45, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillRect(x * cellPx, y * cellPx, cellPx, cellPx);
-            }
-        }),
-    );
+    if (cellPx <= PIXEL_BRICK_MAX_PX) drawBrickPixels(ctx, grid, cellPx, isRound, background);
+    else {
+        ctx.fillStyle = background;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawBrickShapes(ctx, grid, cellPx, isRound);
+    }
 
     if (cellsPerCard <= 0) return;
     const cardPx = cellsPerCard * cellPx;
