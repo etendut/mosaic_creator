@@ -23,7 +23,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 - Page: `plate` with the stud texture (below). Working surfaces: `tray`, bordered in `groove`.
 - Text: `ink` for content, `muted` for help, status and labels. Both read on `tray` and `plate`.
 - Accent: `azure` only, for the one thing that is current or primary: the contained main action, the current step, the selected tool, the focus ring. `azureDark` is its hover; `azureWash` a selected background. Text on an `azure` fill is `on-azure`.
-- **Two themes**, with the same roles: a dark baseplate (`plate`, `plateDot`), dark trays, light `ink`, and a lighter `azure` that takes dark `on-azure` text. In dark, `azureDark` is the lighter hover step. Never pick colours per theme in a component: use the token and let the theme supply it.
+- **Two themes**, with the same roles: a dark baseplate (`plate`, `plateDot`), dark trays, light `ink`, and a lighter `azure` that takes dark `on-azure` text. In dark, `azureDark` is the lighter hover step. Never pick colours per theme in a component: use the token and let the theme supply it. You choose the theme in ☰ (ThemeToggle): Auto, the default, follows the device; Light and Dark fix it. Printing is always light.
 - MUI greys come from tokens too: `icon` for icon buttons and unselected toggles, `disabled` and `disabled-fill` for disabled controls, `azure-outline` for outlined buttons.
 - Never use raw hex in components; use the tokens. Never add a second accent: the mosaic's own brick colours are the only other colour on screen.
 - `groove` borders are 1.7:1 on `tray`. They separate surfaces; never let a border alone say a control is selected (pair it with `azure` or `azureWash`).
@@ -40,7 +40,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 - **Stud texture.** The body is a baseplate: `plate` with `plateDot` dots of 3px radius every `stud-pitch` (16px), offset 8px. Print is plain white.
 - **Tray**: `tray` fill, 1px `groove` border, `radius-tray`, `space-2` padding, no shadow. For the tools column, panels and lists.
 - **Stage** holds the canvas with no background of its own, so the studs run through it unbroken: `radius-stage`, `space-1.5` padding on phones, `space-3` from 600px.
-- Shadows only on what floats over the canvas: the phone tool panel (`shadow-panel`), toasts and the zoom control (`shadow-float`). Everything else is `shadow-none`.
+- Shadows only on what floats over the canvas: the phone tool panel (`shadow-panel`), toasts, the zoom control and walkthrough cards (`shadow-float`). Everything else is `shadow-none`.
 
 ## Layout
 
@@ -91,24 +91,25 @@ Like a document or photo viewer: it fills the space to the bottom of the window 
 
 ### Empty states
 
-When a step can't show a result yet, the canvas holds one centred EmptyState card: what to do, one main button, and a tip. The tools zone stays empty until there's something to change.
+When a step can't show a result yet, the canvas holds one centred EmptyState card: what to do, one main button, and a tip. The tools zone stays empty until there's something to change. On Image, until you've finished or skipped the Walkthrough once, a text button under the tip offers it: "Show me around".
 
 ## Help text
 
 - One rule decides whether a setting gets a help line: if you can see its effect on the canvas, no line; if you can't, one line. Two groups never differ just because one was written up and the other wasn't.
 - The line describes the current choice and its consequence and changes with it: "Each card is one 8 × 8 plate: 64 bricks." At most two short sentences.
 - Directly under the control, `body2` in `muted`. Never repeat an Info bar number, never restate the label, never show a code builders don't use (hex).
+- Help lives in that line, never behind a (?) button or a tooltip. The Walkthrough is for finding your way through the steps, not for explaining settings.
 
 ## Actions
 
-| Kind            | Style                              | Where                                                        |
-| --------------- | ---------------------------------- | ------------------------------------------------------------ |
-| Main action     | contained `azure`, one per step    | app bar right, or ending the tools when it follows from them |
-| Secondary       | outlined                           | beside the main action on desktop, in ☰ on a phone          |
-| In a group      | small text button                  | under the setting it acts on                                 |
-| Tool            | icon + label, with an `aria-label` | tools zone                                                   |
-| Destructive     | text, with confirmation or undo    | in a group or ☰                                             |
-| Project and app | menu items                         | ☰ (open, save, template, reset, forget image, About)        |
+| Kind            | Style                              | Where                                                                        |
+| --------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| Main action     | contained `azure`, one per step    | app bar right, or ending the tools when it follows from them                 |
+| Secondary       | outlined                           | beside the main action on desktop, in ☰ on a phone                          |
+| In a group      | small text button                  | under the setting it acts on                                                 |
+| Tool            | icon + label, with an `aria-label` | tools zone                                                                   |
+| Destructive     | text, with confirmation or undo    | in a group or ☰                                                             |
+| Project and app | menu items                         | ☰ (open, save, template, reset, forget image, Show me around, Theme, About) |
 
 - Each action lives in one place only: printing is on the Print step only.
 - An action that follows from the tools (_Print cards_ after Paper and Pages; _Download BrickLink XML_ after Spares) ends the tools, with one line above it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page."). On desktop it is the last block of the column; on a phone a strip just above the tool bar. It is then the step's main action, so the app bar has none.
