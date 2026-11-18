@@ -1,5 +1,5 @@
 import { colorDistance, hexToRgb } from './color';
-import type { Cell, PaletteColor, PixelGrid } from './types';
+import type { Cell, PaletteColor, PixelGrid, Rgb } from './types';
 
 /** View the map, paint or erase bricks, or pick the paint colour from a brick (an eyedropper). */
 export type TouchUpMode = 'view' | 'paint' | 'erase' | 'pick';
@@ -120,6 +120,34 @@ const NEIGHBOURS = [
     [1, 1],
 ];
 
+/** How many of a brick's 8 neighbours are bricks, how many share its colour, and the counts of the other colours. */
+const neighbourhood = (at: (x: number, y: number) => Cell, x: number, y: number, own: number) => {
+    const others = new Map<number, { color: PaletteColor; n: number }>();
+    let bricks = 0;
+    let same = 0;
+    for (const [dx, dy] of NEIGHBOURS) {
+        const n = at(x + dx, y + dy);
+        if (!n) continue;
+        bricks++;
+        if (n.id === own) {
+            same++;
+            continue;
+        }
+        const count = others.get(n.id);
+        if (count) count.n++;
+        else others.set(n.id, { color: n, n: 1 });
+    }
+    return { bricks, same, others };
+};
+
+/** The most common of the other colours; a tie goes to the one closest to the brick's own colour. */
+const replacement = (own: Rgb, others: Map<number, { color: PaletteColor; n: number }>) => {
+    const closer = (a: PaletteColor, b: PaletteColor) =>
+        colorDistance(own, hexToRgb(b.hex)) < colorDistance(own, hexToRgb(a.hex));
+    const [first, ...rest] = others.values();
+    return rest.reduce((a, b) => (b.n > a.n || (b.n === a.n && closer(a.color, b.color)) ? b : a), first).color;
+};
+
 /**
  * Edits that recolour stray bricks to the most common colour around them. A brick is stray when at most 0 (`lone`)
  * or 1 (`pairs`) of its 8 neighbours share its colour, and at least 5 neighbours are bricks, so the edge of the
@@ -135,33 +163,9 @@ export const findStrays = (grid: PixelGrid, strength: CleanUpStrength): Edit[] =
         for (let x = 0; x < grid.width; x++) {
             const cell = at(x, y);
             if (!cell) continue;
-            const counts = new Map<number, { color: PaletteColor; n: number }>();
-            let bricks = 0;
-            let same = 0;
-            for (const [dx, dy] of NEIGHBOURS) {
-                const n = at(x + dx, y + dy);
-                if (!n) continue;
-                bricks++;
-                if (n.id === cell.id) same++;
-                else {
-                    const count = counts.get(n.id);
-                    if (count) count.n++;
-                    else counts.set(n.id, { color: n, n: 1 });
-                }
-            }
-            if (bricks < 5 || same > allowed || counts.size === 0) continue;
-            const own = hexToRgb(cell.hex);
-            const [first, ...rest] = counts.values();
-            const best = rest.reduce(
-                (a, b) =>
-                    b.n > a.n ||
-                    (b.n === a.n &&
-                        colorDistance(own, hexToRgb(b.color.hex)) < colorDistance(own, hexToRgb(a.color.hex)))
-                        ? b
-                        : a,
-                first,
-            );
-            edits.push([x, y, best.color.id]);
+            const { bricks, same, others } = neighbourhood(at, x, y, cell.id);
+            if (bricks < 5 || same > allowed || others.size === 0) continue;
+            edits.push([x, y, replacement(hexToRgb(cell.hex), others).id]);
         }
     }
     return edits;

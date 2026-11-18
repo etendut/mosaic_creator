@@ -142,6 +142,34 @@ const page = (sheet: Sheet, landscape: boolean, columns: number, rows: number): 
 const GRID_BORDER_MM = 0.6;
 const MAX_PER_SIDE = 12;
 
+/** The best card layout on one sheet: the most cards per page, then the biggest bricks; null if none fits. */
+const bestOnSheet = (
+    sheet: Sheet,
+    fit: { cells: number; realMm: number; minMm: number; size: CardSize; content: CardContent },
+): Omit<CardLayout, 'usesPaper'> | null => {
+    const { cells, realMm, minMm, size, content } = fit;
+    let best: Omit<CardLayout, 'usesPaper'> | null = null;
+    const tryLayout = (landscape: boolean, columns: number, rows: number) => {
+        const p = page(sheet, landscape, columns, rows);
+        const text = cardText(content, p.cardWidthMm, size);
+        const gridMm = Math.min(
+            p.cardWidthMm - CARD_TEXT[size].paddingMm * 2,
+            p.cardHeightMm - CARD_TEXT[size].paddingMm * 2 - text.heightMm,
+        );
+        const cellMm = Math.min(realMm, (gridMm - GRID_BORDER_MM) / cells);
+        if (cellMm < minMm) return;
+        const better =
+            !best ||
+            p.cardsPerPage > best.cardsPerPage ||
+            (p.cardsPerPage === best.cardsPerPage && cellMm > best.cellMm + 1e-9);
+        if (better) best = { ...p, cellMm, text };
+    };
+    for (const landscape of [false, true])
+        for (let columns = 1; columns <= MAX_PER_SIDE; columns++)
+            for (let rows = 1; rows <= MAX_PER_SIDE; rows++) tryLayout(landscape, columns, rows);
+    return best;
+};
+
 /**
  * How to print the cards: the sheet, orientation and number of cards across and down that fit the most cards per
  * page, with cells no smaller than the size allows. Tries the user's paper first, then A3 and A2 for cards too big
@@ -160,27 +188,9 @@ export const cardLayout = (options: {
     const minMm = size === 'real' ? realMm * REAL_SIZE_MIN : Math.min(realMm, COMPACT_CELL_MIN_MM);
 
     // the chosen paper first, then bigger sheets for cards that don't fit it
-    const sheets = [...new Set<Sheet>([paperSize, 'A3', 'A2'])];
-    for (const sheet of sheets) {
-        let best: CardLayout | null = null;
-        for (const landscape of [false, true])
-            for (let columns = 1; columns <= MAX_PER_SIDE; columns++)
-                for (let rows = 1; rows <= MAX_PER_SIDE; rows++) {
-                    const p = page(sheet, landscape, columns, rows);
-                    const text = cardText(content, p.cardWidthMm, size);
-                    const gridMm = Math.min(
-                        p.cardWidthMm - CARD_TEXT[size].paddingMm * 2,
-                        p.cardHeightMm - CARD_TEXT[size].paddingMm * 2 - text.heightMm,
-                    );
-                    const cellMm = Math.min(realMm, (gridMm - GRID_BORDER_MM) / cells);
-                    if (cellMm < minMm) continue;
-                    const better =
-                        !best ||
-                        p.cardsPerPage > best.cardsPerPage ||
-                        (p.cardsPerPage === best.cardsPerPage && cellMm > best.cellMm + 1e-9);
-                    if (better) best = { ...p, usesPaper: sheet === paperSize, cellMm, text };
-                }
-        if (best) return best;
+    for (const sheet of [...new Set<Sheet>([paperSize, 'A3', 'A2'])]) {
+        const best = bestOnSheet(sheet, { cells, realMm, minMm, size, content });
+        if (best) return { ...best, usesPaper: sheet === paperSize };
     }
     throw new Error(`A ${plateStuds} stud card doesn't fit on any sheet`);
 };
