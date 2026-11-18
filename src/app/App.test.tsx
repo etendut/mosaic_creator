@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import App from './App';
 import { rememberImage } from '../lib/imageStore';
 import { goTo, projectMenu, startMosaic } from '../test/app';
@@ -41,6 +41,36 @@ describe('<App />', () => {
         await rememberImage(canvas);
         render(<App />);
         expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
+    });
+
+    it('keeps the step in the URL, so back and forward move between steps', async () => {
+        const user = await startMosaic();
+        expect(window.location.hash).toBe('#/bricks');
+        await goTo(user, 'Touch up');
+        expect(window.location.hash).toBe('#/touch-up');
+        await goTo(user, 'Print');
+        expect(window.location.hash).toBe('#/print');
+
+        act(() => window.history.back());
+        expect(await screen.findByRole('heading', { name: 'Touch up', level: 1 })).toBeInTheDocument();
+        act(() => window.history.forward());
+        expect(await screen.findByRole('heading', { name: 'Print', level: 1 })).toBeInTheDocument();
+    });
+
+    it('comes back to the step in the URL after a refresh', async () => {
+        await rememberImage(document.createElement('canvas'));
+        window.history.replaceState(null, '', '#/parts');
+        render(<App />);
+        expect(await screen.findByRole('heading', { name: 'Parts', level: 1 })).toBeInTheDocument();
+        // restoring doesn't add a history entry
+        expect(window.location.hash).toBe('#/parts');
+    });
+
+    it('shows Image for a step in the URL while there is no image', () => {
+        window.history.replaceState(null, '', '#/cards');
+        render(<App />);
+        expect(screen.getByRole('heading', { name: 'Image', level: 1 })).toBeInTheDocument();
+        expect(screen.getByText('Start with a picture')).toBeVisible();
     });
 
     it('forgets the image when asked, back to a fresh start', async () => {

@@ -122,6 +122,7 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 - Disabled: 35% opacity in the tool bar; a turned-off swatch is 30% opacity and struck through.
 - Messages after an action are a Toast: one look, `ink` with `tray` text; errors in `danger` with an icon, staying until closed. `danger` is for errors only.
 - No motion beyond MUI's defaults.
+- The current step is in the URL (`#/touch-up`): a refresh comes back to it, and the browser's back and forward move between steps. Without an image, every step shows Image.
 
 ## Iconography
 
