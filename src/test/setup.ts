@@ -26,8 +26,9 @@ vi.mock('react-easy-crop', () => ({
 }));
 
 afterEach(() => {
-    // each test starts as a first visit: nothing remembered
+    // each test starts as a first visit: nothing remembered, and no step in the URL
     localStorage.clear();
+    window.history.replaceState(null, '', '/');
     globalThis.indexedDB = new IDBFactory();
     resetFakes();
 });

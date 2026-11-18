@@ -9,6 +9,7 @@ import CardsStep from '../steps/CardsStep';
 import ImageStep from '../steps/ImageStep';
 import PartsStep from '../steps/PartsStep';
 import PrintStep from '../steps/PrintStep';
+import { useStepRoute } from '../hooks/useStepRoute';
 import TouchUpStep from '../steps/TouchUpStep';
 import { tokens } from './theme';
 import { useMosaic } from '../hooks/useMosaic';
@@ -57,20 +58,22 @@ const StepLabel = ({ number, name, state }: { number: number; name: string; stat
 
 const App = () => {
     const mosaic = useMosaic();
-    const [step, setStep] = useState<Step>('Image');
+    // the step in the URL; without an image every step shows Image, until one is chosen or restored
+    const { step: wanted, go, inUrl } = useStepRoute(STEPS, 'Image');
     // where the current step's main action goes in the app bar
     const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
     // an opened project's image restarts the image step from that image
     const [openedImage, setOpenedImage] = useState<{ image: HTMLImageElement | null; key: number } | null>(null);
     const hasImage = !!mosaic.grid;
+    const step: Step = hasImage ? wanted : 'Image';
     // set once the user picks or opens an image, so a slow restore of the last one can't replace it
     const imageChosen = useRef(false);
 
-    /** Load an image into every step: the mosaic, and the image step to edit it again. */
-    const showImage = (image: HTMLImageElement, remember = true) => {
+    /** Load an image into every step: the mosaic, and the image step to edit it again; then go to `to`. */
+    const showImage = (image: HTMLImageElement, remember = true, to: Step = 'Bricks') => {
         mosaic.setImage(imageToCanvas(image), { remember });
         setOpenedImage({ image, key: Date.now() });
-        setStep('Bricks');
+        go(to, { replace: !remember });
     };
 
     // pick up where the last visit left off
@@ -78,7 +81,8 @@ const App = () => {
         recallImage()
             .then((png) => (png ? pngToImage(png) : null))
             .then((image) => {
-                if (image && !imageChosen.current) showImage(image, false);
+                // back to the step in the URL (a refresh), or Bricks
+                if (image && !imageChosen.current) showImage(image, false, inUrl() ?? 'Bricks');
             })
             .catch(() => {
                 // a stored image that no longer decodes is simply not restored
@@ -146,7 +150,7 @@ const App = () => {
                         imageChosen.current = true;
                         mosaic.setImage(null);
                         setOpenedImage({ image: null, key: Date.now() });
-                        setStep('Image');
+                        go('Image');
                     }}
                 />
                 {/* the step's name, for screen readers: on screen the highlighted tab names it, on both layouts */}
@@ -158,7 +162,7 @@ const App = () => {
 
                 <Tabs
                     value={step}
-                    onChange={(_, value: Step) => setStep(value)}
+                    onChange={(_, value: Step) => go(value)}
                     variant="scrollable"
                     // arrows whenever the steps don't all fit (phones), so a cut-off row can't pass for the whole
                     // list; each arrow fades out once that end is reached
@@ -204,7 +208,7 @@ const App = () => {
                         onApply={(image) => {
                             imageChosen.current = true;
                             mosaic.setImage(image);
-                            setStep('Bricks');
+                            go('Bricks');
                         }}
                     />
                 </Box>
