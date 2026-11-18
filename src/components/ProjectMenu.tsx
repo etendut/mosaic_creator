@@ -21,6 +21,7 @@ import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '..
 import type { Mosaic } from '../hooks/useMosaic';
 import { VERSION } from '../lib/version';
 import AboutDialog from './AboutDialog';
+import ThemeChoice from './ThemeChoice';
 
 interface ProjectMenuProps {
     mosaic: Mosaic;
@@ -86,7 +87,8 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
             >
                 <MenuIcon />
             </IconButton>
-            <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+            {/* `menu`, not the default `selectedMenu`: it opens on its first item, not on the chosen theme */}
+            <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)} variant="menu">
                 <MenuItem
                     onClick={() => {
                         setAnchor(null);
@@ -126,6 +128,8 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                 >
                     <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
                 </MenuItem>
+                <Divider />
+                <ThemeChoice />
                 <Divider />
                 <MenuItem
                     onClick={() => {
