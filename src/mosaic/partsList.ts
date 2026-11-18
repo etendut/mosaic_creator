@@ -35,15 +35,11 @@ export const buildPartsList = (
     pin: PinOption,
 ): PartLine[] => {
     const byColor = new Map<number, PartLine>();
-    for (const card of cards) {
-        for (const row of card.rows) {
-            for (const cell of row) {
-                if (!cell) continue;
-                const line = byColor.get(cell.id);
-                if (line) line.quantity++;
-                else byColor.set(cell.id, { partId: brick.partId, name: brick.name, color: cell, quantity: 1 });
-            }
-        }
+    for (const cell of cards.flatMap((card) => card.rows.flat())) {
+        if (!cell) continue;
+        const line = byColor.get(cell.id);
+        if (line) line.quantity++;
+        else byColor.set(cell.id, { partId: brick.partId, name: brick.name, color: cell, quantity: 1 });
     }
     const lines = [...byColor.values()].sort(
         (a, b) => b.quantity - a.quantity || a.color.name.localeCompare(b.color.name),

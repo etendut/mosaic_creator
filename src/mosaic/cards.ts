@@ -30,6 +30,13 @@ export const cardGridSize = (grid: Pick<PixelGrid, 'width' | 'height'>, cellsPer
     rows: Math.ceil(grid.height / cellsPerSide),
 });
 
+/** One card's square of cells, empty (null) past the edge of the grid. */
+const cardCells = (grid: PixelGrid, cellsPerSide: number, cardRow: number, cardCol: number): Cell[][] =>
+    Array.from({ length: cellsPerSide }, (_, y) => {
+        const source = grid.rows[cardRow * cellsPerSide + y];
+        return Array.from({ length: cellsPerSide }, (_, x) => source?.[cardCol * cellsPerSide + x] ?? null);
+    });
+
 /**
  * Split the grid into plate-sized building cards, left-to-right then top-to-bottom. Cards that would be entirely
  * empty are skipped, but keep their position in the id sequence so ids match the preview overlay.
@@ -40,18 +47,8 @@ export const compileMosaicCards = (grid: PixelGrid, cellsPerSide: number): Mosai
 
     for (let cardRow = 0; cardRow < rows; cardRow++) {
         for (let cardCol = 0; cardCol < columns; cardCol++) {
-            const cardRows: Cell[][] = [];
-            let brickCount = 0;
-            for (let y = 0; y < cellsPerSide; y++) {
-                const source = grid.rows[cardRow * cellsPerSide + y];
-                const row: Cell[] = [];
-                for (let x = 0; x < cellsPerSide; x++) {
-                    const cell = source?.[cardCol * cellsPerSide + x] ?? null;
-                    if (cell) brickCount++;
-                    row.push(cell);
-                }
-                cardRows.push(row);
-            }
+            const cardRows = cardCells(grid, cellsPerSide, cardRow, cardCol);
+            const brickCount = cardRows.flat().filter(Boolean).length;
             if (brickCount > 0)
                 cards.push({ id: `${rowLabel(cardRow + 1)}${cardCol + 1}`, rows: cardRows, brickCount });
         }
