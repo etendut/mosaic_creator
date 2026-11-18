@@ -9,8 +9,8 @@ import UndoIcon from '@mui/icons-material/Undo';
 import { createSvgIcon } from '@mui/material';
 import type { ReactNode } from 'react';
 import { findStrays, type CleanUpStrength, type TouchUpMode, type TouchUpState } from '../mosaic/touchUp';
-import type { Mosaic } from '../useMosaic';
-import type { ToastMessage } from './Toast';
+import type { Mosaic } from '../hooks/useMosaic';
+import type { ToastMessage } from '../ui/Toast';
 
 // Material Icons has no eraser; this is "eraser" from Material Design Icons (Pictogrammers, Apache 2.0)
 const EraserIcon = createSvgIcon(
@@ -20,7 +20,7 @@ const EraserIcon = createSvgIcon(
 
 /**
  * A toast's Undo. It runs after later renders, so the step binds it to the mosaic's undo as it is then, not as it was
- * when the message was made (see TouchUpTab).
+ * when the message was made (see TouchUpStep).
  */
 export const UNDO = { label: 'Undo', onClick: () => {} };
 

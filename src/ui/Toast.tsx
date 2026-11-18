@@ -1,7 +1,7 @@
 import CloseIcon from '@mui/icons-material/Close';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import { Box, ButtonBase, IconButton, Snackbar } from '@mui/material';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 /** A message after an action: what happened, and optionally one thing to do about it. */
 export interface ToastMessage {

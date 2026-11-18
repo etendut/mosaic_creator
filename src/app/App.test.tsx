@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
-import { rememberImage } from './imageStore';
-import { goTo, projectMenu, startMosaic } from './test/app';
+import { rememberImage } from '../lib/imageStore';
+import { goTo, projectMenu, startMosaic } from '../test/app';
 
 describe('<App />', () => {
     it('starts on the image step, with the menu, the steps and no title bar', () => {

@@ -10,4 +10,4 @@ A short message about what just happened, after an action: "Cleaned up 7 bricks.
 
 **Words.** What happened, then what to do next if anything, in the system's voice: a subject and a verb, no "Successfully", no exclamation marks. The words name the action as its button does.
 
-The consumer supplies the text, an optional action (label and handler), and `error` for an error. Replaces the plain MUI `Snackbar` in `src/tabs/TouchUpTab.tsx` and the filled `Alert` in `src/components/ProjectMenu.tsx`.
+The consumer supplies the text, an optional action (label and handler), and `error` for an error. From `src/ui/Toast.tsx`, used by Touch up and the ☰ menu.

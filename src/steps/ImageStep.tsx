@@ -3,12 +3,12 @@ import { useMemo, useRef, useState } from 'react';
 import CropIcon from '@mui/icons-material/Crop';
 import TuneIcon from '@mui/icons-material/Tune';
 import Cropper, { type Area } from 'react-easy-crop';
-import { Stage, Tray } from '../components/Tray';
-import AppBarAction from '../components/AppBarAction';
-import ChoiceRow from '../components/ChoiceRow';
-import StepLayout, { type ToolGroup } from '../components/StepLayout';
+import { Stage, Tray } from '../ui/Tray';
+import AppBarAction from '../ui/AppBarAction';
+import ChoiceRow from '../ui/ChoiceRow';
+import StepLayout, { type ToolGroup } from '../ui/StepLayout';
 import { applyEdits, filterCss, flipImage, loadImage } from '../mosaic/image';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 const ASPECTS = [
     { label: 'Original', value: 0 },
@@ -28,7 +28,7 @@ interface ImageTabProps {
     initialSource?: HTMLImageElement | null;
 }
 
-const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProps) => {
+const ImageStep = ({ onApply, active = true, initialSource = null }: ImageTabProps) => {
     const fileInput = useRef<HTMLInputElement>(null);
     const [source, setSource] = useState<HTMLImageElement | null>(initialSource);
     const [error, setError] = useState('');
@@ -250,4 +250,4 @@ const ImageTab = ({ onApply, active = true, initialSource = null }: ImageTabProp
     );
 };
 
-export default ImageTab;
+export default ImageStep;

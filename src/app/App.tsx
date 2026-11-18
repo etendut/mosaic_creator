@@ -1,17 +1,17 @@
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
-import ProjectMenu from './components/ProjectMenu';
-import { recallImage } from './imageStore';
-import { imageToCanvas, pngToImage } from './mosaic/image';
-import BricksTab from './tabs/BricksTab';
-import CardsTab from './tabs/CardsTab';
-import ImageTab from './tabs/ImageTab';
-import PartsTab from './tabs/PartsTab';
-import PrintTab from './tabs/PrintTab';
-import TouchUpTab from './tabs/TouchUpTab';
+import ProjectMenu from '../components/ProjectMenu';
+import { recallImage } from '../lib/imageStore';
+import { imageToCanvas, pngToImage } from '../mosaic/image';
+import BricksStep from '../steps/BricksStep';
+import CardsStep from '../steps/CardsStep';
+import ImageStep from '../steps/ImageStep';
+import PartsStep from '../steps/PartsStep';
+import PrintStep from '../steps/PrintStep';
+import TouchUpStep from '../steps/TouchUpStep';
 import { tokens } from './theme';
-import { useMosaic } from './useMosaic';
+import { useMosaic } from '../hooks/useMosaic';
 
 const STEPS = ['Image', 'Bricks', 'Touch up', 'Cards', 'Parts', 'Print'] as const;
 type Step = (typeof STEPS)[number];
@@ -87,19 +87,19 @@ const App = () => {
     }, []);
 
     const content = () => {
-        // ImageTab stays mounted (below) so the crop/edit state survives switching steps
+        // ImageStep stays mounted (below) so the crop/edit state survives switching steps
         if (step === 'Image' || !mosaic.grid) return null;
         switch (step) {
             case 'Bricks':
-                return <BricksTab mosaic={mosaic} />;
+                return <BricksStep mosaic={mosaic} />;
             case 'Touch up':
-                return <TouchUpTab mosaic={mosaic} />;
+                return <TouchUpStep mosaic={mosaic} />;
             case 'Cards':
-                return <CardsTab mosaic={mosaic} />;
+                return <CardsStep mosaic={mosaic} />;
             case 'Parts':
-                return <PartsTab mosaic={mosaic} />;
+                return <PartsStep mosaic={mosaic} />;
             case 'Print':
-                return <PrintTab mosaic={mosaic} />;
+                return <PrintStep mosaic={mosaic} />;
         }
     };
 
@@ -197,7 +197,7 @@ const App = () => {
             </Box>
             <AppBarSlot.Provider value={actionSlot}>
                 <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
-                    <ImageTab
+                    <ImageStep
                         key={openedImage?.key}
                         initialSource={openedImage?.image}
                         active={step === 'Image'}

@@ -10,7 +10,7 @@ import {
     ToggleButtonGroup,
 } from '@mui/material';
 import { useRef, useState } from 'react';
-import { downloadFile } from '../download';
+import { downloadFile } from '../lib/download';
 import type { ColorMetric } from '../mosaic/color';
 import type { Dithering } from '../mosaic/quantize';
 import {
@@ -21,10 +21,10 @@ import {
     resolveSavedPalette,
     type PalettePreset,
 } from '../mosaic/palette';
-import type { Mosaic } from '../useMosaic';
-import ChoiceRow from './ChoiceRow';
-import ColorSwatch from './ColorSwatch';
-import HelpText from './HelpText';
+import type { Mosaic } from '../hooks/useMosaic';
+import ChoiceRow from '../ui/ChoiceRow';
+import ColorSwatch from '../ui/ColorSwatch';
+import HelpText from '../ui/HelpText';
 import { partName } from '../mosaic/units';
 
 const DITHERING_HELP: Record<Dithering, string> = {

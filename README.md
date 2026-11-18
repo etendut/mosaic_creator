@@ -46,7 +46,14 @@ the PR closes. Previews share the live site's origin, so they see the same saved
   Don't hand-edit; to refresh it, download Colors, Codes and Parts as XML from
   https://www.bricklink.com/catalogDownload.asp into `temp/bricklink/` and run
   `node scripts/build-catalog.mjs temp/bricklink`. The part list lives at the top of that script.
-- `src/tabs/`, `src/components/` — the UI, tested through the whole app with Testing Library.
+- `src/steps/` — one component per step (Image, Bricks, Touch up, Cards, Parts, Print), tested through the whole app
+  with Testing Library.
+- `src/ui/` — the design system's components (Tray, ChoiceRow, ColorSwatch, InfoBar, Toast, ZoomControl, the step
+  layout), one per guideline in `docs/design-system/components/`.
+- `src/components/` — the app's own pieces built from them: the card map, building cards, print pages, part pickers,
+  touch-up tools, the ☰ menu.
+- `src/app/` — the app shell and theme. `src/hooks/` — React hooks: the mosaic's state (`useMosaic`), zoom and
+  pointer handling. `src/lib/` — browser plumbing: image storage, downloads, the version.
 - `src/test/` — test setup. jsdom has no canvas, image decoding or IndexedDB, so `fakes.ts` stands in for them
   (a canvas holding a known picture, images that load, fake-indexeddb) and the real app code runs on top.
 

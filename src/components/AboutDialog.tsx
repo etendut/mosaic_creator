@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
-import { COMMIT_URL, REPO_URL, VERSION } from '../version';
+import { COMMIT_URL, REPO_URL, VERSION } from '../lib/version';
 
 /** What the app is, where it comes from, and which build this is. */
 const AboutDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) => (

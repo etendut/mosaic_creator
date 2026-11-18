@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { catalog } from './data/catalog';
-import { forgetImage, rememberImage } from './imageStore';
-import { cardColorCounts, cardGridSize, cellsPerCard, compileMosaicCards } from './mosaic/cards';
-import { cardLayout } from './mosaic/layout';
-import type { ColorMetric } from './mosaic/color';
-import { shrinkToBricks } from './mosaic/image';
-import { applySwaps, limitColors, resolveSwaps, selectPalette, type PalettePreset } from './mosaic/palette';
-import { buildPartsList, withSpares } from './mosaic/partsList';
-import { DEFAULT_PROJECT, sanitizeSettings, type ProjectSettings } from './mosaic/project';
-import { quantize, type Dithering } from './mosaic/quantize';
-import { addEdits, applyTouchUps, fitsGrid, type Edit, type TouchUps } from './mosaic/touchUp';
-import type { CardSettings } from './mosaic/types';
+import { catalog } from '../data/catalog';
+import { forgetImage, rememberImage } from '../lib/imageStore';
+import { cardColorCounts, cardGridSize, cellsPerCard, compileMosaicCards } from '../mosaic/cards';
+import { cardLayout } from '../mosaic/layout';
+import type { ColorMetric } from '../mosaic/color';
+import { shrinkToBricks } from '../mosaic/image';
+import { applySwaps, limitColors, resolveSwaps, selectPalette, type PalettePreset } from '../mosaic/palette';
+import { buildPartsList, withSpares } from '../mosaic/partsList';
+import { DEFAULT_PROJECT, sanitizeSettings, type ProjectSettings } from '../mosaic/project';
+import { quantize, type Dithering } from '../mosaic/quantize';
+import { addEdits, applyTouchUps, fitsGrid, type Edit, type TouchUps } from '../mosaic/touchUp';
+import type { CardSettings } from '../mosaic/types';
 
-export { MAX_PLATES_ACROSS } from './mosaic/project';
+export { MAX_PLATES_ACROSS } from '../mosaic/project';
 
 const STORAGE_KEY = 'mosaic-creator:settings';
 

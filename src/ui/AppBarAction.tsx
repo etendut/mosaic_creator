@@ -1,6 +1,6 @@
 import { useContext, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { AppBarSlot } from '../appBarSlot';
+import { AppBarSlot } from '../app/appBarSlot';
 
 /**
  * A step's main action (one `contained` button), shown at the right of the app bar like a photo editor's Export.

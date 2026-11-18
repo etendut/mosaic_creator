@@ -12,14 +12,14 @@ import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 import PhotoSizeSelectLargeIcon from '@mui/icons-material/PhotoSizeSelectLarge';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import BuildingCard from '../components/BuildingCard';
-import { Stage } from '../components/Tray';
-import StepLayout, { type ToolGroup } from '../components/StepLayout';
+import { Stage } from '../ui/Tray';
+import StepLayout, { type ToolGroup } from '../ui/StepLayout';
 import { CARD_TEXT, MAX_MESSAGE_LINES, messageLines, mmToPx } from '../mosaic/layout';
 import type { CardSize } from '../mosaic/types';
-import { tokens } from '../theme';
-import { useFitScale } from '../useFitScale';
-import type { Mosaic } from '../useMosaic';
-import HelpText from '../components/HelpText';
+import { tokens } from '../app/theme';
+import { useFitScale } from '../hooks/useFitScale';
+import type { Mosaic } from '../hooks/useMosaic';
+import HelpText from '../ui/HelpText';
 
 const TEXT_FIELDS: {
     key: 'title' | 'topMessage' | 'bottomMessage' | 'clubEvent';
@@ -37,7 +37,7 @@ const SIZES: { value: CardSize; label: string }[] = [
     { value: 'compact', label: 'Compact' },
 ];
 
-const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
+const CardsStep = ({ mosaic }: { mosaic: Mosaic }) => {
     const { settings, updateSettings, cards, brick, layout } = mosaic;
     const [firstCard] = cards;
     const { measure: measureStage, scale: fitScale } = useFitScale(mmToPx(layout.cardWidthMm));
@@ -181,4 +181,4 @@ const CardsTab = ({ mosaic }: { mosaic: Mosaic }) => {
     );
 };
 
-export default CardsTab;
+export default CardsStep;

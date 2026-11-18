@@ -1,5 +1,5 @@
 import { Box, type BoxProps } from '@mui/material';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 /** The one working-surface treatment: white, one groove border, no shadow. */
 export const Tray = ({ sx, ...props }: BoxProps) => (

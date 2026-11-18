@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { mosaicFacts } from '../mosaic/facts';
-import { tokens } from '../theme';
-import type { Mosaic } from '../useMosaic';
+import { tokens } from '../app/theme';
+import type { Mosaic } from '../hooks/useMosaic';
 
 /** The numbers an organiser plans around, as one quiet row. */
 const MosaicSummary = ({ mosaic }: { mosaic: Mosaic }) => {

@@ -2,9 +2,9 @@ import { Box, Chip, ListSubheader, Menu, MenuItem, Stack, Typography } from '@mu
 import { useState } from 'react';
 import { colorsUsed } from '../mosaic/partsList';
 import type { PaletteColor } from '../mosaic/types';
-import type { Mosaic } from '../useMosaic';
-import ColorSwatch from './ColorSwatch';
-import HelpText from './HelpText';
+import type { Mosaic } from '../hooks/useMosaic';
+import ColorSwatch from '../ui/ColorSwatch';
+import HelpText from '../ui/HelpText';
 
 /** The colours the mosaic ended up using, with counts. Click one to build it in a different colour instead. */
 const ColorsUsed = ({ mosaic }: { mosaic: Mosaic }) => {

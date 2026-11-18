@@ -16,20 +16,20 @@ import {
 } from '@mui/material';
 import { Fragment, useState } from 'react';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
-import ColorSwatch from '../components/ColorSwatch';
+import ColorSwatch from '../ui/ColorSwatch';
 import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
-import StepLayout from '../components/StepLayout';
-import { Tray } from '../components/Tray';
+import StepLayout from '../ui/StepLayout';
+import { Tray } from '../ui/Tray';
 import { catalog } from '../data/catalog';
-import { downloadFile } from '../download';
+import { downloadFile } from '../lib/download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
 import { partName } from '../mosaic/units';
-import { tokens } from '../theme';
-import type { Mosaic } from '../useMosaic';
-import HelpText from '../components/HelpText';
+import { tokens } from '../app/theme';
+import type { Mosaic } from '../hooks/useMosaic';
+import HelpText from '../ui/HelpText';
 
 const BRICKLINK_UPLOAD_URL = 'https://www.bricklink.com/v2/wanted/upload.page';
 
@@ -84,7 +84,7 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
     );
 };
 
-const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
+const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
     const { order: parts, settings, brick, plate, sparesPercent, setSparesPercent } = mosaic;
 
     const iconFor = (partId: string) => {
@@ -227,4 +227,4 @@ const PartsTab = ({ mosaic }: { mosaic: Mosaic }) => {
     );
 };
 
-export default PartsTab;
+export default PartsStep;

@@ -4,10 +4,10 @@ import { drawPreview } from '../mosaic/image';
 import { brushCells, type BrickTool } from '../mosaic/touchUp';
 import type { Cell, PixelGrid } from '../mosaic/types';
 import { drawZoom, fitScale } from '../mosaic/view';
-import type { Mosaic } from '../useMosaic';
-import { useMapPointer } from './useMapPointer';
-import { useMeasuredBox, useSpaceHeld, useZoom, type Point } from './useZoomableMap';
-import ZoomControl from './ZoomControl';
+import type { Mosaic } from '../hooks/useMosaic';
+import { useMapPointer } from '../hooks/useMapPointer';
+import { useMeasuredBox, useSpaceHeld, useZoom, type Point } from '../hooks/useZoomableMap';
+import ZoomControl from '../ui/ZoomControl';
 
 /** Target on-screen width of the preview; the canvas is scaled down with CSS if the window is narrower. */
 const PREVIEW_WIDTH_PX = 1200;

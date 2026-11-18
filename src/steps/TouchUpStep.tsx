@@ -1,19 +1,19 @@
 import { Alert } from '@mui/material';
 import { useState } from 'react';
 import MosaicPreview from '../components/MosaicPreview';
-import StepLayout, { type ToolGroup } from '../components/StepLayout';
-import Toast, { type ToastMessage } from '../components/Toast';
+import StepLayout, { type ToolGroup } from '../ui/StepLayout';
+import Toast, { type ToastMessage } from '../ui/Toast';
 import { DesktopTools, PhonePalette } from '../components/TouchUp';
 import { touchUpActions, UNDO, type TouchUpAction } from '../components/touchUpTools';
-import { Stage } from '../components/Tray';
+import { Stage } from '../ui/Tray';
 import { colorsUsed } from '../mosaic/partsList';
 import { brushFor, DEFAULT_TOUCH_UP, type TouchUpState } from '../mosaic/touchUp';
-import type { Mosaic } from '../useMosaic';
+import type { Mosaic } from '../hooks/useMosaic';
 
 const bricks = (n: number) => `${n.toLocaleString()} brick${n === 1 ? '' : 's'}`;
 
 /** Fix single bricks on the map: paint, erase, pick colours, clean up strays, and compare before and after. */
-const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
+const TouchUpStep = ({ mosaic }: { mosaic: Mosaic }) => {
     const used = colorsUsed(mosaic.parts, mosaic.brick.partId);
     const [touchUp, setTouchUp] = useState<TouchUpState>(DEFAULT_TOUCH_UP);
     const [message, setMessage] = useState<ToastMessage | null>(null);
@@ -100,4 +100,4 @@ const TouchUpTab = ({ mosaic }: { mosaic: Mosaic }) => {
     );
 };
 
-export default TouchUpTab;
+export default TouchUpStep;

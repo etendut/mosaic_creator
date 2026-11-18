@@ -2,7 +2,7 @@ import { useRef, useState, type PointerEvent, type RefObject } from 'react';
 import { brushCells, type BrickTool, type Edit } from '../mosaic/touchUp';
 import type { Cell, PixelGrid } from '../mosaic/types';
 import { clampZoom, contentAt, scrollToPut } from '../mosaic/view';
-import type { Mosaic } from '../useMosaic';
+import type { Mosaic } from './useMosaic';
 import type { Point } from './useZoomableMap';
 
 interface Gesture {
