@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Slider, Stack, ToggleButton, Typography } from '@mui/material';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CropIcon from '@mui/icons-material/Crop';
 import TuneIcon from '@mui/icons-material/Tune';
 import Cropper, { type Area } from 'react-easy-crop';
@@ -26,11 +26,22 @@ interface ImageTabProps {
     active?: boolean;
     /** Start from this image, e.g. the one in an opened project. */
     initialSource?: HTMLImageElement | null;
+    /** Whether a picture is picked here (used or not), so the tour knows not to load its sample over it. */
+    onPictureChange?: (picked: boolean) => void;
+    /** Offer the Walkthrough under the empty state's tip; left out once it's been seen. */
+    onShowMeAround?: (opener: HTMLElement) => void;
 }
 
-const ImageStep = ({ onApply, active = true, initialSource = null }: ImageTabProps) => {
+const ImageStep = ({
+    onApply,
+    active = true,
+    initialSource = null,
+    onPictureChange,
+    onShowMeAround,
+}: ImageTabProps) => {
     const fileInput = useRef<HTMLInputElement>(null);
     const [source, setSource] = useState<HTMLImageElement | null>(initialSource);
+    useEffect(() => onPictureChange?.(!!source), [source, onPictureChange]);
     const [error, setError] = useState('');
     const [flipH, setFlipH] = useState(false);
     const [flipV, setFlipV] = useState(false);
@@ -189,7 +200,7 @@ const ImageStep = ({ onApply, active = true, initialSource = null }: ImageTabPro
             />
             {active && displayUrl && (
                 <AppBarAction>
-                    <Button variant="contained" onClick={apply} disabled={!area}>
+                    <Button variant="contained" onClick={apply} disabled={!area} data-tour="use-image">
                         Use this image
                     </Button>
                 </AppBarAction>
@@ -241,6 +252,16 @@ const ImageStep = ({ onApply, active = true, initialSource = null }: ImageTabPro
                                     A photo, logo or drawing. Bold shapes and strong contrast make the clearest mosaics.
                                     Your image stays on this device.
                                 </Typography>
+                                {onShowMeAround && (
+                                    <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={(e) => onShowMeAround(e.currentTarget)}
+                                        sx={{ marginTop: 1 }}
+                                    >
+                                        Show me around
+                                    </Button>
+                                )}
                             </Tray>
                         </Stack>
                     )}

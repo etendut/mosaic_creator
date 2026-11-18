@@ -28,21 +28,23 @@ Each stop is one or two short sentences: what you do there, then what it gets yo
 - **Inside, top to bottom.** The counter, "3 of 7", in `body2` `muted`. The text in `body1` `ink`. Then a row of buttons: _Skip_ (text) at the start, then _Back_ (text) and _Next_ (outlined) at the end. On the last stop, _Next_ reads _Done_ and _Skip_ goes.
 - **Why _Next_ is outlined.** The step's own main action stays the one contained button on screen, and it's often the thing the stop points at.
 
-**Target.** The control a stop is about gets three rings, following its corners: a 2px `tray` gap, a 2px `azure` ring, and a `tour-halo` (4px) ring of `azure-outline`. The gap keeps the ring visible around an `azure` button, as on the ColorSwatch's current ring. The page isn't dimmed and has no scrim: the app stays usable, and using the control the tour points at is fine.
+**Target.** The control a stop is about gets one ring: a 2px `azure` outline `space-1` out from it, with `radius-control` corners (react-joyride's spotlight). The `space-1` gap keeps the ring clear of an `azure` button.
 
-**Placement.** The card sits `space-1` from its target, on whichever side has room, and never covers the target. There's no arrow, because the ring marks the target.
+**The rest of the page.** It isn't dimmed, but while the tour runs it doesn't take clicks: only the target and the card do (a transparent overlay). So the tour can't be lost by wandering off, and using the control the tour points at is fine.
+
+**Placement.** The card sits `space-1` outside the ring, on whichever side has room, and never covers the target. There's no arrow, because the ring marks the target.
 
 - **Phone, target in the tool bar.** The card sits above the bar and any open panel.
 - **Phone, target in the app bar or Info bar.** The card sits below them.
 - **Off screen.** A target is scrolled into view before its card opens.
 
-**Ending.** _Skip_, _Done_ and Esc end the tour, and so does changing step yourself. You can replay it from ☰.
+**Ending.** _Skip_, _Done_ and Esc end the tour. Each counts as having seen it, so the EmptyState stops offering it. You can replay it from ☰.
 
 **Interaction.**
 
-- **Motion.** The card moves to the next stop without animation, and the ring has no pulse: no motion beyond MUI's defaults.
-- **Focus.** The card is a `dialog` with `aria-modal="false"`, labelled by its counter and text. Focus moves to _Next_ when a stop opens, and returns to where the tour started when it ends.
+- **Motion.** A target off screen is scrolled into view smoothly (300 ms), so you see where the page went: the one exception to "no motion beyond MUI's defaults". The card moves to the next stop without animation, and the ring has no pulse.
+- **Focus.** The card is a `dialog` with `aria-modal="true"`, labelled by its counter and text, and keeps focus while the tour runs. Focus moves to _Next_ when a stop opens, and returns to where the tour started when it ends.
 
 **No (?) help.** Complex settings explain themselves with a HelpText line under the control, by the Help text rule. They get no (?) button or tooltip. Dithering, clean-up, card size and spares already have their lines.
 
-The consumer supplies the stops: a target element, its step and the text. Planned for issue #22.
+Built on react-joyride, which places the card (Floating UI), scrolls to the target, waits for it after a step change, and draws the spotlight; the card itself is ours (`tooltipComponent`). The consumer supplies the stops: a target, its step and the text. In `src/components/Walkthrough.tsx`.

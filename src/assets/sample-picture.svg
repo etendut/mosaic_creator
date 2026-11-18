@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+  <!-- A hot-air balloon over hills: a few big, flat shapes in strong colours, so it makes a clear mosaic -->
+  <rect width="640" height="480" fill="#4FA8E0"/>
+  <circle cx="545" cy="90" r="58" fill="#FFD43B"/>
+  <path d="M30 150 q36 -34 76 0 q32 -22 58 6 q-8 18 -36 18 h-86 q-30 0 -12 -24z" fill="#FFFFFF"/>
+  <path d="M0 380 Q140 300 300 360 T640 330 V480 H0Z" fill="#3BAA55"/>
+  <path d="M0 440 Q180 380 360 430 T640 410 V480 H0Z" fill="#1E6E3A"/>
+  <g transform="translate(320 36)">
+    <path d="M0 0 C-150 0 -165 170 -60 280 L60 280 C165 170 150 0 0 0Z" fill="#E53935"/>
+    <path d="M0 0 C-58 0 -64 170 -22 280 L22 280 C64 170 58 0 0 0Z" fill="#FFFFFF"/>
+    <path d="M-60 280 L60 280 L52 300 L-52 300Z" fill="#1E3A8A"/>
+    <line x1="-48" y1="300" x2="-30" y2="340" stroke="#4E342E" stroke-width="6"/>
+    <line x1="48" y1="300" x2="30" y2="340" stroke="#4E342E" stroke-width="6"/>
+    <rect x="-38" y="338" width="76" height="52" rx="6" fill="#8D5524"/>
+  </g>
+</svg>

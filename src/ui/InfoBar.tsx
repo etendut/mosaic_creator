@@ -10,6 +10,7 @@ const InfoBar = ({ facts, phone = false }: { facts: Fact[]; phone?: boolean }) =
     <Box
         component="dl"
         aria-label="Info"
+        data-tour="info-bar"
         sx={{
             display: 'flex',
             flexWrap: 'wrap',
