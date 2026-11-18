@@ -8,14 +8,14 @@ import ColorsUsed from '../components/ColorsUsed';
 import MosaicPreview from '../components/MosaicPreview';
 import PaletteEditor from '../components/PaletteEditor';
 import { BrickPicker, PlatePicker } from '../components/PartPickers';
-import StepLayout, { type ToolGroup } from '../components/StepLayout';
-import { Stage } from '../components/Tray';
+import StepLayout, { type ToolGroup } from '../ui/StepLayout';
+import { Stage } from '../ui/Tray';
 import { mosaicFacts, type Fact } from '../mosaic/facts';
-import { MAX_PLATES_ACROSS, type Mosaic } from '../useMosaic';
-import HelpText from '../components/HelpText';
+import { MAX_PLATES_ACROSS, type Mosaic } from '../hooks/useMosaic';
+import HelpText from '../ui/HelpText';
 
 /** Choose what to build with and how big, and check the mosaic in bricks. */
-const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
+const BricksStep = ({ mosaic }: { mosaic: Mosaic }) => {
     const { brick, plate, platesAcross, setPlatesAcross } = mosaic;
     // each card is one plate, covered in bricks
     const bricksPerCard = (plate.size / brick.size) ** 2;
@@ -111,4 +111,4 @@ const BricksTab = ({ mosaic }: { mosaic: Mosaic }) => {
     );
 };
 
-export default BricksTab;
+export default BricksStep;

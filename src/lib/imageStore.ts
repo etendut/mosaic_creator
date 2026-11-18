@@ -1,4 +1,4 @@
-import { canvasToPng } from './mosaic/image';
+import { canvasToPng } from '../mosaic/image';
 
 /**
  * The last image used, kept in this browser between visits. IndexedDB rather than localStorage (a few MB, strings

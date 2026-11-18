@@ -2,7 +2,7 @@
 
 The app's actions, as MUI `Button` with the theme's overrides: sentence case, 15px weight 500, no elevation, at least 40px high.
 
-Static rendition, hand-written from `src/theme.ts`; the app uses MUI's own `Button`.
+Static rendition, hand-written from `src/app/theme.ts`; the app uses MUI's own `Button`.
 
 - **contained** (`azure` fill, `on-azure` text, `azureDark` on hover): the step's one main action. Put it in the app bar through `AppBarAction`, or at the end of the tools when it follows from them (_Print cards_).
 - **outlined**: at most one secondary action, beside the main one on desktop and in ☰ on a phone (_Copy XML_).

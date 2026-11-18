@@ -2,7 +2,7 @@ import { Box, ButtonBase, type SxProps, type Theme } from '@mui/material';
 import type { MouseEvent } from 'react';
 import { contrastTextColor } from '../mosaic/color';
 import type { PaletteColor } from '../mosaic/types';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 interface ColorSwatchProps {
     color: PaletteColor;

@@ -1,6 +1,6 @@
 import { isInaccessible, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from '../App';
+import App from '../app/App';
 import { FAKE_PNG } from './fakes';
 
 export type User = ReturnType<typeof userEvent.setup>;

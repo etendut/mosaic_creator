@@ -21,10 +21,10 @@ import { useState } from 'react';
 import { colorsUsed } from '../mosaic/partsList';
 import { BRUSH_SIZES, type BrushShape, type TouchUpMode, type TouchUpState } from '../mosaic/touchUp';
 import type { PaletteColor } from '../mosaic/types';
-import { tokens } from '../theme';
-import type { Mosaic } from '../useMosaic';
-import ColorSwatch from './ColorSwatch';
-import HelpText from './HelpText';
+import { tokens } from '../app/theme';
+import type { Mosaic } from '../hooks/useMosaic';
+import ColorSwatch from '../ui/ColorSwatch';
+import HelpText from '../ui/HelpText';
 import type { TouchUpAction } from './touchUpTools';
 
 interface ToolProps {

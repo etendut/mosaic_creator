@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import type { Fact } from '../mosaic/facts';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 /**
  * A step's numbers, at most four, label over value: a slim tray above the canvas on desktop, a band flush under the

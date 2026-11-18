@@ -1,5 +1,5 @@
 import { forgetImage, recallImage, rememberImage } from './imageStore';
-import { canvasFailures, FAKE_PNG } from './test/fakes';
+import { canvasFailures, FAKE_PNG } from '../test/fakes';
 
 const canvas = () => document.createElement('canvas');
 

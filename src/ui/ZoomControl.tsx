@@ -4,7 +4,7 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import { IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { MAX_ZOOM } from '../mosaic/view';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 /** One button of the zoom control, with a tooltip that still shows when it's disabled. */
 const ZoomButton = (props: { title: string; icon: ReactNode; onClick: () => void; disabled: boolean }) => (

@@ -1,7 +1,7 @@
 import { Box, ButtonBase, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useCallback, useId, useState, type ReactNode } from 'react';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 import type { Fact } from '../mosaic/facts';
 import InfoBar from './InfoBar';
 import { Tray } from './Tray';

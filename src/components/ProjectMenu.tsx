@@ -13,13 +13,13 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useRef, useState } from 'react';
-import { downloadFile } from '../download';
-import Toast, { type ToastMessage } from './Toast';
+import { downloadFile } from '../lib/download';
+import Toast, { type ToastMessage } from '../ui/Toast';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import { canvasToPng, pngToImage } from '../mosaic/image';
 import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '../mosaic/project';
-import type { Mosaic } from '../useMosaic';
-import { VERSION } from '../version';
+import type { Mosaic } from '../hooks/useMosaic';
+import { VERSION } from '../lib/version';
 import AboutDialog from './AboutDialog';
 
 interface ProjectMenuProps {

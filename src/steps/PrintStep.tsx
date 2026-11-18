@@ -5,15 +5,15 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import BuildingCard from '../components/BuildingCard';
 import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
-import StepLayout, { type ToolGroup } from '../components/StepLayout';
-import { Stage } from '../components/Tray';
+import StepLayout, { type ToolGroup } from '../ui/StepLayout';
+import { Stage } from '../ui/Tray';
 import { CARD_GAP_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
-import { COLOR_SCHEME_ATTRIBUTE, tokens } from '../theme';
-import { useFitScale } from '../useFitScale';
-import type { Mosaic } from '../useMosaic';
-import HelpText from '../components/HelpText';
+import { COLOR_SCHEME_ATTRIBUTE, tokens } from '../app/theme';
+import { useFitScale } from '../hooks/useFitScale';
+import type { Mosaic } from '../hooks/useMosaic';
+import HelpText from '../ui/HelpText';
 
 /** Large print jobs are split into batches; Chrome gets slow rendering hundreds of card pages at once. */
 const PAGES_PER_BATCH = 20;
@@ -62,7 +62,7 @@ interface PrintChoice {
 
 const PAPERS: PaperSize[] = ['A4', 'A3', 'Letter'];
 
-const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
+const PrintStep = ({ mosaic }: { mosaic: Mosaic }) => {
     const { cards, settings, updateSettings, brick, grid, layout } = mosaic;
     const [chosen, setChosen] = useState('map');
 
@@ -205,4 +205,4 @@ const PrintTab = ({ mosaic }: { mosaic: Mosaic }) => {
     );
 };
 
-export default PrintTab;
+export default PrintStep;

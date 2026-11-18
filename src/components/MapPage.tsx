@@ -4,8 +4,8 @@ import { drawPreview, printLabelPx } from '../mosaic/image';
 import { LEGEND_ROW_MM, MAP_HEADER_MM, MAP_PAGE_GAP_MM, type MapPageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { PixelGrid } from '../mosaic/types';
-import type { Mosaic } from '../useMosaic';
-import ColorSwatch from './ColorSwatch';
+import type { Mosaic } from '../hooks/useMosaic';
+import ColorSwatch from '../ui/ColorSwatch';
 import MosaicSummary from './MosaicSummary';
 
 /** Long side of the printed map image; plenty for a sharp A4/A3 print without a huge image. */

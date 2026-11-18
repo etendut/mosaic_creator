@@ -4,7 +4,7 @@ import { catalog } from '../data/catalog';
 import type { BrickOption, PlateOption } from '../mosaic/types';
 import { partName } from '../mosaic/units';
 import { PART_ICON_BLUE, PartIcon } from './PartIcon';
-import { tokens } from '../theme';
+import { tokens } from '../app/theme';
 
 const PLATE_SIZES = [...new Set(catalog.plates.map((p) => p.size))].sort((a, b) => a - b);
 

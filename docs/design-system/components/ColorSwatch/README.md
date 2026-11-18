@@ -10,4 +10,4 @@ A brick colour as a chip labelled with its BrickLink id, matching the numbers pr
 
 **Names.** The name goes beside the chip in `body2` `ink`, never inside it on the brick colour.
 
-The consumer supplies `color` (`{id, name, hex}`) and, for a control, `onClick` plus `pressed` (on/off) or `current`. From `src/components/ColorSwatch.tsx`.
+The consumer supplies `color` (`{id, name, hex}`) and, for a control, `onClick` plus `pressed` (on/off) or `current`. From `src/ui/ColorSwatch.tsx`.
