@@ -28,7 +28,7 @@ Each stop is one or two short sentences: what you do there, then what it gets yo
 - **Inside, top to bottom.** The counter, "3 of 7", in `body2` `muted`. The text in `body1` `ink`. Then a row of buttons: _Skip_ (text) at the start, then _Back_ (text) and _Next_ (outlined) at the end. On the last stop, _Next_ reads _Done_ and _Skip_ goes.
 - **Why _Next_ is outlined.** The step's own main action stays the one contained button on screen, and it's often the thing the stop points at.
 
-**Target.** The control a stop is about gets a 2px `azure` outline and a `tour-halo` (4px) ring of `azure-outline` around it, following the control's corners. The page isn't dimmed and has no scrim: the app stays usable, and using the control the tour points at is fine.
+**Target.** The control a stop is about gets three rings, following its corners: a 2px `tray` gap, a 2px `azure` ring, and a `tour-halo` (4px) ring of `azure-outline`. The gap keeps the ring visible around an `azure` button, as on the ColorSwatch's current ring. The page isn't dimmed and has no scrim: the app stays usable, and using the control the tour points at is fine.
 
 **Placement.** The card sits `space-1` from its target, on whichever side has room, and never covers the target. There's no arrow, because the ring marks the target.
 
