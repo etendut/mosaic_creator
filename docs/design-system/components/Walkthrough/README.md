@@ -8,7 +8,7 @@ A short tour from a picture to printed cards: one card per stop, each pointing a
 - **Any time.** ☰ → "Show me around", next to About. There's no (?) button in the app bar, which holds ☰, the steps and one action.
 - **Without an image.** The tour starts by loading the sample picture, so the later steps have something to show. It never replaces an image you already have: if there is one, the tour uses it.
 
-**Stops.** Seven, in step order. The tour moves to each stop's step itself.
+**Stops.** Eight: the seven steps in order, then saving and opening your project. The tour moves to each stop's step itself.
 
 | #   | Step     | Points at                                         | Text                                                                                                              |
 | --- | -------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -19,13 +19,14 @@ A short tour from a picture to printed cards: one card per stop, each pointing a
 | 5   | Cards    | Card size                                         | Each card covers one plate. Pick _Real size_ and builders can lay bricks straight on the card.                    |
 | 6   | Parts    | _Download BrickLink XML_                          | Download the parts as a BrickLink wanted list. Add _Spares_ if you want a few extra of each colour.               |
 | 7   | Print    | The print action                                  | Print the map page for yourself and one card for each builder.                                                    |
+| 8   | Print    | ☰ (_Open project_, _Save project_)               | Save your project from this menu to pick up where you left off, or open one you've saved.                         |
 
 Each stop is one or two short sentences: what you do there, then what it gets you. Use the control's own name, and never repeat a number from the Info bar.
 
 **Card.**
 
 - **Surface.** `tray` fill, a `groove` border, `radius-tray`, `shadow-float` and `space-2` padding. It's `tour-card` (320px) wide on desktop; on a phone, the screen less `space-2` each side.
-- **Inside, top to bottom.** The counter, "3 of 7", in `body2` `muted`. The text in `body1` `ink`. Then a row of buttons: _Skip_ (text) at the start, then _Back_ (text) and _Next_ (outlined) at the end. On the last stop, _Next_ reads _Done_ and _Skip_ goes.
+- **Inside, top to bottom.** The counter, "3 of 8", in `body2` `muted`. The text in `body1` `ink`. Then a row of buttons: _Skip_ (text) at the start, then _Back_ (text) and _Next_ (outlined) at the end. On the last stop, _Next_ reads _Done_ and _Skip_ goes.
 - **Why _Next_ is outlined.** The step's own main action stays the one contained button on screen, and it's often the thing the stop points at.
 
 **Target.** The control a stop is about gets one ring: a 2px `azure` outline `space-1` out from it, with `radius-control` corners (react-joyride's spotlight). The `space-1` gap keeps the ring clear of an `azure` button.
@@ -34,7 +35,7 @@ Each stop is one or two short sentences: what you do there, then what it gets yo
 
 **Placement.** The card sits `space-1` outside the ring, on whichever side has room, and never covers the target. There's no arrow, because the ring marks the target.
 
-- **Target in the app bar** (_Use this image_). The card hangs under the Info bar, at its end by the action, so it covers neither.
+- **Target in the app bar** (_Use this image_, ☰). The card hangs under the Info bar, at the same end as the target, so it covers neither.
 - **Phone, target in the bottom stack** (the tool bar, the palette strip, the action strip). The card sits above the whole stack, so none of it is covered.
 - **Never over the app bar or Info bar.** A card that would rise into them slides down beside its target instead.
 - **At the screen's edge** (a phone's tool bar, its full-width Info bar). The ring sits 2px inside the target instead of `space-1` outside, so no side is cut off.

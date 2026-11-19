@@ -21,8 +21,9 @@ export interface TourStop<S extends string> {
     step: S;
     target: string;
     text: string;
-    /** The target is in the app bar: the card goes below the Info bar too, not over it. */
-    inAppBar?: boolean;
+    /** The target is in the app bar, at its start (☰) or end (the action): the card hangs under the Info bar at
+     * that end, so it covers neither. */
+    inAppBar?: 'start' | 'end';
     /** On a phone the target is in the bottom stack: the tool bar, the palette strip or the action strip. */
     phoneTools?: boolean;
     /** On a phone the target touches the screen's edge (the tool bar, the full-width Info bar): draw the ring just
@@ -125,7 +126,7 @@ const Walkthrough = <S extends string>({ stops, run, goTo, onEnd }: WalkthroughP
                 ...shared,
                 target: tourTarget('info-bar'),
                 spotlightTarget: tourTarget(stop.target),
-                placement: 'bottom-end',
+                placement: `bottom-${stop.inAppBar}`,
             };
         // and a target in the phone's bottom stack (tool bar, palette, action strip) gets its card above all of it,
         // so nothing in the stack is covered

@@ -84,6 +84,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: P
         <>
             <IconButton
                 ref={menuButton}
+                data-tour="menu"
                 onClick={(e) => setAnchor(e.currentTarget)}
                 aria-haspopup="menu"
                 aria-label="Menu"

@@ -64,7 +64,7 @@ const TOUR_STOPS: TourStop<Step>[] = [
     {
         step: 'Image',
         target: 'use-image',
-        inAppBar: true,
+        inAppBar: 'end',
         text: 'Drag and zoom to frame your picture, then press Use this image to turn it into bricks.',
     },
     {
@@ -104,6 +104,12 @@ const TOUR_STOPS: TourStop<Step>[] = [
         target: 'print-action',
         phoneTools: true,
         text: 'Print the map page for yourself and one card for each builder.',
+    },
+    {
+        step: 'Print',
+        target: 'menu',
+        inAppBar: 'start',
+        text: "Save your project from this menu to pick up where you left off, or open one you've saved.",
     },
 ];
 

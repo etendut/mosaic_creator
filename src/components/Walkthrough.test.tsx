@@ -5,7 +5,7 @@ import { chooseImage, goTo, info, renderApp, startMosaic, type User } from '../t
 
 /** The sample picture, inlined as an SVG data URL so the single-file build needs no other file. */
 const SAMPLE = /^data:image\/svg\+xml/;
-const card = (n?: number) => screen.findByRole('dialog', { name: n ? new RegExp(`^${n} of 7`) : /of 7/ });
+const card = (n?: number) => screen.findByRole('dialog', { name: n ? new RegExp(`^${n} of 8`) : /of 8/ });
 const offer = () => screen.queryByRole('button', { name: 'Show me around' });
 const step = () => screen.getByRole('tab', { selected: true }).getAttribute('aria-label');
 const press = async (user: User, name: string, n: number) =>
@@ -27,6 +27,7 @@ const STOPS = [
     ['Cards', 'group-size', 'Each card covers one plate.'],
     ['Parts', 'download-xml', 'Download the parts as a BrickLink wanted list.'],
     ['Print', 'print-action', 'Print the map page for yourself and one card for each builder.'],
+    ['Print', 'menu', 'Save your project from this menu to pick up where you left off'],
 ] as const;
 
 describe('Walkthrough', () => {
@@ -42,7 +43,7 @@ describe('Walkthrough', () => {
         await waitFor(() => expect(within(stop).getByRole('button', { name: 'Next' })).toHaveFocus());
     });
 
-    it('goes through all seven stops in step order, switching step itself, and ends on Done', async () => {
+    it('goes through all eight stops in step order, switching step itself, and ends on Done', async () => {
         const user = renderApp();
         await user.click(offer()!);
         for (const [i, [name, target, text]] of STOPS.entries()) {
