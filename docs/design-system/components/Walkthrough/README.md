@@ -34,8 +34,10 @@ Each stop is one or two short sentences: what you do there, then what it gets yo
 
 **Placement.** The card sits `space-1` outside the ring, on whichever side has room, and never covers the target. There's no arrow, because the ring marks the target.
 
-- **Phone, target in the tool bar.** The card sits above the bar and any open panel.
-- **Phone, target in the app bar or Info bar.** The card sits below them.
+- **Target in the app bar** (_Use this image_). The card hangs under the Info bar, at its end by the action, so it covers neither.
+- **Phone, target in the bottom stack** (the tool bar, the palette strip, the action strip). The card sits above the whole stack, so none of it is covered.
+- **Never over the app bar or Info bar.** A card that would rise into them slides down beside its target instead.
+- **At the screen's edge** (a phone's tool bar, its full-width Info bar). The ring sits 2px inside the target instead of `space-1` outside, so no side is cut off.
 - **Off screen.** A target is scrolled into view before its card opens.
 
 **Ending.** _Skip_, _Done_ and Esc end the tour. Each counts as having seen it, so the EmptyState stops offering it. You can replay it from ☰.
