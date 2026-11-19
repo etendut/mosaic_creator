@@ -164,7 +164,13 @@ const PrintStep = ({ mosaic }: { mosaic: Mosaic }) => {
                             Print each one in turn from Pages.
                         </Alert>
                     )}
-                    <Button variant="contained" size="large" fullWidth onClick={() => window.print()}>
+                    <Button
+                        variant="contained"
+                        size="large"
+                        fullWidth
+                        onClick={() => window.print()}
+                        data-tour="print-action"
+                    >
                         {choice.button}
                     </Button>
                 </>

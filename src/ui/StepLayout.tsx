@@ -63,9 +63,11 @@ interface StepLayoutProps {
 }
 
 /** A titled group of tools in the desktop column. */
-export const ControlSection = ({ title, children }: { title: string; children: ReactNode }) => (
+export const ControlSection = ({ title, children, tour }: { title: string; children: ReactNode; tour?: string }) => (
     <Stack
         component="section"
+        // the Walkthrough points at a group by this name
+        data-tour={tour}
         spacing={1.5}
         sx={{ padding: 2, '&:not(:last-of-type)': { borderBottom: `1px solid ${tokens.groove}` } }}
     >
@@ -170,7 +172,7 @@ const StepLayout = ({
                         }}
                     >
                         {desktopGroups.map((g) => (
-                            <ControlSection key={g.id} title={g.title ?? g.label}>
+                            <ControlSection key={g.id} title={g.title ?? g.label} tour={`group-${g.id}`}>
                                 {g.content}
                             </ControlSection>
                         ))}
@@ -219,6 +221,8 @@ const StepLayout = ({
             {(phoneGroups.length > 0 || action || phoneStrip) && (
                 <Stack
                     ref={measureBottom}
+                    // the Walkthrough hangs a card for anything in here above all of it
+                    data-tour="phone-tools"
                     sx={{ position: 'fixed', insetInline: 0, bottom: 0, zIndex: 20, displayPrint: 'none' }}
                 >
                     {openGroup && (
@@ -295,6 +299,7 @@ const StepLayout = ({
                                         return (
                                             <ButtonBase
                                                 key={g.id}
+                                                data-tour={`group-${g.id}`}
                                                 aria-label={g.shortLabel || iconOnlyBar ? g.label : undefined}
                                                 disabled={g.disabled}
                                                 aria-pressed={

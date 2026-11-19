@@ -129,7 +129,7 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
             // like Print: the order follows from the tools, so it ends them (a strip above the bar on phones)
             action={
                 <Stack direction={{ xs: 'row', md: 'column' }} spacing={1}>
-                    <Button variant="contained" onClick={download} sx={{ flex: 1 }}>
+                    <Button variant="contained" onClick={download} sx={{ flex: 1 }} data-tour="download-xml">
                         Download BrickLink XML
                     </Button>
                     <Button variant="outlined" onClick={copy} sx={{ flex: { xs: '0 0 auto', md: 1 } }}>
