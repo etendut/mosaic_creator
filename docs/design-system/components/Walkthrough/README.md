@@ -10,15 +10,15 @@ A short tour from a picture to printed cards: one card per stop, each pointing a
 
 **Stops.** Seven, in step order. The tour moves to each stop's step itself.
 
-| #   | Step     | Points at                                         | Text                                                                                     |
-| --- | -------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 1   | Image    | _Use this image_                                  | Drag and zoom to frame your picture, then use it.                                        |
-| 2   | Bricks   | Plate (first tools group, or its tool-bar button) | Choose the plate and brick you'll build with. Size sets how many cards the mosaic needs. |
-| 3   | Bricks   | The Info bar                                      | These numbers follow your choices: cards, bricks and the finished size.                  |
-| 4   | Touch up | Brush                                             | Paint single bricks to sharpen faces and edges. Clean up removes stray bricks for you.   |
-| 5   | Cards    | Card size                                         | Each card is one plate. At real size, builders lay the bricks straight on it.            |
-| 6   | Parts    | _Download BrickLink XML_                          | Download the parts as a BrickLink wanted list. Spares add a few extra of each colour.    |
-| 7   | Print    | The print action                                  | Print the map page for yourself and one card for each builder.                           |
+| #   | Step     | Points at                                         | Text                                                                                                              |
+| --- | -------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1   | Image    | _Use this image_                                  | Drag and zoom to frame your picture, then press _Use this image_ to turn it into bricks.                          |
+| 2   | Bricks   | Plate (first tools group, or its tool-bar button) | Pick the plate and brick you'll build with. Raise _Size_ for a bigger mosaic with more cards.                     |
+| 3   | Bricks   | The Info bar                                      | Check here as you change settings: you'll see how many cards and bricks you need, and how big the mosaic ends up. |
+| 4   | Touch up | Brush                                             | Paint single bricks to sharpen faces and edges. Press _Clean up_ to clear stray bricks in one go.                 |
+| 5   | Cards    | Card size                                         | Each card covers one plate. Pick _Real size_ and builders can lay bricks straight on the card.                    |
+| 6   | Parts    | _Download BrickLink XML_                          | Download the parts as a BrickLink wanted list. Add _Spares_ if you want a few extra of each colour.               |
+| 7   | Print    | The print action                                  | Print the map page for yourself and one card for each builder.                                                    |
 
 Each stop is one or two short sentences: what you do there, then what it gets you. Use the control's own name, and never repeat a number from the Info bar.
 

@@ -20,11 +20,11 @@ const seen = () => localStorage.getItem('mosaic-creator:walkthrough-seen');
 const picture = () => screen.getByTestId('cropper').getAttribute('src') ?? '';
 
 const STOPS = [
-    ['Image', 'use-image', 'Drag and zoom to frame your picture, then use it.'],
-    ['Bricks', 'group-plate', "Choose the plate and brick you'll build with."],
-    ['Bricks', 'info-bar', 'These numbers follow your choices'],
+    ['Image', 'use-image', 'Drag and zoom to frame your picture, then press Use this image'],
+    ['Bricks', 'group-plate', "Pick the plate and brick you'll build with."],
+    ['Bricks', 'info-bar', 'Check here as you change settings'],
     ['Touch up', 'group-paint', 'Paint single bricks to sharpen faces and edges.'],
-    ['Cards', 'group-size', 'Each card is one plate.'],
+    ['Cards', 'group-size', 'Each card covers one plate.'],
     ['Parts', 'download-xml', 'Download the parts as a BrickLink wanted list.'],
     ['Print', 'print-action', 'Print the map page for yourself and one card for each builder.'],
 ] as const;

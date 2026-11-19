@@ -61,38 +61,43 @@ const StepLabel = ({ number, name, state }: { number: number; name: string; stat
 
 /** The Walkthrough's stops, in step order (docs/design-system/components/Walkthrough). */
 const TOUR_STOPS: TourStop<Step>[] = [
-    { step: 'Image', target: 'use-image', inAppBar: true, text: 'Drag and zoom to frame your picture, then use it.' },
+    {
+        step: 'Image',
+        target: 'use-image',
+        inAppBar: true,
+        text: 'Drag and zoom to frame your picture, then press Use this image to turn it into bricks.',
+    },
     {
         step: 'Bricks',
         target: 'group-plate',
         phoneTools: true,
         phoneEdge: true,
-        text: "Choose the plate and brick you'll build with. Size sets how many cards the mosaic needs.",
+        text: "Pick the plate and brick you'll build with. Raise Size for a bigger mosaic with more cards.",
     },
     {
         step: 'Bricks',
         target: 'info-bar',
         phoneEdge: true,
-        text: 'These numbers follow your choices: cards, bricks and the finished size.',
+        text: "Check here as you change settings: you'll see how many cards and bricks you need, and how big the mosaic ends up.",
     },
     {
         step: 'Touch up',
         target: 'group-paint',
         phoneTools: true,
-        text: 'Paint single bricks to sharpen faces and edges. Clean up removes stray bricks for you.',
+        text: 'Paint single bricks to sharpen faces and edges. Press Clean up to clear stray bricks in one go.',
     },
     {
         step: 'Cards',
         target: 'group-size',
         phoneTools: true,
         phoneEdge: true,
-        text: 'Each card is one plate. At real size, builders lay the bricks straight on it.',
+        text: 'Each card covers one plate. Pick Real size and builders can lay bricks straight on the card.',
     },
     {
         step: 'Parts',
         target: 'download-xml',
         phoneTools: true,
-        text: 'Download the parts as a BrickLink wanted list. Spares add a few extra of each colour.',
+        text: 'Download the parts as a BrickLink wanted list. Add Spares if you want a few extra of each colour.',
     },
     {
         step: 'Print',
