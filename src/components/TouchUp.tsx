@@ -40,12 +40,17 @@ const label = (text: string) => <Typography variant="body2">{text}</Typography>;
 const ColourPicker = ({ mosaic, state, onChange, compact }: ToolProps & { compact: boolean }) => {
     const { brick, parts } = mosaic;
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-    const used = colorsUsed(parts, brick.partId).map((line) => line.color);
+    // the colours on the mosaic now, touch-ups included, with how many of each
+    const usedLines = colorsUsed(parts, brick.partId);
+    const used = usedLines.map((line) => line.color);
+    const counts = new Map(usedLines.map((line) => [line.color.id, line.quantity]));
     const usedIds = new Set(used.map((c) => c.id));
     const others = brick.colors.filter((c) => !usedIds.has(c.id));
     const option = (c: PaletteColor) => (
         <MenuItem
             key={c.id}
+            // read out as Colours used on Bricks reads its swatches: "Red: 56"
+            aria-label={counts.has(c.id) ? `${c.name}: ${counts.get(c.id)!.toLocaleString('en-GB')}` : undefined}
             selected={c.id === state.color?.id}
             onClick={() => {
                 onChange({ color: c });
@@ -55,6 +60,16 @@ const ColourPicker = ({ mosaic, state, onChange, compact }: ToolProps & { compac
         >
             <ColorSwatch color={c} />
             {c.name}
+            {counts.has(c.id) && (
+                <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    // at the end of the row, in even figures, so the counts line up
+                    sx={{ marginLeft: 'auto', paddingLeft: 2, fontVariantNumeric: 'tabular-nums' }}
+                >
+                    {counts.get(c.id)!.toLocaleString('en-GB')}
+                </Typography>
+            )}
         </MenuItem>
     );
     const name = `Paint colour: ${state.color?.name ?? 'none'}`;

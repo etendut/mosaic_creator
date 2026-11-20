@@ -57,6 +57,43 @@ const startTouchUp = async () => {
 };
 
 describe('Touch up step', () => {
+    it('shows how many of each colour the mosaic uses in the colour list, as on Bricks, following touch-ups', async () => {
+        const user = await startTouchUp();
+        /** The colour list's counts, by colour name: only the colours on the mosaic have one. */
+        const listCounts = async () => {
+            await user.click(tool(/^Paint colour/));
+            const rows = within(screen.getByRole('menu')).getAllByRole('menuitem');
+            const counts = Object.fromEntries(
+                rows
+                    .map((row) => row.getAttribute('aria-label')?.split(': '))
+                    .filter((pair): pair is string[] => pair?.length === 2)
+                    .map(([name, n]) => [name, Number(n.replace(/,/g, ''))]),
+            );
+            await user.keyboard('{Escape}');
+            return counts;
+        };
+        const before = await listCounts();
+        // the same counts as Colours used on Bricks
+        await goTo(user, 'Bricks');
+        const onBricks = Object.fromEntries(
+            within(screen.getByRole('group', { name: 'Colours used' }))
+                .getAllByRole('button')
+                .map((b) => b.getAttribute('aria-label')!.split(': '))
+                .map(([name, n]) => [name, Number(n)]),
+        );
+        expect(before).toEqual(onBricks);
+        expect(before.Black).toBeUndefined();
+
+        // painting a brick black adds one black brick and takes one from its old colour
+        await goTo(user, 'Touch up');
+        await paintWith(user, 'Black');
+        map().click(5, 5);
+        const after = await listCounts();
+        expect(after.Black).toBe(1);
+        const total = (counts: Record<string, number>) => Object.values(counts).reduce((a, b) => a + b, 0);
+        expect(total(after)).toBe(total(before));
+    });
+
     it('lays the tools out in one consistent column: history, tools, palette, clean-up, clearing', async () => {
         await startTouchUp();
         expect(screen.getByRole('heading', { name: 'Touch up' })).toBeInTheDocument();
