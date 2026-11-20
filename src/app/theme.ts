@@ -23,6 +23,9 @@ const light = {
     onAzure: '#FFFFFF',
     /** The inset edge of a colour swatch, so white bricks show on a white tray. */
     swatchEdge: 'rgba(0, 0, 0, 0.2)',
+    /** The outline round the bricks under the brush, and its dark halo: on the mosaic, so the same in both themes. */
+    brushOutline: '#FFFFFF',
+    brushHalo: 'rgba(0, 0, 0, 0.6)',
     /** A text action on a toast, which is an ink fill. */
     toastAction: '#7FD3DE',
     /** Errors only, always with an icon and words. */
@@ -45,6 +48,8 @@ const dark: typeof light = {
     azureWash: '#173A40',
     onAzure: '#0B1D20',
     swatchEdge: 'rgba(255, 255, 255, 0.28)',
+    brushOutline: '#FFFFFF',
+    brushHalo: 'rgba(0, 0, 0, 0.6)',
     toastAction: '#00616F',
     danger: '#F2B8B5',
     onDanger: '#5C1210',

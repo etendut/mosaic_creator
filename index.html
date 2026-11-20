@@ -10,6 +10,12 @@
             type="image/svg+xml"
             href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 27'%3E%3Crect width='27' height='27' rx='6' fill='%2300788A'/%3E%3Cg fill='%23FFFFFF' fill-opacity='0.9'%3E%3Ccircle cx='7.5' cy='7.5' r='4.5'/%3E%3Ccircle cx='19.5' cy='7.5' r='4.5'/%3E%3Ccircle cx='7.5' cy='19.5' r='4.5'/%3E%3Ccircle cx='19.5' cy='19.5' r='4.5'/%3E%3C/g%3E%3C/svg%3E"
         />
+        <!-- installing (docs/design-system/README.md, "Installing and offline"): the manifest and the home-screen icon;
+             the window bar takes the app bar's colour, `tray`, in each theme -->
+        <link rel="manifest" href="manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="icons/icon-192.png" />
+        <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#24282C" media="(prefers-color-scheme: dark)" />
     </head>
     <body>
         <div id="root"></div>

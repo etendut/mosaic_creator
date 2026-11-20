@@ -21,6 +21,7 @@ import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '..
 import type { Mosaic } from '../hooks/useMosaic';
 import { VERSION } from '../lib/version';
 import AboutDialog from './AboutDialog';
+import { useInstall } from '../hooks/useInstall';
 import ThemeChoice from './ThemeChoice';
 
 interface ProjectMenuProps {
@@ -36,6 +37,7 @@ interface ProjectMenuProps {
 /** Save the whole project to a file, open one, or go back to the default settings. */
 const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: ProjectMenuProps) => {
     const menuButton = useRef<HTMLButtonElement>(null);
+    const offerInstall = useInstall();
     const fileInput = useRef<HTMLInputElement>(null);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [confirmReset, setConfirmReset] = useState(false);
@@ -144,6 +146,24 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: P
                 >
                     <ListItemText primary="Show me around" secondary="A short tour from a picture to printed cards" />
                 </MenuItem>
+                {offerInstall && (
+                    <MenuItem
+                        onClick={() => {
+                            setAnchor(null);
+                            if (offerInstall.kind === 'prompt') offerInstall.install();
+                        }}
+                    >
+                        <ListItemText
+                            primary="Install app"
+                            secondary={
+                                offerInstall.kind === 'prompt'
+                                    ? 'Use it offline, in its own window'
+                                    : // a page can't start the install on an iPhone or iPad: say how instead
+                                      'In Safari, tap Share, then Add to Home Screen'
+                            }
+                        />
+                    </MenuItem>
+                )}
                 <MenuItem
                     onClick={() => {
                         setAnchor(null);
