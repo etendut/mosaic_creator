@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import { useEffect, useRef } from 'react';
+import { tokens } from '../app/theme';
 import { drawPreview } from '../mosaic/image';
 import { brushCells, type BrickTool } from '../mosaic/touchUp';
 import type { Cell, PixelGrid } from '../mosaic/types';
@@ -65,8 +66,8 @@ const BrushOutline = ({ grid, hover, tool }: { grid: PixelGrid; hover: Point; to
                 width: `${((right - left) / grid.width) * 100}%`,
                 height: `${((bottom - top) / grid.height) * 100}%`,
                 borderRadius: tool?.shape === 'round' && tool.size > 2 ? '50%' : 0,
-                outline: '2px solid white',
-                boxShadow: '0 0 0 3px rgba(0, 0, 0, 0.6)',
+                outline: `2px solid ${tokens.brushOutline}`,
+                boxShadow: `0 0 0 3px ${tokens.brushHalo}`,
                 pointerEvents: 'none',
             }}
         />

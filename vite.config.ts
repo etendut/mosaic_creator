@@ -1,7 +1,8 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react';
 import { execSync } from 'node:child_process';
-import { defineConfig } from 'vite';
+import { readFile, writeFile } from 'node:fs/promises';
+import { defineConfig, type Plugin } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // The commit shown as the app's version. CI sets COMMIT_SHA (for a PR, its head commit rather than the temporary
@@ -18,9 +19,21 @@ const commit = () => {
     }
 };
 
-// Build to one self-contained HTML file so it can be opened straight from disk (file://) in Chrome/Edge.
+/** Writes the commit into the built service worker, so each deploy is a changed sw.js and installs as a new version. */
+const versionServiceWorker = (): Plugin => ({
+    name: 'version-service-worker',
+    apply: 'build',
+    async closeBundle() {
+        const file = 'dist/sw.js';
+        const source = await readFile(file, 'utf8');
+        await writeFile(file, source.replace('__COMMIT__', commit() || 'dev'));
+    },
+});
+
+// Build to one self-contained HTML file so it can be opened straight from disk (file://) in Chrome/Edge. The Pages
+// deploy also gets public/: the manifest, the icons and the service worker that make it an installable, offline app.
 export default defineConfig({
-    plugins: [react(), viteSingleFile()],
+    plugins: [react(), viteSingleFile(), versionServiceWorker()],
     define: { __COMMIT__: JSON.stringify(commit()) },
     build: {
         outDir: 'dist',

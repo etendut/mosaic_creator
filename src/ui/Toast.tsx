@@ -10,6 +10,8 @@ export interface ToastMessage {
     error?: boolean;
     /** One text action at the end, like Undo. */
     action?: { label: string; onClick: () => void };
+    /** A message that waits for you (a new version is ready): it stays, with a close button, until you act on it. */
+    stays?: boolean;
 }
 
 /** How long a message that isn't an error stays. */
@@ -22,11 +24,16 @@ export const TOAST_MS = 4000;
 const Toast = ({ message, onClose }: { message: ToastMessage | null; onClose: () => void }) => (
     <Snackbar
         open={!!message}
-        autoHideDuration={message?.error ? null : TOAST_MS}
+        autoHideDuration={message?.error || message?.stays ? null : TOAST_MS}
         // it times out; the click that caused it mustn't close it straight away
         onClose={(_, reason) => reason !== 'clickaway' && onClose()}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ bottom: 'calc(var(--bottom-reserve, 16px) + 8px) !important' }}
+        sx={{
+            bottom: 'calc(var(--bottom-reserve, 16px) + 8px) !important',
+            // under a menu or dialog you open (1300), so a message that waits never covers one; above the app bar
+            // (1100) and the Walkthrough (1250)
+            zIndex: (theme) => theme.zIndex.modal - 1,
+        }}
     >
         {message ? (
             <Box
@@ -70,7 +77,8 @@ const Toast = ({ message, onClose }: { message: ToastMessage | null; onClose: ()
                         {message.action.label}
                     </ButtonBase>
                 )}
-                {message.error && (
+                {/* a message that doesn't go by itself can be closed */}
+                {(message.error || message.stays) && (
                     <IconButton aria-label="Close" onClick={onClose} sx={{ color: 'inherit', marginRight: -1 }}>
                         <CloseIcon />
                     </IconButton>

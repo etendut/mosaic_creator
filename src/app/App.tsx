@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
 import ProjectMenu from '../components/ProjectMenu';
 import { recallImage } from '../lib/imageStore';
+import { registerServiceWorker } from '../lib/pwa';
+import Toast from '../ui/Toast';
 import { imageToCanvas, loadImage, pngToImage } from '../mosaic/image';
 import samplePicture from '../assets/sample-picture.svg';
 import Walkthrough, { type TourStop } from '../components/Walkthrough';
@@ -158,6 +160,14 @@ const App = () => {
         go(to, { replace: !remember });
     };
 
+    // a new version, published since this page opened: offered with Reload, never reloaded by itself
+    const [update, setUpdate] = useState<(() => void) | null>(null);
+    useEffect(() => {
+        registerServiceWorker((reload) => setUpdate(() => reload)).catch(() => {
+            // no offline copy this time; the app works as before
+        });
+    }, []);
+
     // pick up where the last visit left off
     useEffect(() => {
         recallImage()
@@ -282,6 +292,16 @@ const App = () => {
                     sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, marginLeft: { md: 'auto' } }}
                 />
             </Box>
+            <Toast
+                message={
+                    update && {
+                        text: 'A new version is ready.',
+                        action: { label: 'Reload', onClick: update },
+                        stays: true,
+                    }
+                }
+                onClose={() => setUpdate(null)}
+            />
             <Walkthrough stops={TOUR_STOPS} run={touring} goTo={(to) => go(to)} onEnd={endTour} />
             <AppBarSlot.Provider value={actionSlot}>
                 <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>

@@ -1,6 +1,6 @@
 import { Box, ButtonBase, IconButton, Paper, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useCallback, useId, useState, type ReactNode } from 'react';
+import { useCallback, useId, useState, type ReactNode, useLayoutEffect } from 'react';
 import { tokens } from '../app/theme';
 import type { Fact } from '../mosaic/facts';
 import InfoBar from './InfoBar';
@@ -112,6 +112,17 @@ const StepLayout = ({
         observer.observe(element);
         return () => observer.disconnect();
     }, []);
+    // the page root gets the same reserve while this step is the one on screen, so a toast outside the step (the ☰
+    // menu's, the app's update) also sits above the phone's tools; a hidden step (Image, kept mounted) leaves it alone
+    useLayoutEffect(() => {
+        if (desktop || bottomPx === 0) return;
+        const root = document.documentElement.style;
+        const value = `${bottomPx + 8}px`;
+        root.setProperty('--bottom-reserve', value);
+        return () => {
+            if (root.getPropertyValue('--bottom-reserve') === value) root.removeProperty('--bottom-reserve');
+        };
+    }, [desktop, bottomPx]);
 
     const result = (
         <Stack

@@ -103,14 +103,14 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 
 ## Actions
 
-| Kind            | Style                              | Where                                                                        |
-| --------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
-| Main action     | contained `azure`, one per step    | app bar right, or ending the tools when it follows from them                 |
-| Secondary       | outlined                           | beside the main action on desktop, in ☰ on a phone                          |
-| In a group      | small text button                  | under the setting it acts on                                                 |
-| Tool            | icon + label, with an `aria-label` | tools zone                                                                   |
-| Destructive     | text, with confirmation or undo    | in a group or ☰                                                             |
-| Project and app | menu items                         | ☰ (open, save, template, reset, forget image, Show me around, Theme, About) |
+| Kind            | Style                              | Where                                                                                     |
+| --------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| Main action     | contained `azure`, one per step    | app bar right, or ending the tools when it follows from them                              |
+| Secondary       | outlined                           | beside the main action on desktop, in ☰ on a phone                                       |
+| In a group      | small text button                  | under the setting it acts on                                                              |
+| Tool            | icon + label, with an `aria-label` | tools zone                                                                                |
+| Destructive     | text, with confirmation or undo    | in a group or ☰                                                                          |
+| Project and app | menu items                         | ☰ (open, save, template, reset, forget image, Show me around, Install app, Theme, About) |
 
 - Each action lives in one place only: printing is on the Print step only.
 - An action that follows from the tools (_Print cards_ after Paper and Pages; _Download BrickLink XML_ after Spares) ends the tools, with one line above it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page."). On desktop it is the last block of the column; on a phone a strip just above the tool bar. It is then the step's main action, so the app bar has none.
@@ -125,6 +125,12 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 - Messages after an action are a Toast: one look, `ink` with `tray` text; errors in `danger` with an icon, staying until closed. `danger` is for errors only.
 - No motion beyond MUI's defaults, except the Walkthrough's smooth scroll to a target off screen.
 - The current step is in the URL (`#/touch-up`): a refresh comes back to it, and the browser's back and forward move between steps. Without an image, every step shows Image.
+
+## Installing and offline
+
+- The app installs like any other: its own window, and the mark as its icon. After one visit it opens and works with no connection, since everything it does happens on the device.
+- ☰ offers _Install app_ ("Use it offline, in its own window") only when the browser can install it, and not once it's installed. On an iPhone or iPad, where a page can't start the install, the item's second line says how instead: "In Safari, tap Share, then Add to Home Screen."
+- When a new version has been published, a Toast that waits says "A new version is ready." with _Reload_. Nothing reloads by itself, so work in progress is never lost.
 
 ## Iconography
 
