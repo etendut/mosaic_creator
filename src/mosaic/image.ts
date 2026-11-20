@@ -1,5 +1,5 @@
 import { rowLabel } from './cards';
-import { hexToRgb } from './color';
+import { hexToRgb, rgbToHex, seamColor } from './color';
 import type { PixelGrid } from './types';
 
 /** Edited images are capped to this many pixels on the long side; mosaics are far smaller than this. */
@@ -181,6 +181,16 @@ export const printLabelPx = (cardPx: number, canvasWidthPx: number, printWidthMm
 /** Bricks this small or smaller are drawn as pixels: a circle can't be told from a square at that size anyway. */
 const PIXEL_BRICK_MAX_PX = 8;
 
+/** Square bricks smaller than this get no seam: at 1–3 px a seam would be most of the brick. */
+const SEAM_MIN_BRICK_PX = 4;
+
+/**
+ * How wide a square brick's seam is, on its right and bottom edges, so each joint between two bricks is one seam:
+ * 1 px at screen sizes, a little more on the map page's big bricks. None on round bricks, or bricks too small for one.
+ */
+const seamPx = (cellPx: number, isRound: boolean) =>
+    isRound || cellPx < SEAM_MIN_BRICK_PX ? 0 : Math.max(1, Math.round(cellPx / 24));
+
 /**
  * How much of each pixel of a `cellPx` square a brick covers, 0–1: a circle 90% across, sampled 4 × 4 per pixel so
  * its edge is anti-aliased like a canvas path; or the whole square.
@@ -226,9 +236,20 @@ const drawBrickPixels = (
     pixels.fill(pack(plate.r, plate.g, plate.b));
     const coverage = brickCoverage(cellPx, isRound);
     const mix = (from: number, to: number, t: number) => Math.round(from + (to - from) * t);
+    const seam = seamPx(cellPx, isRound);
     const brickOf = (hex: string) => {
         const { r, g, b } = hexToRgb(hex);
-        return Uint32Array.from(coverage, (t) => pack(mix(plate.r, r, t), mix(plate.g, g, t), mix(plate.b, b, t)));
+        const brick = Uint32Array.from(coverage, (t) =>
+            pack(mix(plate.r, r, t), mix(plate.g, g, t), mix(plate.b, b, t)),
+        );
+        if (!seam) return brick;
+        // a square brick's seam: its right and bottom edges, in its own colour shaded
+        const edge = seamColor(hex);
+        const edgePixel = pack(edge.r, edge.g, edge.b);
+        for (let y = 0; y < cellPx; y++)
+            for (let x = 0; x < cellPx; x++)
+                if (x >= cellPx - seam || y >= cellPx - seam) brick[y * cellPx + x] = edgePixel;
+        return brick;
     };
     const bricks = new Map<string, Uint32Array>();
     grid.rows.forEach((row, y) =>
@@ -264,6 +285,19 @@ const drawBrickShapes = (ctx: CanvasRenderingContext2D, grid: PixelGrid, cellPx:
                 ctx.moveTo((x + 0.5) * cellPx + r, (y + 0.5) * cellPx);
                 ctx.arc((x + 0.5) * cellPx, (y + 0.5) * cellPx, r, 0, Math.PI * 2);
             } else ctx.rect(x * cellPx, y * cellPx, cellPx, cellPx);
+        }
+        ctx.fill();
+    }
+    // a square brick's seam: its right and bottom edges, in its own colour shaded, one path per colour again
+    const seam = seamPx(cellPx, isRound);
+    if (!seam) return;
+    for (const [hex, at] of byColour) {
+        ctx.fillStyle = rgbToHex(seamColor(hex));
+        ctx.beginPath();
+        for (let i = 0; i < at.length; i += 2) {
+            const [left, top] = [at[i] * cellPx, at[i + 1] * cellPx];
+            ctx.rect(left + cellPx - seam, top, seam, cellPx);
+            ctx.rect(left, top + cellPx - seam, cellPx - seam, seam);
         }
         ctx.fill();
     }
