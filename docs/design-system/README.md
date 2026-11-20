@@ -84,6 +84,7 @@ A step does one job, named by its tab. The signs it's doing two: its tools need 
 - All the tools are one set, in the same order on both layouts, with dividers between: history (undo, redo, before/after), the tools (brush, eraser, eyedropper), the brush palette (colour ▾, size, shape; always in view), clean-up (one button per strength), and clear all.
 - Desktop: one Tools section in the column, every button labelled with icon and name. Phone: the palette is a compact strip in the bar's style (swatch ▾, − size +, one shape toggle) above an icons-only bottom bar, with the names read out. Past about eight buttons the bar takes two rows (history and tools, then clean-up and clearing), so every button stays at least 40px wide.
 - A tool is on from the start, so there is no View tool.
+- The colour list (swatch ▾) shows how many bricks of each colour the mosaic uses, as Colours used does on Bricks, and the counts follow your touch-ups.
 - After an action, a Toast says what happened: "Cleaned up 7 bricks." "Touch-ups cleared." with an Undo action. On a phone it sits just above the tools.
 
 ### A canvas you edit zooms and scrolls
