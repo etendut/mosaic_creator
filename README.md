@@ -41,6 +41,11 @@ Pushes to `main` deploy to GitHub Pages through the `gh-pages` branch. Each pull
 `https://etendut.github.io/mosaic_creator/pr-preview/pr-<number>/`, linked in a comment on the PR and removed when
 the PR closes. Previews share the live site's origin, so they see the same saved settings and image.
 
+The live site is also an installable app that works offline: `public/` holds its manifest, icons and service worker
+(`sw.js`), which the build stamps with the commit so each deploy installs as a new version. The service worker runs
+only on the live site, never on PR previews. To try it locally, `npm run build && npm run preview` (localhost counts
+as secure). The single-file `mosaic-creator.html` from CI stays one file and needs none of this.
+
 - `src/mosaic/` — pure logic: colour matching, quantisation, cards, print layout, parts list, BrickLink XML.
 - `src/data/catalog.json` — the bricks, plates and colours the app uses, trimmed from BrickLink's catalog download.
   Don't hand-edit; to refresh it, download Colors, Codes and Parts as XML from
