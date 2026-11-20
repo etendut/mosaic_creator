@@ -3,7 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
 import ProjectMenu from '../components/ProjectMenu';
 import { recallImage } from '../lib/imageStore';
-import { imageToCanvas, pngToImage } from '../mosaic/image';
+import { imageToCanvas, loadImage, pngToImage } from '../mosaic/image';
+import samplePicture from '../assets/sample-picture.svg';
+import Walkthrough, { type TourStop } from '../components/Walkthrough';
+import { tourSeen, rememberTourSeen } from '../lib/tourSeen';
 import BricksStep from '../steps/BricksStep';
 import CardsStep from '../steps/CardsStep';
 import ImageStep from '../steps/ImageStep';
@@ -56,6 +59,60 @@ const StepLabel = ({ number, name, state }: { number: number; name: string; stat
     </Stack>
 );
 
+/** The Walkthrough's stops, in step order (docs/design-system/components/Walkthrough). */
+const TOUR_STOPS: TourStop<Step>[] = [
+    {
+        step: 'Image',
+        target: 'use-image',
+        inAppBar: 'end',
+        text: 'Drag and zoom to frame your picture, then press Use this image to turn it into bricks.',
+    },
+    {
+        step: 'Bricks',
+        target: 'group-plate',
+        phoneTools: true,
+        phoneEdge: true,
+        text: "Pick the plate and brick you'll build with. Raise Size for a bigger mosaic with more cards.",
+    },
+    {
+        step: 'Bricks',
+        target: 'info-bar',
+        phoneEdge: true,
+        text: "Check here as you change settings: you'll see how many cards and bricks you need, and how big the mosaic ends up.",
+    },
+    {
+        step: 'Touch up',
+        target: 'group-paint',
+        phoneTools: true,
+        text: 'Paint single bricks to sharpen faces and edges. Press Clean up to clear stray bricks in one go.',
+    },
+    {
+        step: 'Cards',
+        target: 'group-size',
+        phoneTools: true,
+        phoneEdge: true,
+        text: 'Each card covers one plate. Pick Real size and builders can lay bricks straight on the card.',
+    },
+    {
+        step: 'Parts',
+        target: 'download-xml',
+        phoneTools: true,
+        text: 'Download the parts as a BrickLink wanted list. Add Spares if you want a few extra of each colour.',
+    },
+    {
+        step: 'Print',
+        target: 'print-action',
+        phoneTools: true,
+        text: 'Print the map page for yourself and one card for each builder.',
+    },
+    {
+        step: 'Print',
+        target: 'menu',
+        inAppBar: 'start',
+        text: "Save your project from this menu to pick up where you left off, or open one you've saved.",
+    },
+];
+
 const App = () => {
     const mosaic = useMosaic();
     // the step in the URL; without an image every step shows Image, until one is chosen or restored
@@ -68,6 +125,31 @@ const App = () => {
     const step: Step = hasImage ? wanted : 'Image';
     // set once the user picks or opens an image, so a slow restore of the last one can't replace it
     const imageChosen = useRef(false);
+    // a picture picked on the Image step but not used yet: the tour mustn't replace it with the sample
+    const [picturePicked, setPicturePicked] = useState(false);
+
+    // the Walkthrough: running, where focus goes back to when it ends, and whether it's been seen once
+    const [touring, setTouring] = useState(false);
+    const tourOpener = useRef<HTMLElement | null>(null);
+    const [seenTour, setSeenTour] = useState(tourSeen);
+
+    /** Start the tour, with the sample picture if there's no picture yet; never replacing one you have. */
+    const startTour = async (opener: HTMLElement | null) => {
+        tourOpener.current = opener;
+        if (!hasImage && !picturePicked) {
+            const image = await loadImage(samplePicture);
+            imageChosen.current = true;
+            mosaic.setImage(imageToCanvas(image), { remember: false });
+            setOpenedImage({ image, key: Date.now() });
+        }
+        setTouring(true);
+    };
+    const endTour = () => {
+        setTouring(false);
+        rememberTourSeen();
+        setSeenTour(true);
+        if (tourOpener.current?.isConnected) tourOpener.current.focus();
+    };
 
     /** Load an image into every step: the mosaic, and the image step to edit it again; then go to `to`. */
     const showImage = (image: HTMLImageElement, remember = true, to: Step = 'Bricks') => {
@@ -146,6 +228,7 @@ const App = () => {
                         imageChosen.current = true;
                         showImage(image);
                     }}
+                    onShowMeAround={(opener) => startTour(opener)}
                     onForgetImage={() => {
                         imageChosen.current = true;
                         mosaic.setImage(null);
@@ -199,12 +282,15 @@ const App = () => {
                     sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, marginLeft: { md: 'auto' } }}
                 />
             </Box>
+            <Walkthrough stops={TOUR_STOPS} run={touring} goTo={(to) => go(to)} onEnd={endTour} />
             <AppBarSlot.Provider value={actionSlot}>
                 <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
                     <ImageStep
                         key={openedImage?.key}
                         initialSource={openedImage?.image}
                         active={step === 'Image'}
+                        onPictureChange={setPicturePicked}
+                        onShowMeAround={seenTour ? undefined : (opener) => startTour(opener)}
                         onApply={(image) => {
                             imageChosen.current = true;
                             mosaic.setImage(image);

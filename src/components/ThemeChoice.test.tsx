@@ -62,8 +62,8 @@ describe('Theme in ☰', () => {
         const user = renderApp();
         await user.click(screen.getByRole('button', { name: 'Menu' }));
         expect(document.activeElement).toHaveTextContent(/^Open project/);
-        await user.keyboard('{ArrowUp}{ArrowUp}');
-        // up from the top wraps to About, then the last theme item
+        await user.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}');
+        // up from the top wraps to About, then Show me around, then the last theme item
         expect(document.activeElement).toHaveAttribute('role', 'menuitemradio');
         expect(document.activeElement).toHaveTextContent('Dark');
         await user.keyboard('{Enter}');

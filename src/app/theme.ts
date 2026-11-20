@@ -64,6 +64,12 @@ export const tokens = Object.fromEntries(
 const variables = (values: typeof light) =>
     Object.fromEntries(Object.entries(values).map(([name, value]) => [`--mc-${name}`, value]));
 
+/** Fixed measures from docs/design-system/tokens.json (`size`) that components use directly. */
+export const sizes = {
+    /** `tour-card`: a walkthrough card's width on desktop; on a phone it's the screen less `space-2` each side. */
+    tourCard: 320,
+} as const;
+
 /** The attribute MUI puts on <html> for the colour scheme; a printed page sets it to light on itself. */
 export const COLOR_SCHEME_ATTRIBUTE = 'data-mui-color-scheme';
 

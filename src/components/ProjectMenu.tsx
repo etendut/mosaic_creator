@@ -29,10 +29,13 @@ interface ProjectMenuProps {
     onImageOpened: (image: HTMLImageElement) => void;
     /** Drop the image, including the copy this browser remembers. */
     onForgetImage: () => void;
+    /** Start the Walkthrough; focus goes back to `opener` when it ends. */
+    onShowMeAround: (opener: HTMLElement) => void;
 }
 
 /** Save the whole project to a file, open one, or go back to the default settings. */
-const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps) => {
+const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: ProjectMenuProps) => {
+    const menuButton = useRef<HTMLButtonElement>(null);
     const fileInput = useRef<HTMLInputElement>(null);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [confirmReset, setConfirmReset] = useState(false);
@@ -80,6 +83,8 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
     return (
         <>
             <IconButton
+                ref={menuButton}
+                data-tour="menu"
                 onClick={(e) => setAnchor(e.currentTarget)}
                 aria-haspopup="menu"
                 aria-label="Menu"
@@ -131,6 +136,14 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage }: ProjectMenuProps)
                 <Divider />
                 <ThemeChoice />
                 <Divider />
+                <MenuItem
+                    onClick={() => {
+                        setAnchor(null);
+                        onShowMeAround(menuButton.current!);
+                    }}
+                >
+                    <ListItemText primary="Show me around" secondary="A short tour from a picture to printed cards" />
+                </MenuItem>
                 <MenuItem
                     onClick={() => {
                         setAnchor(null);

@@ -4,8 +4,6 @@ Where the app falls short of this system, and what to change. The brand book abo
 
 1. **Brush outline colours.** **Now:** the outline around the bricks under the brush (`BrushOutline` in `src/components/MosaicPreview.tsx`) is a raw `white` 2px outline with a raw `rgba(0, 0, 0, 0.6)` 3px halo, so it reads on any brick colour. **Change:** add tokens for it (say `brush-outline` and `brush-halo`, the same in both themes, since it sits on the mosaic's colours rather than the interface) and use them.
 
-2. **Walkthrough** (issue #22). **Now:** a first-time user has no guide from a picture to printed cards. **Change:** add the Walkthrough: "Show me around" in the Image EmptyState and in ☰, and seven stops, each a card beside a ringed target. Add a small sample picture (the app has none yet) and load it when there's no image. Leave out the issue's (?) buttons: the Help text rule already covers those settings.
-
 The first review (17 November 2026) found eleven gaps, all closed since: the Info bar, help text and its colour, one selected state, numbers and units, canvas placement, ColorSwatch, Toast and the zoom control, dark mode, retiring InfoList, and the phone app bar.
 
 When you find a new gap, add it here as a numbered item: **Now** (what the app does, where), then **Change** (what the system asks for). Remove an item in the change that closes it.

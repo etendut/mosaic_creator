@@ -210,6 +210,8 @@ export const DesktopTools = ({
                         key={t.id}
                         value={t.id}
                         aria-label={t.label}
+                        // the same name as the phone bar's button, for the Walkthrough
+                        data-tour={`group-${t.id}`}
                         sx={{ justifyContent: 'flex-start', gap: 1.5, minHeight: 44 }}
                     >
                         {t.icon}
