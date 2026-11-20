@@ -64,6 +64,12 @@ export const tokens = Object.fromEntries(
 const variables = (values: typeof light) =>
     Object.fromEntries(Object.entries(values).map(([name, value]) => [`--mc-${name}`, value]));
 
+/** One spacing unit (`space-1`): MUI's `spacing`, and pixels for code that can't take a theme spacing string. */
+export const SPACE_PX = 8;
+
+/** `radius-control`: buttons, toggles, inputs (MUI's `shape.borderRadius`). */
+export const RADIUS_CONTROL_PX = 6;
+
 /** Fixed measures from docs/design-system/tokens.json (`size`) that components use directly. */
 export const sizes = {
     /** `tour-card`: a walkthrough card's width on desktop; on a phone it's the screen less `space-2` each side. */
@@ -92,7 +98,8 @@ const theme = createTheme({
     // light and dark, following the system; MUI's own colours switch with ours
     cssVariables: { colorSchemeSelector: COLOR_SCHEME_ATTRIBUTE },
     colorSchemes: { light: { palette: palette(light) }, dark: { palette: palette(dark) } },
-    shape: { borderRadius: 6 },
+    spacing: SPACE_PX,
+    shape: { borderRadius: RADIUS_CONTROL_PX },
     typography: {
         fontFamily: '"Rubik", system-ui, sans-serif',
         fontSize: 15,

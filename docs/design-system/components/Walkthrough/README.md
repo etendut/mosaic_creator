@@ -39,6 +39,8 @@ Each stop is one or two short sentences: what you do there, then what it gets yo
 - **Phone, target in the bottom stack** (the tool bar, the palette strip, the action strip). The card sits above the whole stack, so none of it is covered.
 - **Never over the app bar or Info bar.** A card that would rise into them slides down beside its target instead.
 - **At the screen's edge** (a phone's tool bar, its full-width Info bar). The ring sits 2px inside the target instead of `space-1` outside, so no side is cut off.
+- **Phone, target in the app bar** (_Use this image_, ☰, 6px from the top). The ring comes in to `space-0.5` (4px) out, so it stays on screen and still clears the `azure` button.
+- **The window's sides.** A card keeps `space-2` from each, wherever it hangs.
 - **Off screen.** A target is scrolled into view before its card opens.
 
 **Ending.** _Skip_, _Done_ and Esc end the tour. Each counts as having seen it, so the EmptyState stops offering it. You can replay it from ☰.
