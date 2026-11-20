@@ -26,7 +26,7 @@ const ThemeChoice = () => {
             <Typography
                 id="theme-choice-label"
                 variant="subtitle2"
-                color="text.secondary"
+                color="textSecondary"
                 sx={{ paddingInline: 2, paddingBlock: 0.75 }}
             >
                 Theme

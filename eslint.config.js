@@ -19,6 +19,14 @@ export default tseslint.config(
             'sonarjs/cognitive-complexity': ['error', 15],
             // a three-way choice reads fine as a chained ternary, as in the MUI sx props
             'sonarjs/no-nested-conditional': 'off',
+            // MUI 9's Typography takes palette keys (`textSecondary`); a dotted path is silently ignored
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: 'JSXAttribute[name.name="color"] > Literal[value=/^text\\./]',
+                    message: 'Use color="textSecondary" (or "textPrimary"): MUI 9 ignores the dotted "text.…" path.',
+                },
+            ],
         },
     },
 );

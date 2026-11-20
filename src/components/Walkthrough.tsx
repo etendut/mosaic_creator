@@ -8,13 +8,18 @@ import {
     type Step as JoyrideStep,
     type TooltipRenderProps,
 } from 'react-joyride';
-import { sizes, tokens } from '../app/theme';
+import { RADIUS_CONTROL_PX, SPACE_PX, sizes, tokens } from '../app/theme';
 
-/** The ring sits `space-1` (8 px) out from its target; at a phone's screen edge, 2 px inside it instead. */
-const RING_OUT = 8;
-const RING_INSET = 2;
-/** Joyride measures the card's offset from the target, so `space-1` from the ring's outer edge is 8 + 4. */
-const CARD_FROM_TARGET = 12;
+/** The ring: a 2px line `space-1` out from its target, or just inside it at a phone's screen edge. */
+const RING_WIDTH = 2;
+const RING_OUT = SPACE_PX;
+/** On a phone the app bar's buttons sit 6px from the screen's top, so their ring comes in to `space-0.5`. */
+const RING_OUT_PHONE_APP_BAR = SPACE_PX / 2;
+/**
+ * The card sits `space-1` beyond the ring. Joyride adds the ring's padding to this offset itself (for a ringed
+ * target), so the offset is the gap past the ring, plus the half of its line that lies outside the ring's path.
+ */
+const CARD_PAST_RING = SPACE_PX + RING_WIDTH / 2;
 
 /** A stop on the tour: the step it's on, the control it points at (a `data-tour` name), and what it says. */
 export interface TourStop<S extends string> {
@@ -38,8 +43,15 @@ const tourTarget = (name: string) => () => {
     return all.find(shown) ?? null;
 };
 
-/** How far down the page a card may start: under the Info bar (sticky, so the same on every step), and `space-1`. */
-const belowInfoBar = () => Math.round((tourTarget('info-bar')()?.getBoundingClientRect().bottom ?? 0) + 8);
+/**
+ * How far down the window the sticky bars reach (the app bar, and the Info bar under it), plus `gap`: where a card
+ * may start, and where a target scrolled into view stops. Measured, since the Info bar wraps to two rows on a narrow
+ * phone; without one (the Image step before a picture), the app bar.
+ */
+const belowStickyBars = (gap: number) => {
+    const bars = tourTarget('info-bar')() ?? document.querySelector('header');
+    return Math.round((bars?.getBoundingClientRect().bottom ?? 0) + gap);
+};
 
 /** Whether an element is on screen: the browser knows; without `checkVisibility` (tests), no hidden ancestor. */
 const shown = (el: HTMLElement) => {
@@ -66,7 +78,7 @@ const TourCard = ({ index, size, step, isLastStep, backProps, primaryProps, skip
             aria-labelledby={counter}
             aria-describedby={text}
             sx={{
-                width: { xs: `calc(100vw - 32px)`, md: sizes.tourCard },
+                width: { xs: `calc(100vw - ${4 * SPACE_PX}px)`, md: sizes.tourCard },
                 padding: 2,
                 backgroundColor: tokens.tray,
                 border: `1px solid ${tokens.groove}`,
@@ -74,7 +86,7 @@ const TourCard = ({ index, size, step, isLastStep, backProps, primaryProps, skip
                 boxShadow: 2,
             }}
         >
-            <Typography id={counter} variant="body2" color="text.secondary">
+            <Typography id={counter} variant="body2" color="textSecondary">
                 {index + 1} of {size}
             </Typography>
             <Typography id={text} variant="body1" sx={{ color: tokens.ink, marginBlock: 1 }}>
@@ -127,6 +139,7 @@ const Walkthrough = <S extends string>({ stops, run, goTo, onEnd }: WalkthroughP
                 target: tourTarget('info-bar'),
                 spotlightTarget: tourTarget(stop.target),
                 placement: `bottom-${stop.inAppBar}`,
+                ...(phone && { spotlightPadding: RING_OUT_PHONE_APP_BAR }),
             };
         // and a target in the phone's bottom stack (tool bar, palette, action strip) gets its card above all of it,
         // so nothing in the stack is covered
@@ -136,13 +149,13 @@ const Walkthrough = <S extends string>({ stops, run, goTo, onEnd }: WalkthroughP
                 target: tourTarget('phone-tools'),
                 spotlightTarget: tourTarget(stop.target),
                 placement: 'top',
-                ...(stop.phoneEdge && { spotlightPadding: -RING_INSET }),
+                ...(stop.phoneEdge && { spotlightPadding: -RING_WIDTH }),
             };
         return {
             ...shared,
             target: tourTarget(stop.target),
             placement: 'auto',
-            ...(phone && stop.phoneEdge && { spotlightPadding: -RING_INSET }),
+            ...(phone && stop.phoneEdge && { spotlightPadding: -RING_WIDTH }),
         };
     });
     const onEvent = (data: EventData) => {
@@ -162,23 +175,31 @@ const Walkthrough = <S extends string>({ stops, run, goTo, onEnd }: WalkthroughP
                 continuous
                 onEvent={onEvent}
                 tooltipComponent={TourCard}
-                // no card rises over the app bar or the Info bar: it slides down beside its target instead
-                floatingOptions={{ hideArrow: true, shiftOptions: { padding: { top: belowInfoBar() } } }}
+                // no card rises over the app bar or the Info bar (it slides down beside its target instead), and every
+                // card keeps space-2 from the window's sides
+                floatingOptions={{
+                    hideArrow: true,
+                    shiftOptions: {
+                        padding: { top: belowStickyBars(SPACE_PX), left: 2 * SPACE_PX, right: 2 * SPACE_PX },
+                    },
+                }}
                 options={{
                     skipBeacon: true,
                     // not dimmed, but only the target and the card take clicks
                     overlayColor: 'transparent',
                     overlayClickAction: false,
-                    // the ring sits space-1 out from the target, and the card space-1 out from the ring
+                    // the ring sits space-1 out from the target, with a control's corners, and the card space-1
+                    // beyond the ring
                     spotlightPadding: RING_OUT,
-                    spotlightRadius: 6,
-                    offset: CARD_FROM_TARGET,
-                    // above the app bar (1100), under menus and dialogs (1300)
-                    zIndex: 1250,
-                    // clear of the sticky app bar and Info bar when scrolling a target into view
-                    scrollOffset: 140,
+                    spotlightRadius: RADIUS_CONTROL_PX,
+                    offset: CARD_PAST_RING,
+                    // over the page's own sticky bars (the app bar is 10, the phone's tools 20), under menus (modal)
+                    // and toasts (snackbar), which the tour can open or cause
+                    zIndex: theme.zIndex.appBar,
+                    // a target scrolled into view stops space-2 under the sticky bars, not behind them
+                    scrollOffset: belowStickyBars(2 * SPACE_PX),
                 }}
-                styles={{ spotlight: { strokeWidth: 2 } }}
+                styles={{ spotlight: { strokeWidth: RING_WIDTH } }}
             />
         </>
     );
