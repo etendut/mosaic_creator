@@ -54,6 +54,20 @@ export const contrastTextColor = (hex: string | undefined) => {
 
 export const cellHex = (cell: Cell) => cell?.hex ?? 'transparent';
 
+/** How far a square brick's seam moves from the brick's own colour: faint, so it reads as a joint, not a grid. */
+const SEAM_SHADE = 0.18;
+
+/**
+ * The seam of a square brick (docs/design-system/README.md, The mosaic): its own colour a little darker, or a little
+ * lighter for dark bricks (as on a part icon), so a run of one colour still shows each brick.
+ */
+export const seamColor = (hex: string): Rgb => {
+    const { r, g, b } = hexToRgb(hex);
+    const dark = r * 0.3 + g * 0.59 + b * 0.11 < 70;
+    const shade = (c: number) => Math.round(dark ? c + (255 - c) * SEAM_SHADE : c * (1 - SEAM_SHADE));
+    return { r: shade(r), g: shade(g), b: shade(b) };
+};
+
 export type PaletteEntry = PaletteColor & Rgb;
 
 export const toPaletteEntries = (colors: PaletteColor[]): PaletteEntry[] =>

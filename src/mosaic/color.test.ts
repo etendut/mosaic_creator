@@ -1,4 +1,4 @@
-import { colorDistance, contrastTextColor, hexToRgb, nearestColor, rgbToHex } from './color';
+import { colorDistance, contrastTextColor, hexToRgb, nearestColor, rgbToHex, seamColor } from './color';
 
 describe('hexToRgb / rgbToHex', () => {
     it('round-trips 6 digit hex', () => {
@@ -67,5 +67,16 @@ describe('contrastTextColor', () => {
         expect(contrastTextColor('#212121')).toBe('white');
         expect(contrastTextColor('#FFFFFF')).toBe('black');
         expect(contrastTextColor(undefined)).toBe('black');
+    });
+});
+
+describe('seamColor', () => {
+    it("shades a light brick's seam darker, and a dark brick's lighter, so it shows on any colour", () => {
+        const white = seamColor('#FFFFFF');
+        expect(white.r).toBeLessThan(255);
+        expect(white).toEqual({ r: 209, g: 209, b: 209 });
+        const black = seamColor('#1B2A34');
+        expect(black.r).toBeGreaterThan(0x1b);
+        expect(black.b).toBeGreaterThan(0x34);
     });
 });

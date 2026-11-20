@@ -12,7 +12,7 @@ import {
     resizeCanvas,
     shrinkToBricks,
 } from './image';
-import { hexToRgb } from './color';
+import { hexToRgb, seamColor } from './color';
 import type { PixelGrid } from './types';
 
 const canvas = (width: number, height: number) => {
@@ -152,9 +152,10 @@ describe('drawPreview', () => {
         drawPreview(c, grid, { cellPx: 10, isRound: false, background: '#000', cellsPerCard: 2 });
         restore();
         expect([c.width, c.height]).toEqual([40, 30]);
-        // every brick goes into its colour's path, and each colour is filled once
-        expect(calls.filter((x) => x === 'rect')).toHaveLength(10);
-        expect(calls.filter((x) => x === 'fill')).toHaveLength(colours);
+        // every brick goes into its colour's path, and each colour is filled once; then each brick's seam (right and
+        // bottom edges) goes into a second path per colour
+        expect(calls.filter((x) => x === 'rect')).toHaveLength(10 + 2 * 10);
+        expect(calls.filter((x) => x === 'fill')).toHaveLength(2 * colours);
         expect(calls).toContain('fillText');
         expect(calls).not.toContain('arc');
     });
@@ -215,6 +216,16 @@ describe('drawPreview', () => {
 
             drawPreview(canvas(1, 1), two, { cellPx: 8, isRound: false, background: '#000080', cellsPerCard: 0 });
             expect(pixel(0, 0)).toEqual([red.r, red.g, red.b, 255]);
+            // a square brick's right and bottom edges are its seam, its own colour shaded; the empty cell has none
+            const seam = seamColor(RED.hex);
+            expect(pixel(7, 0)).toEqual([seam.r, seam.g, seam.b, 255]);
+            expect(pixel(0, 7)).toEqual([seam.r, seam.g, seam.b, 255]);
+            expect(pixel(6, 6)).toEqual([red.r, red.g, red.b, 255]);
+            expect(pixel(15, 7)).toEqual(plate);
+
+            // bricks under 4 px are too small for a seam
+            drawPreview(canvas(1, 1), two, { cellPx: 3, isRound: false, background: '#000080', cellsPerCard: 0 });
+            expect(pixel(2, 2)).toEqual([red.r, red.g, red.b, 255]);
         } finally {
             spy.mockRestore();
         }

@@ -26,6 +26,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 - **Two themes**, with the same roles: a dark baseplate (`plate`, `plateDot`), dark trays, light `ink`, and a lighter `azure` that takes dark `on-azure` text. In dark, `azureDark` is the lighter hover step. Never pick colours per theme in a component: use the token and let the theme supply it. You choose the theme in ☰ (ThemeToggle): Auto, the default, follows the device; Light and Dark fix it. Printing is always light.
 - MUI greys come from tokens too: `icon` for icon buttons and unselected toggles, `disabled` and `disabled-fill` for disabled controls, `azure-outline` for outlined buttons.
 - Never use raw hex in components; use the tokens. Never add a second accent: the mosaic's own brick colours are the only other colour on screen.
+- **Brick seams.** On the mosaic (the canvas and the printed map page), each square brick has a seam on its right and bottom edges, so a run of one colour still shows every brick rather than one big block: 1px at screen sizes (about 1/24 of the brick on the map page), none under 4px. The seam is the brick's own colour 18% darker, or 18% lighter for a dark brick, as on a part icon. It comes from the brick colour, so it needs no token. Round bricks need none: the plate shows between them.
 - `groove` borders are 1.7:1 on `tray`. They separate surfaces; never let a border alone say a control is selected (pair it with `azure` or `azureWash`).
 
 ## Type
