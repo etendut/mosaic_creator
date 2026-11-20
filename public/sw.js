@@ -13,7 +13,10 @@ self.addEventListener('install', (event) => {
     event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP)));
 });
 
+// only this app's own pages may ask the new version to take over (Reload); a service worker only hears from pages of
+// its origin anyway, but the check says so
 self.addEventListener('message', (event) => {
+    if (event.origin !== self.location.origin) return;
     if (event.data === 'skip-waiting') self.skipWaiting();
 });
 
