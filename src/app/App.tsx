@@ -6,6 +6,7 @@ import ProjectMenu from '../components/ProjectMenu';
 import ProjectName from '../components/ProjectName';
 import { nameFromFile } from '../library/format';
 import { readOpen, writeOpen } from '../library/meta';
+import { whereToOpen } from './whereToOpen';
 import { UNNAMED, type ProjectEntry } from '../library/types';
 import { useLibrary } from '../library/useLibrary';
 import { useProjectSession } from '../library/useProjectSession';
@@ -164,25 +165,23 @@ const App = () => {
     useEffect(() => {
         if (started.current || !ready) return;
         started.current = true;
-        if (route.view === 'projects') return;
-        const known = (id: string | null) => !!id && library.projects.some((p) => p.id === id);
-        if (library.status === 'blocked') return goProjects({ replace: true });
-        if (route.projectId) {
-            if (!known(route.projectId)) goProjects({ replace: true });
-            return;
-        }
-        // a picture already in use (the library took a while to read): that's a new mosaic, kept where you are, not
-        // swapped for the one open last or left behind for Mosaics
-        if (hasImage) return goProject(session.adopt(), inUrl() ?? 'Bricks', { replace: true });
         const last = readOpen();
-        const id = library.migratedId ?? last?.id ?? null;
-        if (known(id)) {
-            const lastStep = last?.id === id ? stepFromSlug(last.step, STEPS) : null;
-            return goProject(id!, inUrl() ?? lastStep ?? 'Bricks', { replace: true });
-        }
-        if (library.projects.length > 0) return goProjects({ replace: true });
-        // a first visit: what's on screen (perhaps a picture already) becomes the first mosaic
-        goProject(session.adopt(), inUrl() ?? 'Image', { replace: true });
+        const opening = whereToOpen(
+            {
+                route,
+                blocked: library.status === 'blocked',
+                projectIds: library.projects.map((p) => p.id),
+                lastOpen: last && { id: last.id, step: stepFromSlug(last.step, STEPS) },
+                migratedId: library.migratedId,
+                hasImage,
+                urlStep: inUrl(),
+            },
+            'Image',
+            'Bricks',
+        );
+        if (opening.to === 'mosaics') goProjects({ replace: true });
+        else if (opening.to === 'project') goProject(opening.id, opening.step, { replace: true });
+        else if (opening.to === 'new') goProject(session.adopt(), opening.step, { replace: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the library is first read
     }, [ready]);
 
