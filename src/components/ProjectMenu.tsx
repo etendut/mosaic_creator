@@ -1,23 +1,11 @@
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Divider,
-    IconButton,
-    ListItemText,
-    Menu,
-    MenuItem,
-} from '@mui/material';
+import { Divider, IconButton, ListItemText, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { downloadFile } from '../lib/download';
 import Toast, { type ToastMessage } from '../ui/Toast';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import { canvasToPng, pngToImage } from '../mosaic/image';
-import { DEFAULT_PROJECT, packProject, projectFileName, unpackProject } from '../mosaic/project';
+import { packProject, projectFileName, unpackProject } from '../mosaic/project';
 import type { Mosaic } from '../hooks/useMosaic';
 import { VERSION } from '../lib/version';
 import AboutDialog from './AboutDialog';
@@ -30,19 +18,24 @@ interface ProjectMenuProps {
     mosaic: Mosaic;
     /** Called with the image from an opened project, so the app can show it and move on to the bricks step. */
     onImageOpened: (image: HTMLImageElement) => void;
-    /** Drop the image, including the copy this browser remembers. */
-    onForgetImage: () => void;
     /** Start the Walkthrough; focus goes back to `opener` when it ends. */
     onShowMeAround: (opener: HTMLElement) => void;
+    /** Set to open the file picker, so Mosaics' Open file… button (on desktop) uses the same one. */
+    openFileRef?: React.RefObject<(() => void) | null>;
 }
 
-/** Save the whole project to a file, open one, or go back to the default settings. */
-const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, onShowMeAround }: ProjectMenuProps) => {
+/**
+ * ☰, per view: in the editor, this mosaic's files (a copy to keep, or its settings as a template); in Mosaics, Open
+ * file… on a phone. Then the app's own items in both: the tour, installing, Theme and About.
+ */
+const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onShowMeAround, openFileRef }: ProjectMenuProps) => {
     const menuButton = useRef<HTMLButtonElement>(null);
     const offerInstall = useInstall();
     const fileInput = useRef<HTMLInputElement>(null);
+    useEffect(() => {
+        if (openFileRef) openFileRef.current = () => fileInput.current?.click();
+    }, [openFileRef]);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-    const [confirmReset, setConfirmReset] = useState(false);
     const [about, setAbout] = useState(false);
     const [message, setMessage] = useState<ToastMessage | null>(null);
 
@@ -55,7 +48,7 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, on
             const zip = packProject({ settings: mosaic.project, image }, wantedList);
             downloadFile(zip, projectFileName(mosaic.settings.title, !image), 'application/zip');
             setMessage({
-                text: image ? 'Project saved.' : 'Template saved: your settings, without an image.',
+                text: image ? 'Project downloaded.' : 'Template saved: your settings, without an image.',
             });
         } catch (e) {
             setMessage({ error: true, text: e instanceof Error ? e.message : String(e) });
@@ -78,50 +71,15 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, on
         }
     };
 
-    const reset = () => {
-        mosaic.setProject(DEFAULT_PROJECT);
-        setConfirmReset(false);
-        setMessage({ text: 'Settings reset to defaults.' });
-    };
-
+    // the editor: this mosaic's files. Opening and starting mosaics live in Mosaics, and it saves itself
     const mosaicItems = [
-        <MenuItem
-            key="m0"
-            onClick={() => {
-                setAnchor(null);
-                fileInput.current?.click();
-            }}
-        >
-            <ListItemText primary="Open project or template…" secondary="A saved project or template (.mosaic.zip)" />
+        <MenuItem key="download" onClick={() => save(false)} disabled={!mosaic.image}>
+            <ListItemText primary="Download project" secondary="Image, settings and parts list in one zip" />
         </MenuItem>,
-        <MenuItem key="m1" onClick={() => save(false)} disabled={!mosaic.image}>
-            <ListItemText primary="Save project" secondary="Image, settings and parts list in one zip" />
-        </MenuItem>,
-        <MenuItem key="m2" onClick={() => save(true)}>
+        <MenuItem key="template" onClick={() => save(true)}>
             <ListItemText primary="Save as template" secondary="Just your settings, to reuse with a new image" />
         </MenuItem>,
-        <Divider key="m3" />,
-        <MenuItem
-            key="m4"
-            onClick={() => {
-                setAnchor(null);
-                setConfirmReset(true);
-            }}
-        >
-            <ListItemText primary="Reset to defaults" secondary="Clears the settings this browser remembers" />
-        </MenuItem>,
-        <MenuItem
-            key="m5"
-            disabled={!mosaic.image}
-            onClick={() => {
-                setAnchor(null);
-                onForgetImage();
-                setMessage({ text: 'Image cleared. This browser no longer keeps it.' });
-            }}
-        >
-            <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
-        </MenuItem>,
-        <Divider key="m6" />,
+        <Divider key="divider" />,
     ];
     // in Mosaics: on desktop, Open file… sits in the app bar beside New mosaic; on a phone it's here
     const projectItems = [
@@ -153,8 +111,6 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, on
             {/* `menu`, not the default `selectedMenu`: it opens on its first item, not on the chosen theme */}
             <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)} variant="menu">
                 {view === 'projects' ? projectItems : mosaicItems}
-                <ThemeChoice />
-                <Divider />
                 <MenuItem
                     onClick={() => {
                         setAnchor(null);
@@ -181,6 +137,9 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, on
                         />
                     </MenuItem>
                 )}
+                <Divider />
+                {/* a setting most people change once: one quiet row, just above About */}
+                <ThemeChoice />
                 <MenuItem
                     onClick={() => {
                         setAnchor(null);
@@ -201,21 +160,6 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, on
                     e.target.value = '';
                 }}
             />
-            <Dialog open={confirmReset} onClose={() => setConfirmReset(false)}>
-                <DialogTitle>Reset to defaults?</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Brick, plate, size, colours and card text go back to their defaults. The image stays. Save the
-                        project first if you might want these settings again.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setConfirmReset(false)}>Cancel</Button>
-                    <Button onClick={reset} variant="contained">
-                        Reset
-                    </Button>
-                </DialogActions>
-            </Dialog>
             <AboutDialog open={about} onClose={() => setAbout(false)} />
             <Toast message={message} onClose={() => setMessage(null)} />
         </>

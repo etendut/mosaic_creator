@@ -6,8 +6,14 @@ import { unzipSync } from 'fflate';
 
 const lastDownloadBytes = async () => new Uint8Array(await downloads.at(-1)!.blob.arrayBuffer());
 
+/** Open file… lives in Mosaics: beside New mosaic on desktop (jsdom's width), in ☰ on a phone. */
+const openFileItem = async (user: User) => {
+    await user.click(screen.getAllByRole('link', { name: /Mosaics/ })[0]);
+    await user.click(screen.getByRole('button', { name: 'Open file…' }));
+};
+
 const openProject = async (user: User, bytes: Uint8Array | string, name = 'club.mosaic.zip') => {
-    await projectMenu(user, /Open project/);
+    await openFileItem(user);
     await user.upload(
         screen.getByTestId('project-file'),
         new File([typeof bytes === 'string' ? bytes : bytes.slice()], name),
@@ -19,8 +25,8 @@ const settings = { ...DEFAULT_PROJECT, card: { ...DEFAULT_PROJECT.card, title: '
 describe('Project menu', () => {
     it('saves the image, settings and parts list in one zip', async () => {
         const user = await startMosaic();
-        await projectMenu(user, /Save project/);
-        expect(await screen.findByText('Project saved.')).toBeInTheDocument();
+        await projectMenu(user, /Download project/);
+        expect(await screen.findByText('Project downloaded.')).toBeInTheDocument();
         expect(downloads.at(-1)!.name).toBe('Mosaic Creator.mosaic.zip');
         const bytes = await lastDownloadBytes();
         const project = unpackProject(bytes);
@@ -40,7 +46,7 @@ describe('Project menu', () => {
     it('says so when saving fails', async () => {
         const user = await startMosaic();
         canvasFailures.nextToBlob = true;
-        await projectMenu(user, /Save project/);
+        await projectMenu(user, /Download project/);
         expect(await screen.findByText('Could not save the image')).toBeInTheDocument();
         await user.click(screen.getByRole('button', { name: 'Close' }));
         expect(screen.queryByText('Could not save the image')).not.toBeInTheDocument();
@@ -66,7 +72,8 @@ describe('Project menu', () => {
         const user = await startMosaic();
         await openProject(user, packProject({ settings, image: null }), 't.mosaic.zip');
         expect(await screen.findByText(/Your current image is kept/)).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
+        // a template brings settings, not a picture, so you stay in Mosaics
+        expect(screen.getByRole('heading', { name: 'Mosaics', level: 1 })).toBeInTheDocument();
     });
 
     it("refuses a file that isn't a project", async () => {
@@ -77,24 +84,19 @@ describe('Project menu', () => {
 
     it('ignores a cancelled file picker', async () => {
         const user = renderApp();
-        await projectMenu(user, /Open project/);
+        await openFileItem(user);
         await user.upload(screen.getByTestId('project-file'), []);
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
-    it('resets the settings after asking, keeping the image', async () => {
+    it("keeps only this mosaic's files in the editor's ☰: no open, save, reset or forget", async () => {
         const user = await startMosaic();
-        await goTo(user, 'Cards');
-        await user.type(screen.getByRole('textbox', { name: 'Title' }), '!');
-
-        await projectMenu(user, /Reset to defaults/);
-        await user.click(screen.getByRole('button', { name: 'Cancel' }));
-        expect(await screen.findByRole('textbox', { name: 'Title' })).toHaveValue('Mosaic Creator!');
-
-        await projectMenu(user, /Reset to defaults/);
-        await user.click(screen.getByRole('button', { name: 'Reset' }));
-        expect(await screen.findByText('Settings reset to defaults.')).toBeInTheDocument();
-        expect(await screen.findByRole('textbox', { name: 'Title' })).toHaveValue('Mosaic Creator');
+        await user.click(screen.getByRole('button', { name: 'Menu' }));
+        const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
+        expect(items[0]).toMatch(/^Download project/);
+        expect(items[1]).toMatch(/^Save as template/);
+        for (const gone of [/^Open/, /^Save project/, /^Reset/, /^Forget/])
+            expect(items.some((text) => gone.test(text ?? ''))).toBe(false);
     });
 
     it('closes the menu without doing anything', async () => {

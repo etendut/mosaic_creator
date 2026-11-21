@@ -15,8 +15,9 @@ const scheme = () => document.documentElement.getAttribute(COLOR_SCHEME_ATTRIBUT
 describe('Theme in ☰', () => {
     it('offers Auto, Light and Dark, with Auto chosen at first', async () => {
         const group = await openMenu(renderApp());
-        expect(group.getAllByRole('menuitemradio').map((item) => item.textContent)).toEqual([
-            'AutoFollows this device',
+        // one row: "Theme" and three icon toggles, named for screen readers and in their tooltips
+        expect(group.getAllByRole('menuitemradio').map((item) => item.getAttribute('aria-label'))).toEqual([
+            'Auto, follows this device',
             'Light',
             'Dark',
         ]);
@@ -61,11 +62,12 @@ describe('Theme in ☰', () => {
     it('opens ☰ on its first item, and the arrow keys reach the theme items', async () => {
         const user = renderApp();
         await user.click(screen.getByRole('button', { name: 'Menu' }));
-        expect(document.activeElement).toHaveTextContent(/^Open project/);
-        await user.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}');
-        // up from the top wraps to About, then Show me around, then the last theme item
+        // without a picture, Download project is disabled, so the menu opens on Save as template
+        expect(document.activeElement).toHaveTextContent(/^Save as template/);
+        await user.keyboard('{ArrowUp}{ArrowUp}');
+        // up from the top wraps to About, then the theme row's last toggle, just above it
         expect(document.activeElement).toHaveAttribute('role', 'menuitemradio');
-        expect(document.activeElement).toHaveTextContent('Dark');
+        expect(document.activeElement).toHaveAttribute('aria-label', 'Dark');
         await user.keyboard('{Enter}');
         expect(scheme()).toBe('dark');
     });

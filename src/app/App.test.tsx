@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import App from './App';
 import AppProviders from './AppProviders';
 import { rememberImage } from '../lib/imageStore';
-import { goTo, projectMenu, startMosaic } from '../test/app';
+import { goTo, startMosaic } from '../test/app';
 
 describe('<App />', () => {
     it('starts on the image step, with the menu, the steps and no title bar', () => {
@@ -74,11 +74,14 @@ describe('<App />', () => {
         expect(screen.getByText('Start with a picture')).toBeVisible();
     });
 
-    it('forgets the image when asked, back to a fresh start', async () => {
+    it('starts a new mosaic from the defaults, with no picture', async () => {
         const user = await startMosaic();
-        await projectMenu(user, /Forget image/);
-        expect(screen.getByText('Start with a picture')).toBeVisible();
+        await goTo(user, 'Cards');
+        await user.type(screen.getByRole('textbox', { name: 'Title' }), '!');
+        await user.click(screen.getAllByRole('link', { name: /Mosaics/ })[0]);
+        await user.click(screen.getByRole('button', { name: 'New mosaic' }));
+        expect(await screen.findByText('Start with a picture')).toBeVisible();
         expect(screen.getByRole('tab', { name: 'Bricks' })).toBeDisabled();
-        expect(await screen.findByText(/no longer keeps it/)).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: 'Cards' })).toBeDisabled();
     });
 });

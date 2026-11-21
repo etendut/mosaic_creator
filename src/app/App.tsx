@@ -1,3 +1,4 @@
+import { DEFAULT_PROJECT } from '../mosaic/project';
 import { Box, Button, IconButton, Stack, Tab, Tabs, Typography } from '@mui/material';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -147,6 +148,8 @@ const App = () => {
     // the Walkthrough: running, where focus goes back to when it ends, and whether it's been seen once
     const [touring, setTouring] = useState(false);
     const tourOpener = useRef<HTMLElement | null>(null);
+    // ☰ owns the file picker; Mosaics' Open file… button on desktop opens the same one
+    const openFile = useRef<(() => void) | null>(null);
     const [seenTour, setSeenTour] = useState(tourSeen);
 
     /** Start the tour, with the sample picture if there's no picture yet; never replacing one you have. */
@@ -207,7 +210,15 @@ const App = () => {
                         setCurrentId(entry.id);
                         goProject(entry.id, entry.bricks ? 'Bricks' : 'Image');
                     }}
-                    onNew={() => goProject(library.create().id, 'Image')}
+                    onOpenFile={() => openFile.current?.()}
+                    onNew={() => {
+                        // a new mosaic starts from the defaults, with no picture (what Reset and Forget image did)
+                        imageChosen.current = true;
+                        mosaic.setProject(DEFAULT_PROJECT);
+                        mosaic.setImage(null);
+                        setOpenedImage({ image: null, key: Date.now() });
+                        goProject(library.create().id, 'Image');
+                    }}
                 />
             );
         if (step === 'Image' || !mosaic.grid) return null;
@@ -260,18 +271,13 @@ const App = () => {
             >
                 <ProjectMenu
                     view={inProjects ? 'projects' : 'mosaic'}
+                    openFileRef={openFile}
                     mosaic={mosaic}
                     onImageOpened={(image) => {
                         imageChosen.current = true;
                         showImage(image);
                     }}
                     onShowMeAround={(opener) => startTour(opener)}
-                    onForgetImage={() => {
-                        imageChosen.current = true;
-                        mosaic.setImage(null);
-                        setOpenedImage({ image: null, key: Date.now() });
-                        go('Image');
-                    }}
                 />
                 {inProjects ? (
                     <Typography

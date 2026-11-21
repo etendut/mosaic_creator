@@ -30,10 +30,12 @@ interface ProjectsViewProps {
     library: MockLibrary;
     onOpen: (entry: ProjectEntry) => void;
     onNew: () => void;
+    /** Open file…: pick a .mosaic.zip (the same picker as ☰ → Open file… on a phone). */
+    onOpenFile: () => void;
 }
 
 /** The Mosaics view: every project, as a collection page (docs/design-system/README.md, Collection pages). */
-const ProjectsView = ({ library, onOpen, onNew }: ProjectsViewProps) => {
+const ProjectsView = ({ library, onOpen, onNew, onOpenFile }: ProjectsViewProps) => {
     const { projects, currentId } = library;
     const [sort, setSort] = useState<Sort>('recent');
     const [storage, setStorage] = useState<Storage>('browser');
@@ -110,11 +112,7 @@ const ProjectsView = ({ library, onOpen, onNew }: ProjectsViewProps) => {
     return (
         <>
             <AppBarAction>
-                <Button
-                    variant="outlined"
-                    onClick={() => setMessage(NOT_YET)}
-                    sx={{ display: { xs: 'none', md: 'inline-flex' } }}
-                >
+                <Button variant="outlined" onClick={onOpenFile} sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
                     Open file…
                 </Button>
                 <Button variant="contained" onClick={onNew}>

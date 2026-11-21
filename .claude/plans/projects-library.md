@@ -106,9 +106,9 @@ pages, Saving, Prompts, Dates and sizes).
 - Unchanged apart from the app bar (the _Mosaics_ link and the name) and ☰.
 - **☰ in the editor:** _Download project_ (a copy to send or keep), _Save as template_, then the app items.
 - **☰ in Mosaics:** _Open file…_ on a phone (on desktop it's beside _New mosaic_), then the app items.
-- **App items, in both:** _Show me around_, _Install app_, Theme, About.
+- **App items, in both:** _Show me around_, _Install app_, then Theme as one quiet row of three icon toggles just above About (`components/ThemeToggle`). Theme used to be a label and three full rows near the top: too loud for a setting most people change once.
 - Gone from ☰: _Open project or template…_ (now _Open file…_ in Mosaics), _Save project_ (it saves itself),
-  _Reset to defaults_ (a new mosaic starts from the defaults), _Forget image_ (delete the project from its card).
+  _Reset to defaults_ (_New mosaic_ starts from the defaults, with no picture), _Forget image_ (delete the project from its card).
   Each action now lives in one place.
 - **Walkthrough:** stop 8 points at the _Mosaics_ link instead of ☰: "Open Mosaics to find every mosaic you've made, saved as you work."
 
