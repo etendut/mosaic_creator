@@ -160,7 +160,7 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 ## Iconography
 
 - Material icons from `@mui/icons-material`, outlined where a variant exists (`InfoOutlined`). Always with a label or tooltip and an `aria-label`.
-- The mark (`src/favicon.svg`) is a 2 × 2 brick seen from above: four white studs on an `azure` square. It's the favicon; the app shows no logo in its own interface.
+- The mark (`src/favicon.svg`) is a picture turning into bricks: a rounded square split corner to corner by a white line, a smooth landscape (sky, sun, hills) in the top-left half, and the same scene as stud plates on `ink` in the bottom-right. It's the one place outside the mosaic where brick colours appear, since the mark stands for the mosaic. It's the favicon and the app icon (`public/icons/`, with a full-bleed `src/favicon-maskable.svg` for the maskable one); the app shows no logo in its own interface.
 
 ## The steps
 
