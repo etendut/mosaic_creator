@@ -1,7 +1,11 @@
-import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, IconButton, Stack, Tab, Tabs, Typography } from '@mui/material';
+import CollectionsIcon from '@mui/icons-material/Collections';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
 import ProjectMenu from '../components/ProjectMenu';
+import ProjectName from '../components/ProjectName';
+import { useMockLibrary } from '../library/mockLibrary';
+import ProjectsView from '../views/ProjectsView';
 import { recallImage } from '../lib/imageStore';
 import { registerServiceWorker } from '../lib/pwa';
 import Toast from '../ui/Toast';
@@ -109,16 +113,26 @@ const TOUR_STOPS: TourStop<Step>[] = [
     },
     {
         step: 'Print',
-        target: 'menu',
+        target: 'mosaics-link',
         inAppBar: 'start',
-        text: "Save your project from this menu to pick up where you left off, or open one you've saved.",
+        text: "Open Mosaics to find every mosaic you've made, saved as you work.",
     },
 ];
 
 const App = () => {
     const mosaic = useMosaic();
-    // the step in the URL; without an image every step shows Image, until one is chosen or restored
-    const { step: wanted, go, inUrl } = useStepRoute(STEPS, 'Image');
+    // PROTOTYPE: a library in memory; every project opens this one mosaic
+    const library = useMockLibrary();
+    // the view and step in the URL; without an image every step shows Image, until one is chosen or restored
+    const { route, go, goProjects, goProject, inUrl } = useStepRoute(STEPS, 'Image', library.currentId);
+    const inProjects = route.view === 'projects';
+    const wanted: Step = route.view === 'mosaic' ? route.step : 'Image';
+    // a project in the URL (a refresh, back or forward) is the open one
+    const routeProject = route.view === 'mosaic' ? route.projectId : null;
+    const { setCurrentId, projects } = library;
+    useEffect(() => {
+        if (routeProject && projects.some((p) => p.id === routeProject)) setCurrentId(routeProject);
+    }, [routeProject, projects, setCurrentId]);
     // where the current step's main action goes in the app bar
     const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
     // an opened project's image restarts the image step from that image
@@ -154,10 +168,10 @@ const App = () => {
     };
 
     /** Load an image into every step: the mosaic, and the image step to edit it again; then go to `to`. */
-    const showImage = (image: HTMLImageElement, remember = true, to: Step = 'Bricks') => {
+    const showImage = (image: HTMLImageElement, remember = true, to: Step | null = 'Bricks') => {
         mosaic.setImage(imageToCanvas(image), { remember });
         setOpenedImage({ image, key: Date.now() });
-        go(to, { replace: !remember });
+        if (to) go(to, { replace: !remember });
     };
 
     // a new version, published since this page opened: offered with Reload, never reloaded by itself
@@ -173,8 +187,9 @@ const App = () => {
         recallImage()
             .then((png) => (png ? pngToImage(png) : null))
             .then((image) => {
-                // back to the step in the URL (a refresh), or Bricks
-                if (image && !imageChosen.current) showImage(image, false, inUrl() ?? 'Bricks');
+                // back to the step in the URL (a refresh), or Bricks; Mosaics stays on Mosaics
+                if (image && !imageChosen.current)
+                    showImage(image, false, window.location.hash === '#/mosaics' ? null : (inUrl() ?? 'Bricks'));
             })
             .catch(() => {
                 // a stored image that no longer decodes is simply not restored
@@ -184,6 +199,17 @@ const App = () => {
 
     const content = () => {
         // ImageStep stays mounted (below) so the crop/edit state survives switching steps
+        if (inProjects)
+            return (
+                <ProjectsView
+                    library={library}
+                    onOpen={(entry) => {
+                        setCurrentId(entry.id);
+                        goProject(entry.id, entry.bricks ? 'Bricks' : 'Image');
+                    }}
+                    onNew={() => goProject(library.create().id, 'Image')}
+                />
+            );
         if (step === 'Image' || !mosaic.grid) return null;
         switch (step) {
             case 'Bricks':
@@ -233,6 +259,7 @@ const App = () => {
                 }}
             >
                 <ProjectMenu
+                    view={inProjects ? 'projects' : 'mosaic'}
                     mosaic={mosaic}
                     onImageOpened={(image) => {
                         imageChosen.current = true;
@@ -246,47 +273,102 @@ const App = () => {
                         go('Image');
                     }}
                 />
-                {/* the step's name, for screen readers: on screen the highlighted tab names it, on both layouts */}
-                <Typography variant="h3" component="h1" sx={visuallyHidden}>
-                    {step}
-                </Typography>
-                {/* on a phone, the first row is ☰ and the step's action, at the ends */}
-                <Box sx={{ flexGrow: 1, minHeight: 52, display: { md: 'none' } }} />
+                {inProjects ? (
+                    <Typography
+                        variant="subtitle1"
+                        component="h1"
+                        sx={{ flexGrow: 1, minHeight: { xs: 52, md: 60 }, display: 'flex', alignItems: 'center' }}
+                    >
+                        Mosaics
+                    </Typography>
+                ) : (
+                    <>
+                        {/* the step's name, for screen readers: on screen the highlighted tab names it */}
+                        <Typography variant="h3" component="h1" sx={visuallyHidden}>
+                            {step}
+                        </Typography>
+                        {/* back to every mosaic: the word on desktop, the icon alone on a phone */}
+                        <Button
+                            href="#/mosaics"
+                            data-tour="mosaics-link"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                goProjects();
+                            }}
+                            startIcon={<CollectionsIcon />}
+                            sx={{ display: { xs: 'none', md: 'inline-flex' }, flexShrink: 0, color: tokens.ink }}
+                        >
+                            Mosaics
+                        </Button>
+                        <IconButton
+                            href="#/mosaics"
+                            aria-label="Mosaics"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                goProjects();
+                            }}
+                            sx={{ display: { md: 'none' }, flexShrink: 0, width: 44, height: 44 }}
+                        >
+                            <CollectionsIcon />
+                        </IconButton>
+                        <Typography aria-hidden sx={{ display: { xs: 'none', md: 'block' }, color: tokens.muted }}>
+                            /
+                        </Typography>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                minHeight: 52,
+                                minWidth: 0,
+                                flex: { xs: 1, md: '0 1 auto' },
+                            }}
+                        >
+                            <ProjectName
+                                name={library.current?.name ?? 'New mosaic'}
+                                onRename={(name) => library.currentId && library.rename(library.currentId, name)}
+                            />
+                        </Box>
+                    </>
+                )}
 
-                <Tabs
-                    value={step}
-                    onChange={(_, value: Step) => go(value)}
-                    variant="scrollable"
-                    // arrows whenever the steps don't all fit (phones), so a cut-off row can't pass for the whole
-                    // list; each arrow fades out once that end is reached
-                    scrollButtons="auto"
-                    allowScrollButtonsMobile
-                    aria-label="Steps"
-                    sx={{
-                        order: { xs: 3, md: 0 },
-                        width: { xs: '100%', md: 'auto' },
-                        minHeight: { xs: 48, md: 60 },
-                        '& .MuiTab-root': { minHeight: { xs: 48, md: 60 }, paddingInline: { xs: 1.5, md: 2 } },
-                        '& .MuiTabs-scrollButtons': { width: 28, color: tokens.azure },
-                        '& .MuiTabs-scrollButtons.Mui-disabled': { opacity: 0.25 },
-                    }}
-                >
-                    {STEPS.map((name, i) => (
-                        <Tab
-                            key={name}
-                            value={name}
-                            disabled={name !== 'Image' && !hasImage}
-                            aria-label={name}
-                            label={
-                                <StepLabel
-                                    number={i + 1}
-                                    name={name}
-                                    state={step === name ? 'current' : name === 'Image' && hasImage ? 'done' : 'todo'}
-                                />
-                            }
-                        />
-                    ))}
-                </Tabs>
+                {!inProjects && (
+                    <Tabs
+                        value={step}
+                        onChange={(_, value: Step) => go(value)}
+                        variant="scrollable"
+                        // arrows whenever the steps don't all fit (phones), so a cut-off row can't pass for the whole
+                        // list; each arrow fades out once that end is reached
+                        scrollButtons="auto"
+                        allowScrollButtonsMobile
+                        aria-label="Steps"
+                        sx={{
+                            order: { xs: 3, md: 0 },
+                            width: { xs: '100%', md: 'auto' },
+                            minHeight: { xs: 48, md: 60 },
+                            '& .MuiTab-root': { minHeight: { xs: 48, md: 60 }, paddingInline: { xs: 1.5, md: 2 } },
+                            '& .MuiTabs-scrollButtons': { width: 28, color: tokens.azure },
+                            '& .MuiTabs-scrollButtons.Mui-disabled': { opacity: 0.25 },
+                        }}
+                    >
+                        {STEPS.map((name, i) => (
+                            <Tab
+                                key={name}
+                                value={name}
+                                disabled={name !== 'Image' && !hasImage}
+                                aria-label={name}
+                                label={
+                                    <StepLabel
+                                        number={i + 1}
+                                        name={name}
+                                        state={
+                                            step === name ? 'current' : name === 'Image' && hasImage ? 'done' : 'todo'
+                                        }
+                                    />
+                                }
+                            />
+                        ))}
+                    </Tabs>
+                )}
                 <Box
                     ref={setActionSlot}
                     sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, marginLeft: { md: 'auto' } }}
@@ -304,11 +386,11 @@ const App = () => {
             />
             <Walkthrough stops={TOUR_STOPS} run={touring} goTo={(to) => go(to)} onEnd={endTour} />
             <AppBarSlot.Provider value={actionSlot}>
-                <Box sx={{ display: step === 'Image' ? 'block' : 'none' }}>
+                <Box sx={{ display: step === 'Image' && !inProjects ? 'block' : 'none' }}>
                     <ImageStep
                         key={openedImage?.key}
                         initialSource={openedImage?.image}
-                        active={step === 'Image'}
+                        active={step === 'Image' && !inProjects}
                         onPictureChange={setPicturePicked}
                         onShowMeAround={seenTour ? undefined : (opener) => startTour(opener)}
                         onApply={(image) => {

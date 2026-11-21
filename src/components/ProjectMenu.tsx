@@ -25,6 +25,8 @@ import { useInstall } from '../hooks/useInstall';
 import ThemeChoice from './ThemeChoice';
 
 interface ProjectMenuProps {
+    /** Which view the menu is in: each has its own project items above the app items. */
+    view?: 'projects' | 'mosaic';
     mosaic: Mosaic;
     /** Called with the image from an opened project, so the app can show it and move on to the bricks step. */
     onImageOpened: (image: HTMLImageElement) => void;
@@ -35,7 +37,7 @@ interface ProjectMenuProps {
 }
 
 /** Save the whole project to a file, open one, or go back to the default settings. */
-const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: ProjectMenuProps) => {
+const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onForgetImage, onShowMeAround }: ProjectMenuProps) => {
     const menuButton = useRef<HTMLButtonElement>(null);
     const offerInstall = useInstall();
     const fileInput = useRef<HTMLInputElement>(null);
@@ -82,6 +84,60 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: P
         setMessage({ text: 'Settings reset to defaults.' });
     };
 
+    const mosaicItems = [
+        <MenuItem
+            key="m0"
+            onClick={() => {
+                setAnchor(null);
+                fileInput.current?.click();
+            }}
+        >
+            <ListItemText primary="Open project or template…" secondary="A saved project or template (.mosaic.zip)" />
+        </MenuItem>,
+        <MenuItem key="m1" onClick={() => save(false)} disabled={!mosaic.image}>
+            <ListItemText primary="Save project" secondary="Image, settings and parts list in one zip" />
+        </MenuItem>,
+        <MenuItem key="m2" onClick={() => save(true)}>
+            <ListItemText primary="Save as template" secondary="Just your settings, to reuse with a new image" />
+        </MenuItem>,
+        <Divider key="m3" />,
+        <MenuItem
+            key="m4"
+            onClick={() => {
+                setAnchor(null);
+                setConfirmReset(true);
+            }}
+        >
+            <ListItemText primary="Reset to defaults" secondary="Clears the settings this browser remembers" />
+        </MenuItem>,
+        <MenuItem
+            key="m5"
+            disabled={!mosaic.image}
+            onClick={() => {
+                setAnchor(null);
+                onForgetImage();
+                setMessage({ text: 'Image cleared. This browser no longer keeps it.' });
+            }}
+        >
+            <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
+        </MenuItem>,
+        <Divider key="m6" />,
+    ];
+    // in Mosaics: on desktop, Open file… sits in the app bar beside New mosaic; on a phone it's here
+    const projectItems = [
+        <MenuItem
+            key="open"
+            sx={{ display: { md: 'none' } }}
+            onClick={() => {
+                setAnchor(null);
+                fileInput.current?.click();
+            }}
+        >
+            <ListItemText primary="Open file…" secondary="A saved project (.mosaic.zip)" />
+        </MenuItem>,
+        <Divider key="divider" sx={{ display: { md: 'none' } }} />,
+    ];
+
     return (
         <>
             <IconButton
@@ -96,46 +152,7 @@ const ProjectMenu = ({ mosaic, onImageOpened, onForgetImage, onShowMeAround }: P
             </IconButton>
             {/* `menu`, not the default `selectedMenu`: it opens on its first item, not on the chosen theme */}
             <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)} variant="menu">
-                <MenuItem
-                    onClick={() => {
-                        setAnchor(null);
-                        fileInput.current?.click();
-                    }}
-                >
-                    <ListItemText
-                        primary="Open project or template…"
-                        secondary="A saved project or template (.mosaic.zip)"
-                    />
-                </MenuItem>
-                <MenuItem onClick={() => save(false)} disabled={!mosaic.image}>
-                    <ListItemText primary="Save project" secondary="Image, settings and parts list in one zip" />
-                </MenuItem>
-                <MenuItem onClick={() => save(true)}>
-                    <ListItemText
-                        primary="Save as template"
-                        secondary="Just your settings, to reuse with a new image"
-                    />
-                </MenuItem>
-                <Divider />
-                <MenuItem
-                    onClick={() => {
-                        setAnchor(null);
-                        setConfirmReset(true);
-                    }}
-                >
-                    <ListItemText primary="Reset to defaults" secondary="Clears the settings this browser remembers" />
-                </MenuItem>
-                <MenuItem
-                    disabled={!mosaic.image}
-                    onClick={() => {
-                        setAnchor(null);
-                        onForgetImage();
-                        setMessage({ text: 'Image cleared. This browser no longer keeps it.' });
-                    }}
-                >
-                    <ListItemText primary="Forget image" secondary="Clears the image this browser remembers" />
-                </MenuItem>
-                <Divider />
+                {view === 'projects' ? projectItems : mosaicItems}
                 <ThemeChoice />
                 <Divider />
                 <MenuItem

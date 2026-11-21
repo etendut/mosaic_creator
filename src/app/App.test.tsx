@@ -46,11 +46,11 @@ describe('<App />', () => {
 
     it('keeps the step in the URL, so back and forward move between steps', async () => {
         const user = await startMosaic();
-        expect(window.location.hash).toBe('#/bricks');
+        expect(window.location.hash).toMatch(/^#\/[\w-]+\/bricks$/);
         await goTo(user, 'Touch up');
-        expect(window.location.hash).toBe('#/touch-up');
+        expect(window.location.hash).toMatch(/\/touch-up$/);
         await goTo(user, 'Print');
-        expect(window.location.hash).toBe('#/print');
+        expect(window.location.hash).toMatch(/\/print$/);
 
         act(() => window.history.back());
         expect(await screen.findByRole('heading', { name: 'Touch up', level: 1 })).toBeInTheDocument();
@@ -63,8 +63,8 @@ describe('<App />', () => {
         window.history.replaceState(null, '', '#/parts');
         render(<App />, { wrapper: AppProviders });
         expect(await screen.findByRole('heading', { name: 'Parts', level: 1 })).toBeInTheDocument();
-        // restoring doesn't add a history entry
-        expect(window.location.hash).toBe('#/parts');
+        // restoring doesn't add a history entry; the old step-only URL gains the open project
+        expect(window.location.hash).toMatch(/^#\/[\w-]+\/parts$/);
     });
 
     it('shows Image for a step in the URL while there is no image', () => {
