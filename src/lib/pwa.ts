@@ -16,21 +16,39 @@ export const serviceWorkerAllowed = (
     (location.protocol === 'https:' || location.hostname === 'localhost') &&
     !location.pathname.includes('/pr-preview/');
 
+/** How often an app left open looks for a new version, besides each time you come back to it. */
+export const UPDATE_CHECK_MS = 60 * 60 * 1000;
+
 /**
  * Register the service worker. When a new version has installed and is waiting, `onUpdate` gets a function that
  * hands over to it and reloads, for the "A new version is ready" Reload. Nothing reloads by itself.
+ *
+ * It looks for a new version as the app starts, each time you come back to it (an installed app's window is often
+ * left open for days, and moving between steps never reloads the page), and every hour while it's open. Returns a
+ * function that stops looking (the app calls it when it goes; tests unmount it).
  */
 export const registerServiceWorker = async (
     onUpdate: (reload: () => void) => void,
     allowed = serviceWorkerAllowed(),
-) => {
-    if (!allowed) return;
+): Promise<() => void> => {
+    if (!allowed) return () => {};
     const worker = navigator.serviceWorker;
-    // the build writes the version into sw.js, so a new deploy is a changed file: look for one on every start
+    // the build writes the version into sw.js, so a new deploy is a changed file
     const registration = await worker.register('sw.js');
-    registration.update().catch(() => {
-        // offline: the kept version carries on
-    });
+    const check = () =>
+        registration.update().catch(() => {
+            // offline: the kept version carries on
+        });
+    void check();
+    const onShow = () => {
+        if (document.visibilityState === 'visible') void check();
+    };
+    document.addEventListener('visibilitychange', onShow);
+    const hourly = setInterval(() => void check(), UPDATE_CHECK_MS);
+    const stop = () => {
+        document.removeEventListener('visibilitychange', onShow);
+        clearInterval(hourly);
+    };
     const offer = (waiting: ServiceWorker) =>
         onUpdate(() => {
             worker.addEventListener('controllerchange', () => window.location.reload(), { once: true });
@@ -44,6 +62,7 @@ export const registerServiceWorker = async (
             if (installing.state === 'installed' && worker.controller) offer(installing);
         });
     });
+    return stop;
 };
 
 /** The browser's offer to install, held until ☰ uses it (it can arrive before the menu is first opened). */

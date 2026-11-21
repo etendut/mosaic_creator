@@ -1,4 +1,4 @@
-import { registerServiceWorker, serviceWorkerAllowed } from './pwa';
+import { registerServiceWorker, serviceWorkerAllowed, UPDATE_CHECK_MS } from './pwa';
 
 const live = { protocol: 'https:', hostname: 'etendut.github.io', pathname: '/mosaic_creator/' };
 
@@ -20,7 +20,16 @@ const fakeServiceWorker = (registration: { waiting?: object | null }, controller
     return { container, reg, handlers };
 };
 
+// each registration's checks (on coming back, and hourly), stopped after each test
+const stops: (() => void)[] = [];
+const register = async (...args: Parameters<typeof registerServiceWorker>) => {
+    const stop = await registerServiceWorker(...args);
+    stops.push(stop);
+    return stop;
+};
+
 afterEach(() => {
+    stops.splice(0).forEach((stop) => stop());
     Reflect.deleteProperty(navigator, 'serviceWorker');
 });
 
@@ -45,7 +54,7 @@ describe('registerServiceWorker', () => {
     it("registers this commit's worker, and offers nothing on the first install", async () => {
         const { container } = fakeServiceWorker({ waiting: { postMessage: vi.fn() } }, null);
         const onUpdate = vi.fn();
-        await registerServiceWorker(onUpdate, true);
+        await register(onUpdate, true);
         expect(container.register).toHaveBeenCalledWith('sw.js');
         expect(onUpdate).not.toHaveBeenCalled();
     });
@@ -54,7 +63,7 @@ describe('registerServiceWorker', () => {
         const waiting = { postMessage: vi.fn() };
         const { container } = fakeServiceWorker({ waiting }, {});
         const onUpdate = vi.fn();
-        await registerServiceWorker(onUpdate, true);
+        await register(onUpdate, true);
         expect(onUpdate).toHaveBeenCalledTimes(1);
         onUpdate.mock.calls[0][0]();
         expect(waiting.postMessage).toHaveBeenCalledWith('skip-waiting');
@@ -66,7 +75,7 @@ describe('registerServiceWorker', () => {
     it('offers a version that finishes installing while the app is open', async () => {
         const { reg, handlers } = fakeServiceWorker({ waiting: null }, {});
         const onUpdate = vi.fn();
-        await registerServiceWorker(onUpdate, true);
+        await register(onUpdate, true);
         let changed = () => {};
         reg.installing = { state: 'installing', addEventListener: (_t, f) => (changed = f) };
         handlers.updatefound();
@@ -77,9 +86,46 @@ describe('registerServiceWorker', () => {
         expect(onUpdate).toHaveBeenCalledTimes(1);
     });
 
+    it('looks for a new version as it starts, each time you come back to the app, and every hour', async () => {
+        vi.useFakeTimers();
+        try {
+            const { reg } = fakeServiceWorker({ waiting: null }, {});
+            const stop = await register(vi.fn(), true);
+            expect(reg.update).toHaveBeenCalledTimes(1);
+
+            // switching away doesn't check; coming back does
+            const visibility = vi.spyOn(document, 'visibilityState', 'get');
+            visibility.mockReturnValue('hidden');
+            document.dispatchEvent(new Event('visibilitychange'));
+            expect(reg.update).toHaveBeenCalledTimes(1);
+            visibility.mockReturnValue('visible');
+            document.dispatchEvent(new Event('visibilitychange'));
+            expect(reg.update).toHaveBeenCalledTimes(2);
+
+            // an app left open in view checks each hour
+            vi.advanceTimersByTime(UPDATE_CHECK_MS);
+            expect(reg.update).toHaveBeenCalledTimes(3);
+
+            // once stopped (the app has gone), neither checks
+            stop();
+            document.dispatchEvent(new Event('visibilitychange'));
+            vi.advanceTimersByTime(UPDATE_CHECK_MS * 2);
+            expect(reg.update).toHaveBeenCalledTimes(3);
+            visibility.mockRestore();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('carries on when a check fails, as it does offline', async () => {
+        const { reg } = fakeServiceWorker({ waiting: null }, {});
+        reg.update.mockRejectedValue(new Error('offline'));
+        await expect(register(vi.fn(), true)).resolves.toEqual(expect.any(Function));
+    });
+
     it('does nothing where it is not allowed', async () => {
         const { container } = fakeServiceWorker({}, null);
-        await registerServiceWorker(vi.fn(), false);
+        await register(vi.fn(), false);
         expect(container.register).not.toHaveBeenCalled();
     });
 });
