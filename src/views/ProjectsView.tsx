@@ -12,7 +12,7 @@ import {
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import SortIcon from '@mui/icons-material/Sort';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { sizes } from '../app/theme';
+import { sizes, tokens } from '../app/theme';
 import ProjectCard, { LoadingCard } from '../components/ProjectCard';
 import { formatBytes, formatDay } from '../library/format';
 import type { ProjectEntry } from '../library/types';
@@ -34,7 +34,7 @@ const mosaics = (n: number) => `${n} ${n === 1 ? 'mosaic' : 'mosaics'}`;
 /** Where projects are kept, said for the Storage help line: what the browser granted decides what it says. */
 const storageHelp = (library: Library) => {
     if (library.kind === 'folder')
-        return `Saved in ${library.folderName} on this device. Put the folder inside Google Drive or OneDrive to sync it.`;
+        return "You'll find each mosaic here as a .mosaic.zip file. Put the folder inside Google Drive or OneDrive to sync it.";
     if (isAppleMobile() && !installed())
         return 'Safari clears these after 7 days unused. Add the app to your Home Screen to keep them.';
     return library.persisted
@@ -134,28 +134,13 @@ const ProjectsView = ({
         }
     };
 
-    /** Pick a folder, then offer to copy in what the browser holds. */
+    /** Pick a folder; moving from the browser, offer to copy in what it holds (not when changing folders). */
     const chooseFolder = async () => {
-        const browserHas = await library.browserCount();
+        const browserHas = kind === 'browser' ? await library.browserCount() : 0;
         const folder = await library.chooseFolder();
         if (!folder) return;
         onStorageChanged();
         if (browserHas > 0) setOfferCopy({ count: browserHas, folder });
-    };
-
-    const changeStorage = async (to: string) => {
-        if (to === kind) return;
-        try {
-            if (to === 'browser') {
-                await library.keepInBrowser();
-                onStorageChanged();
-            } else if (library.folderName) {
-                await library.keepInFolder();
-                onStorageChanged();
-            } else await chooseFolder();
-        } catch (e) {
-            fail(e);
-        }
     };
 
     // on opening Mosaics: the one prompt due, once a visit
@@ -225,31 +210,34 @@ const ProjectsView = ({
             icon: <FolderOutlinedIcon />,
             content: (
                 <>
-                    {canUseFolders() ? (
-                        <ChoiceRow
-                            label="Keep mosaics in"
-                            value={kind}
-                            onChange={(v) => void changeStorage(v)}
-                            options={[
-                                ['browser', 'This browser'],
-                                ['folder', 'A folder'],
-                            ]}
-                            help={storageHelp(library)}
-                        />
-                    ) : (
-                        <HelpText>{storageHelp(library)}</HelpText>
+                    {/* a linked folder is where your mosaics are, not one of two options: it shows as a fact */}
+                    {kind === 'folder' && (
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                            <FolderOutlinedIcon sx={{ color: tokens.muted }} />
+                            <Typography sx={{ fontWeight: 500, minWidth: 0 }} noWrap>
+                                {library.folderName || 'Your folder'}
+                            </Typography>
+                        </Stack>
                     )}
-                    <Box>
+                    <HelpText>{storageHelp(library)}</HelpText>
+                    <Stack direction="row" spacing={1}>
                         {kind === 'folder' ? (
-                            <Button size="small" onClick={() => void chooseFolder()}>
-                                Choose folder…
+                            <Button size="small" onClick={() => void chooseFolder().catch(fail)}>
+                                Change folder…
                             </Button>
                         ) : (
-                            <Button size="small" onClick={() => void backUp()} disabled={projects.length === 0}>
-                                Back up all
-                            </Button>
+                            <>
+                                <Button size="small" onClick={() => void backUp()} disabled={projects.length === 0}>
+                                    Back up all
+                                </Button>
+                                {canUseFolders() && (
+                                    <Button size="small" onClick={() => void chooseFolder().catch(fail)}>
+                                        Use a folder…
+                                    </Button>
+                                )}
+                            </>
                         )}
-                    </Box>
+                    </Stack>
                 </>
             ),
         },

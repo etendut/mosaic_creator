@@ -281,7 +281,7 @@ export const useLibrary = () => {
 
     /**
      * Pick a folder (the browser asks which) and keep projects there from now on. Returns the folder's name, or null
-     * when you cancelled. The browser library stays as it was, to copy across or come back to.
+     * when you cancelled. The browser library stays as it was, to copy across.
      */
     const chooseFolder = useCallback(async () => {
         let handle: FolderHandle;
@@ -298,22 +298,6 @@ export const useLibrary = () => {
         await load(folderStore(handle), handle);
         return handle.name;
     }, [load, updateMeta]);
-
-    /** Keep projects in this browser again (the folder and its files stay as they are). */
-    const keepInBrowser = useCallback(async () => {
-        await updateMeta({ storage: 'browser' });
-        setStatus('loading');
-        await load(browserStore, null);
-    }, [load, updateMeta]);
-
-    /** Go back to the folder chosen before, if there was one. */
-    const keepInFolder = useCallback(async () => {
-        if (!folder) return chooseFolder();
-        await updateMeta({ storage: 'folder' });
-        setStatus('loading');
-        await load(folderStore(folder), folder);
-        return folder.name;
-    }, [folder, chooseFolder, load, updateMeta]);
 
     /** The browser needs your OK to read the folder again: ask (after a click), then read it. */
     const allowAccess = useCallback(async () => {
@@ -375,8 +359,6 @@ export const useLibrary = () => {
         importFile,
         backUpAll,
         chooseFolder,
-        keepInBrowser,
-        keepInFolder,
         allowAccess,
         copyBrowserIntoFolder,
         browserCount,

@@ -296,7 +296,7 @@ describe('Mosaics: keeping them in a folder', () => {
 
     it("says the browser keeps them, with no folder choice where the browser can't keep them in one", async () => {
         await openMosaicsWith('Balloon');
-        expect(screen.queryByRole('group', { name: 'Keep mosaics in' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Use a folder…' })).not.toBeInTheDocument();
         expect(screen.getByText(/Your browser (can clear|keeps) these/)).toBeInTheDocument();
     });
 
@@ -304,12 +304,18 @@ describe('Mosaics: keeping them in a folder', () => {
         const f = fakeFolder('Mosaics');
         withFolderPicker(f.folder);
         const user = await openMosaicsWith('Balloon', 'Fox');
-        await user.click(screen.getByRole('button', { name: 'A folder' }));
+        await user.click(screen.getByRole('button', { name: 'Use a folder…' }));
         const dialog = await screen.findByRole('dialog', { name: 'Copy your mosaics into Mosaics?' });
         await user.click(within(dialog).getByRole('button', { name: 'Copy 2 mosaics' }));
         expect(await screen.findByText('Copied 2 mosaics into Mosaics.')).toBeInTheDocument();
         expect(f.names()).toEqual(['Balloon.mosaic.zip', 'Fox.mosaic.zip']);
-        expect(screen.getByText(/Saved in Mosaics on this device/)).toBeInTheDocument();
+        // the folder shows as where your mosaics are, with one way to change it; the browser isn't a choice any more
+        expect(screen.getByText('Mosaics', { selector: 'p' })).toBeInTheDocument();
+        expect(screen.getByText(/You'll find each mosaic here/)).toBeInTheDocument();
+        // (the copy dialog closes first, so wait for the page behind it)
+        expect(await screen.findByRole('button', { name: 'Change folder…' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'This browser' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Back up all' })).not.toBeInTheDocument();
         expect(screen.queryByText('Backed up')).not.toBeInTheDocument();
 
         // saves go to the folder now
@@ -323,8 +329,23 @@ describe('Mosaics: keeping them in a folder', () => {
     it('stays in the browser when you cancel choosing a folder', async () => {
         withFolderPicker(null);
         const user = await openMosaicsWith('Balloon');
-        await user.click(screen.getByRole('button', { name: 'A folder' }));
-        expect(screen.getByRole('button', { name: 'This browser' })).toHaveAttribute('aria-pressed', 'true');
+        await user.click(screen.getByRole('button', { name: 'Use a folder…' }));
+        expect(screen.getByRole('button', { name: 'Use a folder…' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Back up all' })).toBeInTheDocument();
+    });
+
+    it("changes folder without offering to copy the browser's mosaics in again", async () => {
+        const first = fakeFolder('Mosaics');
+        withFolderPicker(first.folder);
+        const user = await openMosaicsWith('Balloon');
+        await user.click(screen.getByRole('button', { name: 'Use a folder…' }));
+        await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Copy 1 mosaic' }));
+        await screen.findByText('Copied 1 mosaic into Mosaics.');
+
+        withFolderPicker(fakeFolder('Club mosaics').folder);
+        await user.click(await screen.findByRole('button', { name: 'Change folder…' }));
+        expect(await screen.findByText('Club mosaics', { selector: 'p' })).toBeInTheDocument();
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('asks again for the folder when the browser needs your OK, then lists it', async () => {

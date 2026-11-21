@@ -90,7 +90,7 @@ The app has two views, and each uses the three zones.
 A page of things you choose between, where a step is one result you change. Mosaics is the first.
 
 - **Canvas**: a grid of cards, `project-card` (220px) at their narrowest and `space-2` apart, filling the Stage; one column on a phone. The current item comes first, then the rest in the chosen order. Screen readers get a list, each card labelled by its item's name.
-- **Tools**: what decides which items show and in what order, and where they're kept, as ControlSections like any step's tools. An empty collection keeps its tools, unlike an empty step: they're how you'd bring items in.
+- **Tools**: what decides which items show and in what order, and where they're kept, as ControlSections like any step's tools. An empty collection keeps its tools, unlike an empty step: they're how you'd bring items in. Where items are kept is a state with one way to change it, not a toggle: once you've linked a folder, it shows as a fact (its icon and name) with _Change folder…_, and the default it replaced isn't offered beside it.
 - **Actions**: the main action makes a new item (_New mosaic_); a secondary one brings one in (_Open file…_). Actions on one item sit on its card and nowhere else, not also in ☰: small text buttons in `muted` that turn `azure` on hover and focus, in the same order on every card, never behind a ⋮ menu. Deleting offers Undo.
 - **Current item** (the open project): an `azure` ring outside a `tray` gap, with `aria-current`, as on a ColorSwatch. Current isn't selected: you don't choose it with a toggle, so it never takes the `azureWash` selected state.
 - **Loading**: each card shows as a plain `tray` tile at its final size until its content arrives. No spinner, no shimmer.

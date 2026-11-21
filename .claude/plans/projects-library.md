@@ -43,7 +43,7 @@ Google Drive, OneDrive or Dropbox on your computer, their sync apps copy it, and
 1. **A browser library where folders aren't available.** `showDirectoryPicker()` exists in Chromium on desktop and
    recent Chrome for Android, not in Firefox or on iPhone and iPad. Folder-only would leave those users with no
    library, and would remove the "remembers your last mosaic" behaviour they have now. Recommendation: every
-   browser gets a library in IndexedDB; where the browser can, _Choose folder…_ moves it into a folder. One
+   browser gets a library in IndexedDB; where the browser can, _Use a folder…_ moves it into a folder. One
    storage interface, two backends.
 2. **Saving happens automatically.** The app already keeps your current mosaic without asking; the library
    extends that to every mosaic. The open project saves itself about two seconds after your last change. The
@@ -78,18 +78,24 @@ pages, Saving, Prompts, Dates and sizes).
   them, _Duplicate_ and _Delete_. Delete removes the file and a Toast offers Undo. The open project is _current_:
   an `azure` ring outside a `tray` gap and `aria-current`, as on the ColorSwatch, not the selected state of a
   toggle.
-- **Storage** group: a ChoiceRow, _This browser_ / _A folder_, with _Choose folder…_ as a small text button under
-  it once you pick folder. The help line follows the rule (you can't see where files go, so it gets one line) and
-  changes with the choice and with what the browser has granted (see "Keeping a browser library safe"):
-  - This browser, storage persisted: "Your browser keeps these until you clear its site data. Back up all saves
-    a copy."
-  - This browser, not persisted: "Your browser can clear these when it runs short of space. Back up all saves a
-    copy."
-  - This browser, on iPhone or iPad and not installed: "Safari clears these after 7 days unused. Add the app to
-    your Home Screen to keep them."
-  - A folder: "Saved in Mosaics on this device. Put the folder inside Google Drive or OneDrive to sync it."
-  - Without folder support, the folder option doesn't show, and the line stays the browser one.
-- _Back up all_ is a small text button under the Storage ChoiceRow while the library is in the browser.
+- **Storage** group: where your mosaics are, and one way to move them. Not a ChoiceRow: a folder, once linked, is
+  where they live, not one of two options, and showing _This browser_ beside it made it look unlinked.
+  - **In the browser:** the help line, then two small text buttons: _Back up all_ and, where the browser supports
+    folders, _Use a folder…_. Choosing a folder offers to copy the browser's mosaics into it.
+  - **In a folder:** the folder as a fact (`FolderOutlined` in `muted`, its name in `body1` at 500), the help line,
+    and _Change folder…_. No way back to the browser: change the folder instead. Changing folder doesn't offer the
+    browser's old mosaics again.
+  - **Without folder support:** the browser help line and _Back up all_.
+  - The help line follows the rule (you can't see where files go, so it gets one line) and changes with what the
+    browser has granted (see "Keeping a browser library safe"):
+    - This browser, storage persisted: "Your browser keeps these until you clear its site data. Back up all saves
+      a copy."
+    - This browser, not persisted: "Your browser can clear these when it runs short of space. Back up all saves a
+      copy."
+    - This browser, on iPhone or iPad and not installed: "Safari clears these after 7 days unused. Add the app to
+      your Home Screen to keep them."
+    - A folder: "You'll find each mosaic here as a .mosaic.zip file. Put the folder inside Google Drive or OneDrive
+      to sync it."
 - **Sort** group: a ChoiceRow, _Recent_ / _Name_.
 - **Loading.** While a folder's projects are read, each card shows as a plain `tray` tile of its final size, the
   same tile a project without a thumbnail shows. No spinner, no shimmer.
