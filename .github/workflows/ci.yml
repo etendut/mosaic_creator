@@ -26,6 +26,8 @@ jobs:
       - run: npm run build
         env:
           COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          # a PR's build is a preview of the version it gets on merge (empty on a push to main)
+          PR_NUMBER: ${{ github.event.pull_request.number }}
       - run: mv dist/index.html dist/mosaic-creator.html
       - uses: actions/upload-artifact@v7
         with:
