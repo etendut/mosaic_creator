@@ -17,4 +17,4 @@ One project in the Mosaics view: its picture, its name and when you last changed
 
 **Accessibility.** Cards sit in a list (`ul`), each `li` labelled by the project's name. Each button's name includes the project ("Delete Balloon"), so a list of them reads clearly.
 
-The consumer supplies the project entry (`name`, `savedAt`, `bricks`, `thumbnail`), whether it's current, and the open, duplicate and delete handlers. Planned in `.claude/plans/projects-library.md`.
+The consumer supplies the project entry (`name`, `savedAt`, `bricks`, `thumbnail`), whether it's current, and the open, duplicate and delete handlers. From `src/components/ProjectCard.tsx`.

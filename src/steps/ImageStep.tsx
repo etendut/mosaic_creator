@@ -21,7 +21,8 @@ const ASPECTS = [
 const NO_ADJUSTMENTS = { brightness: 100, contrast: 100, saturation: 100 };
 
 interface ImageTabProps {
-    onApply: (image: HTMLCanvasElement) => void;
+    /** The framed picture, and the name of the file it came from (none for a picture opened with a project). */
+    onApply: (image: HTMLCanvasElement, fileName?: string) => void;
     /** Whether the step is on screen; it stays mounted when it isn't, to keep the edits. */
     active?: boolean;
     /** Start from this image, e.g. the one in an opened project. */
@@ -41,6 +42,8 @@ const ImageStep = ({
 }: ImageTabProps) => {
     const fileInput = useRef<HTMLInputElement>(null);
     const [source, setSource] = useState<HTMLImageElement | null>(initialSource);
+    // the picked file's name, which names a new mosaic
+    const [fileName, setFileName] = useState<string | undefined>(undefined);
     useEffect(() => onPictureChange?.(!!source), [source, onPictureChange]);
     const [error, setError] = useState('');
     const [flipH, setFlipH] = useState(false);
@@ -79,6 +82,7 @@ const ImageStep = ({
             const image = await loadImage(url);
             if (source) URL.revokeObjectURL(source.src);
             setSource(image);
+            setFileName(file.name);
             reset();
         } catch (e) {
             URL.revokeObjectURL(url);
@@ -88,7 +92,7 @@ const ImageStep = ({
 
     const apply = () => {
         if (!flipped || !area) return;
-        onApply(applyEdits(flipped, { crop: area, rotation, ...adjustments }));
+        onApply(applyEdits(flipped, { crop: area, rotation, ...adjustments }), fileName);
     };
 
     const slider = (label: string, value: number, unit: string, props: object, onChange: (value: number) => void) => (

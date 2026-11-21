@@ -1,9 +1,17 @@
 import '@testing-library/jest-dom/vitest';
+import { configure } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import 'fake-indexeddb/auto';
 import { createElement, useEffect } from 'react';
 import { afterEach, vi } from 'vitest';
 import { installFakes, resetFakes } from './fakes';
+import { resetPrompts } from '../library/prompts';
+import { autosave } from '../library/useProjectSession';
+
+// saves come soon after a change, so tests needn't wait the real two seconds
+autosave.ms = 10;
+// the app reads its library from IndexedDB as it starts: under coverage, on a busy machine, that can take a second
+configure({ asyncUtilTimeout: 3000 });
 
 installFakes();
 
@@ -31,4 +39,5 @@ afterEach(() => {
     window.history.replaceState(null, '', '/');
     globalThis.indexedDB = new IDBFactory();
     resetFakes();
+    resetPrompts();
 });

@@ -1,8 +1,11 @@
-import { isInaccessible, render, screen, within } from '@testing-library/react';
+import { isInaccessible, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../app/App';
 import AppProviders from '../app/AppProviders';
 import { FAKE_PNG } from './fakes';
+import { browserStore } from '../library/browserStore';
+import { writeOpen } from '../library/meta';
+import { DEFAULT_PROJECT, packProject, unpackProject, type ProjectSettings } from '../mosaic/project';
 
 export type User = ReturnType<typeof userEvent.setup>;
 
@@ -22,8 +25,43 @@ export const chooseImage = (user: User, name?: string) =>
 export const applyImage = async (user: User) =>
     user.click((await screen.findAllByRole('button', { name: 'Use this image' }))[0]);
 
-/** Open the app, choose an image and use it: lands on the bricks step with a mosaic. */
-export const startMosaic = async () => {
+/** A project in the browser's library, with the fake picture, open last at `step`: as if from an earlier visit. */
+export const seedProject = async (
+    settings: Partial<ProjectSettings> = {},
+    { id = 'seeded', name = 'Balloon', step = 'bricks', savedAt = new Date() } = {},
+) => {
+    const zip = packProject({
+        settings: { ...DEFAULT_PROJECT, ...settings },
+        image: FAKE_PNG,
+        meta: { id, name, savedAt: savedAt.toISOString() },
+    });
+    await browserStore.write({ id, name, savedAt, bricks: null, size: zip.byteLength, thumbnail: null }, zip);
+    writeOpen({ id, step });
+    return id;
+};
+
+/** The settings autosave last wrote, once `check` passes on them. */
+export const expectSaved = (check: (settings: ProjectSettings) => void) =>
+    waitFor(
+        async () => {
+            const [latest] = (await browserStore.list()).sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+            expect(latest).toBeDefined();
+            check(unpackProject(await browserStore.read(latest.id)).settings);
+        },
+        { timeout: 3000 },
+    );
+
+/**
+ * Open the app, choose an image and use it: lands on the bricks step with a mosaic. With `settings`, the mosaic is
+ * one from an earlier visit with those settings instead.
+ */
+export const startMosaic = async (settings?: Partial<ProjectSettings>) => {
+    if (settings) {
+        await seedProject(settings);
+        const user = renderApp();
+        await screen.findByRole('heading', { name: 'Bricks', level: 1 });
+        return user;
+    }
     const user = renderApp();
     await chooseImage(user);
     await applyImage(user);

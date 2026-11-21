@@ -87,7 +87,7 @@ pages, Saving, Prompts, Dates and sizes).
     copy."
   - This browser, on iPhone or iPad and not installed: "Safari clears these after 7 days unused. Add the app to
     your Home Screen to keep them."
-  - A folder: "Saved in Mosaics on this computer. Put the folder inside Google Drive or OneDrive to sync it."
+  - A folder: "Saved in Mosaics on this device. Put the folder inside Google Drive or OneDrive to sync it."
   - Without folder support, the folder option doesn't show, and the line stays the browser one.
 - _Back up all_ is a small text button under the Storage ChoiceRow while the library is in the browser.
 - **Sort** group: a ChoiceRow, _Recent_ / _Name_.

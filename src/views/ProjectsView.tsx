@@ -1,11 +1,24 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Stack,
+    Typography,
+} from '@mui/material';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import SortIcon from '@mui/icons-material/Sort';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { sizes } from '../app/theme';
-import ProjectCard from '../components/ProjectCard';
-import { formatBytes } from '../library/format';
-import type { MockLibrary, ProjectEntry } from '../library/mockLibrary';
+import ProjectCard, { LoadingCard } from '../components/ProjectCard';
+import { formatBytes, formatDay } from '../library/format';
+import type { ProjectEntry } from '../library/types';
+import { claimPrompt } from '../library/prompts';
+import { canUseFolders, type Library, type LibraryPrompt } from '../library/useLibrary';
+import { installed, isAppleMobile } from '../lib/pwa';
 import AppBarAction from '../ui/AppBarAction';
 import ChoiceRow from '../ui/ChoiceRow';
 import HelpText from '../ui/HelpText';
@@ -14,45 +27,195 @@ import Toast, { type ToastMessage } from '../ui/Toast';
 import { Stage, Tray } from '../ui/Tray';
 
 type Sort = 'recent' | 'name';
-type Storage = 'browser' | 'folder';
 
-const canUseFolders = () => typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+/** "1 mosaic", "7 mosaics". */
+const mosaics = (n: number) => `${n} ${n === 1 ? 'mosaic' : 'mosaics'}`;
 
-// PROTOTYPE: what a button not built yet says, so a dead button doesn't pass for a broken one
-const NOT_YET: ToastMessage = { text: 'Not in this prototype yet.' };
-
-const STORAGE_HELP: Record<Storage, string> = {
-    browser: 'Your browser keeps these until you clear its site data. Back up all saves a copy.',
-    folder: 'Saved in Mosaics on this computer. Put the folder inside Google Drive or OneDrive to sync it.',
+/** Where projects are kept, said for the Storage help line: what the browser granted decides what it says. */
+const storageHelp = (library: Library) => {
+    if (library.kind === 'folder')
+        return `Saved in ${library.folderName} on this device. Put the folder inside Google Drive or OneDrive to sync it.`;
+    if (isAppleMobile() && !installed())
+        return 'Safari clears these after 7 days unused. Add the app to your Home Screen to keep them.';
+    return library.persisted
+        ? 'Your browser keeps these until you clear its site data. Back up all saves a copy.'
+        : 'Your browser can clear these when it runs short of space. Back up all saves a copy.';
 };
 
+/** A card-sized EmptyState in the canvas: what's wrong or what to do, and the one button for it. */
+const EmptyCard = ({
+    heading,
+    lead,
+    action,
+    onAction,
+    tip,
+}: {
+    heading: string;
+    lead: string;
+    action: string;
+    onAction: () => void;
+    tip?: string;
+}) => (
+    <Stack sx={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 1 }}>
+        <Tray sx={{ padding: 4, textAlign: 'center', maxWidth: sizes.emptyCard }}>
+            <Typography variant="h2" component="p" gutterBottom>
+                {heading}
+            </Typography>
+            <Typography color="textSecondary" sx={{ paddingBottom: 2.5 }}>
+                {lead}
+            </Typography>
+            <Button variant="contained" size="large" onClick={onAction}>
+                {action}
+            </Button>
+            {tip && (
+                <Typography variant="body2" color="textSecondary" sx={{ paddingTop: 2.5 }}>
+                    {tip}
+                </Typography>
+            )}
+        </Tray>
+    </Stack>
+);
+
 interface ProjectsViewProps {
-    library: MockLibrary;
+    library: Library;
+    /** The project open in the editor, shown first and marked current. */
+    openId: string | null;
+    /** Projects whose file wouldn't open this visit. */
+    broken: ReadonlySet<string>;
     onOpen: (entry: ProjectEntry) => void;
+    onOpenPrevious: (entry: ProjectEntry) => void;
     onNew: () => void;
-    /** Open file…: pick a .mosaic.zip (the same picker as ☰ → Open file… on a phone). */
+    /** Open file…: pick a project, template or backup (the same picker as ☰ → Open file… on a phone). */
     onOpenFile: () => void;
+    /** A project was deleted (the app closes it if it was open). */
+    onDeleted: (id: string) => void;
+    /** Projects are now kept somewhere else: the open one isn't among them. */
+    onStorageChanged: () => void;
 }
 
 /** The Mosaics view: every project, as a collection page (docs/design-system/README.md, Collection pages). */
-const ProjectsView = ({ library, onOpen, onNew, onOpenFile }: ProjectsViewProps) => {
-    const { projects, currentId } = library;
+const ProjectsView = ({
+    library,
+    openId,
+    broken,
+    onOpen,
+    onOpenPrevious,
+    onNew,
+    onOpenFile,
+    onDeleted,
+    onStorageChanged,
+}: ProjectsViewProps) => {
+    const { projects, status, kind } = library;
     const [sort, setSort] = useState<Sort>('recent');
-    const [storage, setStorage] = useState<Storage>('browser');
     const [message, setMessage] = useState<ToastMessage | null>(null);
+    // after choosing a folder: how many mosaics the browser has to copy across
+    const [offerCopy, setOfferCopy] = useState<{ count: number; folder: string } | null>(null);
+    // the prompt on screen, and whether you acted on it (closing it otherwise means no)
+    const showing = useRef<Exclude<LibraryPrompt, null> | null>(null);
+    const acted = useRef(false);
+
+    const fail = (e: unknown) => setMessage({ error: true, text: e instanceof Error ? e.message : String(e) });
 
     // the open project first, then the rest in the chosen order
     const shown = useMemo(() => {
         const order = [...projects].sort((a, b) =>
             sort === 'name' ? a.name.localeCompare(b.name) : b.savedAt.getTime() - a.savedAt.getTime(),
         );
-        const current = order.findIndex((p) => p.id === currentId);
+        const current = order.findIndex((p) => p.id === openId);
         return current > 0 ? [order[current], ...order.slice(0, current), ...order.slice(current + 1)] : order;
-    }, [projects, sort, currentId]);
+    }, [projects, sort, openId]);
 
-    const remove = (entry: ProjectEntry) => {
-        const undo = library.remove(entry.id);
-        setMessage({ text: `Deleted ${entry.name}.`, action: { label: 'Undo', onClick: undo } });
+    const backUp = async () => {
+        try {
+            const count = await library.backUpAll();
+            setMessage({ text: `Backed up ${mosaics(count)} in one zip. Open it with Open file… to restore them.` });
+        } catch (e) {
+            fail(e);
+        }
+    };
+
+    /** Pick a folder, then offer to copy in what the browser holds. */
+    const chooseFolder = async () => {
+        const browserHas = await library.browserCount();
+        const folder = await library.chooseFolder();
+        if (!folder) return;
+        onStorageChanged();
+        if (browserHas > 0) setOfferCopy({ count: browserHas, folder });
+    };
+
+    const changeStorage = async (to: string) => {
+        if (to === kind) return;
+        try {
+            if (to === 'browser') {
+                await library.keepInBrowser();
+                onStorageChanged();
+            } else if (library.folderName) {
+                await library.keepInFolder();
+                onStorageChanged();
+            } else await chooseFolder();
+        } catch (e) {
+            fail(e);
+        }
+    };
+
+    // on opening Mosaics: the one prompt due, once a visit
+    const { prompt } = library;
+    useEffect(() => {
+        if (!prompt || !claimPrompt()) return;
+        showing.current = prompt;
+        acted.current = false;
+        setMessage(
+            prompt === 'backup'
+                ? {
+                      text: `${mosaics(library.changedSinceBackup)} changed since your last backup.`,
+                      action: {
+                          label: 'Back up',
+                          onClick: () => {
+                              acted.current = true;
+                              void backUp();
+                          },
+                      },
+                      stays: true,
+                  }
+                : {
+                      text: 'Keep your mosaics as files you can see and sync.',
+                      action: {
+                          label: 'Choose folder…',
+                          onClick: () => {
+                              // acting on it answers it too: it doesn't come back
+                              void library.closePrompt('folder');
+                              acted.current = true;
+                              void chooseFolder();
+                          },
+                      },
+                      stays: true,
+                  },
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when a prompt is first due
+    }, [prompt]);
+
+    const closeMessage = () => {
+        if (showing.current && !acted.current) void library.closePrompt(showing.current);
+        showing.current = null;
+        setMessage(null);
+    };
+
+    const remove = async (entry: ProjectEntry) => {
+        try {
+            const undo = await library.remove(entry.id);
+            onDeleted(entry.id);
+            setMessage({ text: `Deleted ${entry.name}.`, action: { label: 'Undo', onClick: () => void undo() } });
+        } catch (e) {
+            fail(e);
+        }
+    };
+
+    const duplicate = async (entry: ProjectEntry) => {
+        try {
+            await library.duplicate(entry.id);
+        } catch (e) {
+            fail(e);
+        }
     };
 
     const groups: ToolGroup[] = [
@@ -65,21 +228,27 @@ const ProjectsView = ({ library, onOpen, onNew, onOpenFile }: ProjectsViewProps)
                     {canUseFolders() ? (
                         <ChoiceRow
                             label="Keep mosaics in"
-                            value={storage}
-                            onChange={(v) => setStorage(v as Storage)}
+                            value={kind}
+                            onChange={(v) => void changeStorage(v)}
                             options={[
                                 ['browser', 'This browser'],
                                 ['folder', 'A folder'],
                             ]}
-                            help={STORAGE_HELP[storage]}
+                            help={storageHelp(library)}
                         />
                     ) : (
-                        <HelpText>{STORAGE_HELP.browser}</HelpText>
+                        <HelpText>{storageHelp(library)}</HelpText>
                     )}
                     <Box>
-                        <Button size="small" onClick={() => setMessage(NOT_YET)}>
-                            {storage === 'folder' ? 'Choose folder…' : 'Back up all'}
-                        </Button>
+                        {kind === 'folder' ? (
+                            <Button size="small" onClick={() => void chooseFolder()}>
+                                Choose folder…
+                            </Button>
+                        ) : (
+                            <Button size="small" onClick={() => void backUp()} disabled={projects.length === 0}>
+                                Back up all
+                            </Button>
+                        )}
                     </Box>
                 </>
             ),
@@ -103,11 +272,76 @@ const ProjectsView = ({ library, onOpen, onNew, onOpenFile }: ProjectsViewProps)
     ];
 
     const space = projects.reduce((sum, p) => sum + p.size, 0);
-    const info: [string, string][] = [
-        ['Mosaics', projects.length.toLocaleString()],
-        ['Space', formatBytes(space)],
-        ...(storage === 'browser' ? [['Backed up', 'Never'] as [string, string]] : []),
-    ];
+    const info: [string, string][] =
+        status === 'ready'
+            ? [
+                  ['Mosaics', projects.length.toLocaleString()],
+                  ['Space', formatBytes(space)],
+                  ...(kind === 'browser'
+                      ? [
+                            ['Backed up', library.lastBackup ? formatDay(library.lastBackup) : 'Never'] as [
+                                string,
+                                string,
+                            ],
+                        ]
+                      : []),
+              ]
+            : [];
+
+    const canvas = () => {
+        if (status === 'blocked')
+            return (
+                <EmptyCard
+                    heading={`Open ${library.folderName ?? 'your folder'} again`}
+                    lead="Your browser needs your OK to read the folder."
+                    action="Allow access"
+                    onAction={() => void library.allowAccess()}
+                />
+            );
+        if (status === 'ready' && shown.length === 0)
+            return (
+                <EmptyCard
+                    heading="No mosaics yet"
+                    lead="Start with a picture. You'll find your mosaic here, saved as you go."
+                    action="New mosaic"
+                    onAction={onNew}
+                    tip="Have a .mosaic.zip? Open it with Open file…"
+                />
+            );
+        return (
+            <Box
+                component="ul"
+                aria-label="Mosaics"
+                aria-busy={status === 'loading'}
+                sx={{
+                    margin: 0,
+                    padding: 0,
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        sm: `repeat(auto-fill, minmax(${sizes.projectCard}px, 1fr))`,
+                    },
+                    alignContent: 'start',
+                }}
+            >
+                {status === 'loading'
+                    ? [0, 1, 2].map((i) => <LoadingCard key={i} />)
+                    : shown.map((entry) => (
+                          <ProjectCard
+                              key={entry.id}
+                              entry={entry}
+                              current={entry.id === openId}
+                              broken={broken.has(entry.id)}
+                              onOpen={() => onOpen(entry)}
+                              onOpenPrevious={() => onOpenPrevious(entry)}
+                              onDuplicate={() => void duplicate(entry)}
+                              onDelete={() => void remove(entry)}
+                          />
+                      ))}
+            </Box>
+        );
+    };
 
     return (
         <>
@@ -120,55 +354,35 @@ const ProjectsView = ({ library, onOpen, onNew, onOpenFile }: ProjectsViewProps)
                 </Button>
             </AppBarAction>
             <StepLayout groups={groups} info={info}>
-                <Stage sx={{ display: 'flex', flexDirection: 'column' }}>
-                    {shown.length > 0 ? (
-                        <Box
-                            component="ul"
-                            aria-label="Mosaics"
-                            sx={{
-                                margin: 0,
-                                padding: 0,
-                                display: 'grid',
-                                gap: 2,
-                                gridTemplateColumns: {
-                                    xs: '1fr',
-                                    sm: `repeat(auto-fill, minmax(${sizes.projectCard}px, 1fr))`,
-                                },
-                                alignContent: 'start',
-                            }}
-                        >
-                            {shown.map((entry) => (
-                                <ProjectCard
-                                    key={entry.id}
-                                    entry={entry}
-                                    current={entry.id === currentId}
-                                    onOpen={() => onOpen(entry)}
-                                    onDuplicate={() => library.duplicate(entry.id)}
-                                    onDelete={() => remove(entry)}
-                                />
-                            ))}
-                        </Box>
-                    ) : (
-                        <Stack sx={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 1 }}>
-                            <Tray sx={{ padding: 4, textAlign: 'center', maxWidth: sizes.emptyCard }}>
-                                <Typography variant="h2" component="p" gutterBottom>
-                                    No mosaics yet
-                                </Typography>
-                                <Typography color="textSecondary" sx={{ paddingBottom: 2.5 }}>
-                                    Start with a picture. You'll find your mosaic here, saved as you go.
-                                </Typography>
-                                <Button variant="contained" size="large" onClick={onNew}>
-                                    New mosaic
-                                </Button>
-                                <Typography variant="body2" color="textSecondary" sx={{ paddingTop: 2.5 }}>
-                                    Have a .mosaic.zip? Open it with Open file…
-                                </Typography>
-                            </Tray>
-                        </Stack>
-                    )}
-                </Stage>
+                <Stage sx={{ display: 'flex', flexDirection: 'column' }}>{canvas()}</Stage>
             </StepLayout>
-            <Toast message={message} onClose={() => setMessage(null)} />
+            <Dialog open={!!offerCopy} onClose={() => setOfferCopy(null)}>
+                <DialogTitle>Copy your mosaics into {offerCopy?.folder}?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Your browser keeps {mosaics(offerCopy?.count ?? 0)}. Copy them into {offerCopy?.folder} to keep
+                        them all in one place. The browser keeps its copies too.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOfferCopy(null)}>Not now</Button>
+                    <Button
+                        variant="contained"
+                        onClick={async () => {
+                            setOfferCopy(null);
+                            try {
+                                const count = await library.copyBrowserIntoFolder();
+                                setMessage({ text: `Copied ${mosaics(count)} into ${library.folderName}.` });
+                            } catch (e) {
+                                fail(e);
+                            }
+                        }}
+                    >
+                        Copy {mosaics(offerCopy?.count ?? 0)}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Toast message={message} onClose={closeMessage} />
         </>
     );
 };

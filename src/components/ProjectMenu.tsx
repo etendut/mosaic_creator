@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { downloadFile } from '../lib/download';
 import Toast, { type ToastMessage } from '../ui/Toast';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
-import { canvasToPng, pngToImage } from '../mosaic/image';
-import { packProject, projectFileName, unpackProject } from '../mosaic/project';
+import { canvasToPng } from '../mosaic/image';
+import { packProject, projectFileName } from '../mosaic/project';
 import type { Mosaic } from '../hooks/useMosaic';
 import { VERSION } from '../lib/version';
 import AboutDialog from './AboutDialog';
@@ -16,8 +16,10 @@ interface ProjectMenuProps {
     /** Which view the menu is in: each has its own project items above the app items. */
     view?: 'projects' | 'mosaic';
     mosaic: Mosaic;
-    /** Called with the image from an opened project, so the app can show it and move on to the bricks step. */
-    onImageOpened: (image: HTMLImageElement) => void;
+    /** The open project's name, for its downloaded file. */
+    name: string;
+    /** Open file…: what to say once the file is in (or why it isn't). */
+    onOpenFile: (file: File) => Promise<ToastMessage | null>;
     /** Start the Walkthrough; focus goes back to `opener` when it ends. */
     onShowMeAround: (opener: HTMLElement) => void;
     /** Set to open the file picker, so Mosaics' Open file… button (on desktop) uses the same one. */
@@ -28,7 +30,7 @@ interface ProjectMenuProps {
  * ☰, per view: in the editor, this mosaic's files (a copy to keep, or its settings as a template); in Mosaics, Open
  * file… on a phone. Then the app's own items in both: the tour, installing, Theme and About.
  */
-const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onShowMeAround, openFileRef }: ProjectMenuProps) => {
+const ProjectMenu = ({ view = 'mosaic', mosaic, name, onOpenFile, onShowMeAround, openFileRef }: ProjectMenuProps) => {
     const menuButton = useRef<HTMLButtonElement>(null);
     const offerInstall = useInstall();
     const fileInput = useRef<HTMLInputElement>(null);
@@ -45,8 +47,8 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onShowMeAround, o
         try {
             const image = !template && mosaic.image ? await canvasToPng(mosaic.image) : null;
             const wantedList = image && mosaic.order.length > 0 ? toBrickLinkXml(mosaic.order) : undefined;
-            const zip = packProject({ settings: mosaic.project, image }, wantedList);
-            downloadFile(zip, projectFileName(mosaic.settings.title, !image), 'application/zip');
+            const zip = packProject({ settings: mosaic.project, image, meta: { name } }, wantedList);
+            downloadFile(zip, projectFileName(name, !image), 'application/zip');
             setMessage({
                 text: image ? 'Project downloaded.' : 'Template saved: your settings, without an image.',
             });
@@ -56,19 +58,7 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onShowMeAround, o
     };
 
     const open = async (file: File | undefined) => {
-        if (!file) return;
-        try {
-            const project = unpackProject(new Uint8Array(await file.arrayBuffer()));
-            const image = project.image ? await pngToImage(project.image) : null;
-            mosaic.setProject(project.settings);
-            if (image) onImageOpened(image);
-            const kept = mosaic.image ? ' Your current image is kept.' : ' Choose an image to use it.';
-            setMessage({
-                text: image ? `Opened ${file.name}.` : `Opened template ${file.name}.${kept}`,
-            });
-        } catch (e) {
-            setMessage({ error: true, text: e instanceof Error ? e.message : String(e) });
-        }
+        if (file) setMessage(await onOpenFile(file));
     };
 
     // the editor: this mosaic's files. Opening and starting mosaics live in Mosaics, and it saves itself
@@ -91,7 +81,7 @@ const ProjectMenu = ({ view = 'mosaic', mosaic, onImageOpened, onShowMeAround, o
                 fileInput.current?.click();
             }}
         >
-            <ListItemText primary="Open file…" secondary="A saved project (.mosaic.zip)" />
+            <ListItemText primary="Open file…" secondary="A project, template or backup (.zip)" />
         </MenuItem>,
         <Divider key="divider" sx={{ display: { md: 'none' } }} />,
     ];

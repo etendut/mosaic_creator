@@ -138,25 +138,51 @@ export const PROJECT_FILES = {
     settings: 'project.json',
     image: 'image.png',
     wantedList: 'bricklink-wanted-list.xml',
+    /** The mosaic, small, for the Mosaics grid: so a list never rebuilds a mosaic. */
+    thumbnail: 'thumbnail.png',
 } as const;
 
 const NOT_A_PROJECT = "That file isn't a Mosaic Creator project.";
+
+/** What the library knows a project by, kept in project.json beside the settings. All optional: older files lack them. */
+export interface ProjectMeta {
+    id?: string;
+    name?: string;
+    /** The mosaic's size in bricks when saved. */
+    bricks?: [number, number] | null;
+    /** When it was saved (ISO 8601). */
+    savedAt?: string;
+}
 
 export interface ProjectContents {
     settings: ProjectSettings;
     /** The edited image as PNG bytes, if the project has one. */
     image: Uint8Array | null;
+    thumbnail?: Uint8Array | null;
+    meta?: ProjectMeta;
 }
 
 /**
  * Bundle a project as a zip: project.json (settings, readable in any text editor), image.png (lossless, opens in
  * any image viewer) and, if given, the BrickLink wanted list as it stood when saved.
  */
-export const packProject = ({ settings, image }: ProjectContents, wantedList?: string): Uint8Array => {
+export const packProject = (
+    { settings, image, thumbnail, meta = {} }: ProjectContents,
+    wantedList?: string,
+): Uint8Array => {
+    const { id, name, bricks } = meta;
     const files: Zippable = {
         [PROJECT_FILES.settings]: strToU8(
             JSON.stringify(
-                { app: PROJECT_APP, version: PROJECT_VERSION, savedAt: new Date().toISOString(), settings },
+                {
+                    app: PROJECT_APP,
+                    version: PROJECT_VERSION,
+                    savedAt: meta.savedAt ?? new Date().toISOString(),
+                    ...(id && { id }),
+                    ...(name && { name }),
+                    ...(bricks && { bricks }),
+                    settings,
+                },
                 null,
                 2,
             ),
@@ -164,14 +190,33 @@ export const packProject = ({ settings, image }: ProjectContents, wantedList?: s
     };
     // PNG is already compressed; storing it as-is saves time for nothing lost
     if (image) files[PROJECT_FILES.image] = [image, { level: 0 }];
+    if (thumbnail) files[PROJECT_FILES.thumbnail] = [thumbnail, { level: 0 }];
     if (wantedList) files[PROJECT_FILES.wantedList] = strToU8(wantedList);
     return zipSync(files);
 };
 
-export const unpackProject = (zip: Uint8Array): ProjectContents => {
+/** The metadata in a parsed project.json, each field checked. */
+const readMeta = (value: Loose): ProjectMeta => {
+    const bricks = value.bricks;
+    return {
+        id: isString(value.id) && value.id ? value.id : undefined,
+        name: isString(value.name) && value.name.trim() ? value.name.trim() : undefined,
+        bricks:
+            Array.isArray(bricks) && bricks.length === 2 && bricks.every((n) => isId(n) && n > 0)
+                ? [bricks[0], bricks[1]]
+                : null,
+        savedAt: isString(value.savedAt) && !isNaN(Date.parse(value.savedAt)) ? value.savedAt : undefined,
+    };
+};
+
+/**
+ * Read a project zip. With `withImage: false` the image isn't unzipped, for a list that only needs the name, date
+ * and thumbnail.
+ */
+export const unpackProject = (zip: Uint8Array, { withImage = true } = {}): Required<ProjectContents> => {
     let files: Record<string, Uint8Array>;
     try {
-        files = unzipSync(zip);
+        files = unzipSync(zip, { filter: (f) => withImage || f.name !== PROJECT_FILES.image });
     } catch {
         throw new Error(NOT_A_PROJECT);
     }
@@ -187,7 +232,57 @@ export const unpackProject = (zip: Uint8Array): ProjectContents => {
     if (!isObject(value) || value.app !== PROJECT_APP) throw new Error(NOT_A_PROJECT);
     if (typeof value.version === 'number' && value.version > PROJECT_VERSION)
         throw new Error('That project was saved by a newer version of Mosaic Creator.');
-    return { settings: sanitizeSettings(value.settings), image: files[PROJECT_FILES.image] ?? null };
+    return {
+        settings: sanitizeSettings(value.settings),
+        image: files[PROJECT_FILES.image] ?? null,
+        thumbnail: files[PROJECT_FILES.thumbnail] ?? null,
+        meta: readMeta(value),
+    };
+};
+
+/** What's at the top of a backup zip: every project's .mosaic.zip, and this to say what the zip is. */
+export const BACKUP_FILE = 'backup.json';
+
+/** One zip of many projects, each its own .mosaic.zip inside, so any one can be taken out and opened alone. */
+export const packBackup = (projects: { fileName: string; zip: Uint8Array }[]): Uint8Array => {
+    const files: Zippable = {
+        [BACKUP_FILE]: strToU8(
+            JSON.stringify(
+                {
+                    app: PROJECT_APP,
+                    version: PROJECT_VERSION,
+                    savedAt: new Date().toISOString(),
+                    projects: projects.length,
+                },
+                null,
+                2,
+            ),
+        ),
+    };
+    // the project zips hold PNGs, already compressed
+    for (const { fileName, zip } of projects) files[fileName] = [zip, { level: 0 }];
+    return zipSync(files);
+};
+
+/** The project zips in a backup, or null when the zip isn't one. */
+export const unpackBackup = (zip: Uint8Array): Uint8Array[] | null => {
+    let files: Record<string, Uint8Array>;
+    try {
+        files = unzipSync(zip);
+    } catch {
+        return null;
+    }
+    const about = files[BACKUP_FILE];
+    if (!about) return null;
+    try {
+        const value: unknown = JSON.parse(strFromU8(about));
+        if (!isObject(value) || value.app !== PROJECT_APP) return null;
+    } catch {
+        return null;
+    }
+    return Object.entries(files)
+        .filter(([name]) => name.endsWith('.mosaic.zip'))
+        .map(([, bytes]) => bytes);
 };
 
 /** File name for a project or a template (settings only), safe on Windows and macOS. */

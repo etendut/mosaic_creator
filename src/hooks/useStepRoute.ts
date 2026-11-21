@@ -3,6 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 /** A step's name as it appears in the URL: "Touch up" → "touch-up". */
 export const stepSlug = (step: string) => step.toLowerCase().replace(/\s+/g, '-');
 
+/** The step a slug names, if any. */
+export const stepFromSlug = <S extends string>(slug: string, steps: readonly S[]) =>
+    steps.find((s) => stepSlug(s) === slug) ?? null;
+
 /** Where the app is: the Mosaics view, or one project at one step (null: the open project). */
 export type Route<S extends string> = { view: 'projects' } | { view: 'mosaic'; projectId: string | null; step: S };
 
@@ -47,9 +51,13 @@ export const useStepRoute = <S extends string>(steps: readonly S[], first: S, pr
         (to: S, options: { replace?: boolean } = {}) => navigate({ view: 'mosaic', projectId, step: to }, options),
         [navigate, projectId],
     );
-    const goProjects = useCallback(() => navigate({ view: 'projects' }), [navigate]);
+    const goProjects = useCallback(
+        (options: { replace?: boolean } = {}) => navigate({ view: 'projects' }, options),
+        [navigate],
+    );
     const goProject = useCallback(
-        (id: string, step: S) => navigate({ view: 'mosaic', projectId: id, step }),
+        (id: string, step: S, options: { replace?: boolean } = {}) =>
+            navigate({ view: 'mosaic', projectId: id, step }, options),
         [navigate],
     );
 

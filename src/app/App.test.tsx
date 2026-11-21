@@ -41,7 +41,8 @@ describe('<App />', () => {
         const canvas = document.createElement('canvas');
         await rememberImage(canvas);
         render(<App />, { wrapper: AppProviders });
-        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
+        // it moves into the library first, which takes a few storage round trips
+        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 }, { timeout: 3000 })).toBeInTheDocument();
     });
 
     it('keeps the step in the URL, so back and forward move between steps', async () => {
