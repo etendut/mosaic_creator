@@ -15,13 +15,6 @@ describe('imageStore', () => {
         expect(await recallImage()).toBeNull();
     });
 
-    it("doesn't let a slow save overwrite a forget that came after it", async () => {
-        const saving = rememberImage(canvas());
-        await forgetImage();
-        await saving;
-        expect(await recallImage()).toBeNull();
-    });
-
     it('keeps the old image when a new one cannot be encoded', async () => {
         await rememberImage(canvas());
         canvasFailures.nextToBlob = true;

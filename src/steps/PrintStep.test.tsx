@@ -1,9 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { DEFAULT_PROJECT } from '../mosaic/project';
-import { goTo, startMosaic, type User } from '../test/app';
-
-const remember = (settings: object) =>
-    localStorage.setItem('mosaic-creator:settings', JSON.stringify({ ...DEFAULT_PROJECT, ...settings }));
+import { expectSaved, goTo, startMosaic, type User } from '../test/app';
 
 const tools = () => within(screen.getByRole('complementary', { name: 'Tools' }));
 const choose = (user: User, group: 'Paper' | 'Print', option: string | RegExp) =>
@@ -47,7 +43,7 @@ describe('Print step', () => {
         await choose(user, 'Print', /^Cards/);
         await choose(user, 'Paper', 'A3');
         expect(screen.getByText(/per A3 (landscape|portrait) page/)).toBeInTheDocument();
-        expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).card.paperSize).toBe('A3');
+        await expectSaved((s) => expect(s.card.paperSize).toBe('A3'));
         // still the map page, then the cards, and still on the cards
         expect(screen.getAllByRole('radio', { name: /^(Map page|Cards)/ })).toHaveLength(2);
         expect(screen.getByRole('radio', { name: /^Cards/ })).toBeChecked();
@@ -56,8 +52,7 @@ describe('Print step', () => {
     });
 
     it('splits big jobs into the map page and batches of cards', async () => {
-        remember({ plateId: '395826', platesAcross: 40 });
-        const user = await startMosaic();
+        const user = await startMosaic({ plateId: '395826', platesAcross: 40 });
         await goTo(user, 'Print');
         expect(screen.getByText(/Large jobs print in parts/)).toBeInTheDocument();
         const options = within(screen.getByRole('radiogroup', { name: 'Print' })).getAllByRole('radio');
@@ -73,8 +68,7 @@ describe('Print step', () => {
     });
 
     it('prints big plates one to an A3 sheet, and says why', async () => {
-        remember({ plateId: '6061048', platesAcross: 2 });
-        const user = await startMosaic();
+        const user = await startMosaic({ plateId: '6061048', platesAcross: 2 });
         await goTo(user, 'Print');
         await choose(user, 'Print', /^Cards/);
         expect(screen.getByText(/1 per A3 portrait page/)).toBeInTheDocument();

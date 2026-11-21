@@ -1,8 +1,8 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import AppProviders from './AppProviders';
 import { rememberImage } from '../lib/imageStore';
-import { goTo, projectMenu, startMosaic } from '../test/app';
+import { goTo, startMosaic } from '../test/app';
 
 describe('<App />', () => {
     it('starts on the image step, with the menu, the steps and no title bar', () => {
@@ -41,16 +41,18 @@ describe('<App />', () => {
         const canvas = document.createElement('canvas');
         await rememberImage(canvas);
         render(<App />, { wrapper: AppProviders });
+        // it moves into the library first, which takes a few storage round trips
         expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
     });
 
     it('keeps the step in the URL, so back and forward move between steps', async () => {
         const user = await startMosaic();
-        expect(window.location.hash).toBe('#/bricks');
+        // a picture used before the library has loaded shows at #/bricks; the open project joins the URL once it has
+        await waitFor(() => expect(window.location.hash).toMatch(/^#\/[\w-]+\/bricks$/));
         await goTo(user, 'Touch up');
-        expect(window.location.hash).toBe('#/touch-up');
+        expect(window.location.hash).toMatch(/\/touch-up$/);
         await goTo(user, 'Print');
-        expect(window.location.hash).toBe('#/print');
+        expect(window.location.hash).toMatch(/\/print$/);
 
         act(() => window.history.back());
         expect(await screen.findByRole('heading', { name: 'Touch up', level: 1 })).toBeInTheDocument();
@@ -63,8 +65,8 @@ describe('<App />', () => {
         window.history.replaceState(null, '', '#/parts');
         render(<App />, { wrapper: AppProviders });
         expect(await screen.findByRole('heading', { name: 'Parts', level: 1 })).toBeInTheDocument();
-        // restoring doesn't add a history entry
-        expect(window.location.hash).toBe('#/parts');
+        // restoring doesn't add a history entry; the old step-only URL gains the open project
+        expect(window.location.hash).toMatch(/^#\/[\w-]+\/parts$/);
     });
 
     it('shows Image for a step in the URL while there is no image', () => {
@@ -74,11 +76,14 @@ describe('<App />', () => {
         expect(screen.getByText('Start with a picture')).toBeVisible();
     });
 
-    it('forgets the image when asked, back to a fresh start', async () => {
+    it('starts a new mosaic from the defaults, with no picture', async () => {
         const user = await startMosaic();
-        await projectMenu(user, /Forget image/);
-        expect(screen.getByText('Start with a picture')).toBeVisible();
+        await goTo(user, 'Cards');
+        await user.type(screen.getByRole('textbox', { name: 'Title' }), '!');
+        await user.click(screen.getAllByRole('link', { name: /Mosaics/ })[0]);
+        await user.click(screen.getByRole('button', { name: 'New mosaic' }));
+        expect(await screen.findByText('Start with a picture')).toBeVisible();
         expect(screen.getByRole('tab', { name: 'Bricks' })).toBeDisabled();
-        expect(await screen.findByText(/no longer keeps it/)).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: 'Cards' })).toBeDisabled();
     });
 });

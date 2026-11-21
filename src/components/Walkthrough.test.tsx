@@ -27,7 +27,7 @@ const STOPS = [
     ['Cards', 'group-size', 'Each card covers one plate.'],
     ['Parts', 'download-xml', 'Download the parts as a BrickLink wanted list.'],
     ['Print', 'print-action', 'Print the map page for yourself and one card for each builder.'],
-    ['Print', 'menu', 'Save your project from this menu to pick up where you left off'],
+    ['Print', 'mosaics-link', "Open Mosaics to find every mosaic you've made"],
 ] as const;
 
 describe('Walkthrough', () => {

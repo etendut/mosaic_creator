@@ -42,8 +42,9 @@ export default defineConfig({
         environment: 'jsdom',
         globals: true,
         setupFiles: ['./src/test/setup.ts'],
-        // whole-app tests rebuild the mosaic on every change, which takes a few seconds on a slow CI runner
-        testTimeout: 15000,
+        // whole-app tests rebuild the mosaic on every change: the slowest take about 10s here under coverage, and a CI
+        // runner can take two to three times that. A limit only cuts short a test that would fail anyway.
+        testTimeout: 30000,
         coverage: {
             provider: 'v8',
             include: ['src/**/*.{ts,tsx}'],

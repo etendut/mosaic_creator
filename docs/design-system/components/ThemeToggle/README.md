@@ -2,9 +2,9 @@
 
 How you pick light or dark: Auto follows the device, Light and Dark fix the theme for this browser.
 
-**Where.** In ☰, its own block after the project items and before About, with a divider on each side. It doesn't go in the app bar, which holds ☰, the steps and one action.
+**Where.** In ☰, one row just above About, after a divider. It's a setting most people change once, so it sits low and stays quiet. It doesn't go in the app bar, which holds ☰, the view's links and one action.
 
-**Look.** A `subtitle2` label "Theme" in `muted`, then three menu items, each with an outlined icon before its name: `BrightnessAutoOutlined` Auto, `LightModeOutlined` Light, `DarkModeOutlined` Dark. All three are always in view. Never one item that cycles through them, and never a sub-menu. The chosen one has the system's one selected state: `azureWash` fill, `azure` text and icon at weight 500. Auto has a secondary line in `muted`, "Follows this device", because you can't see that on the page. Light and Dark need none.
+**Look.** One row: "Theme" in `body2` `muted` on the left, then three 40px icon toggles on the right: `BrightnessAutoOutlined` (Auto), `LightModeOutlined` (Light), `DarkModeOutlined` (Dark). Unchosen icons are `muted` on no fill; the chosen one has the system's one selected state: `azureWash` fill, `azure` icon and border. Each toggle has a tooltip and a spoken name: "Auto, follows this device" (you can't see that on the page), "Light", "Dark". All three are always in view. Never one item that cycles through them, never a sub-menu, and never a label, three rows and a fill in the middle of the menu.
 
 **Behaviour.**
 
@@ -13,6 +13,6 @@ How you pick light or dark: Auto follows the device, Light and Dark fix the them
 - The browser remembers the choice, like the settings.
 - Printing is always light, whatever the choice: a printed page is paper.
 
-**Accessibility.** The three items are `menuitemradio` with `aria-checked`, in a group labelled "Theme", so arrow keys reach them like any other menu item.
+**Accessibility.** The three toggles are `menuitemradio` with `aria-checked` and an `aria-label`, in a group labelled "Theme", so the arrow keys reach them like any other menu item: up from the top of ☰ reaches About, then Dark.
 
 The consumer supplies nothing. MUI's `useColorScheme()` gives `mode` (`system`, `light` or `dark`) and `setMode`, and stores the choice. `ThemeProvider defaultMode="system"` in `src/main.tsx` makes Auto the default. It goes in `src/components/ProjectMenu.tsx`.

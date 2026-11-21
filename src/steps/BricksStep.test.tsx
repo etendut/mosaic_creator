@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { info, infoLabels, startMosaic } from '../test/app';
+import { info, infoLabels, startMosaic, expectSaved } from '../test/app';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -121,7 +121,7 @@ describe('Bricks step', () => {
         // pressing the chosen one again keeps it
         await user.click(dithering.getByRole('button', { name: 'Pattern' }));
         expect(dithering.getByRole('button', { name: 'Pattern' })).toHaveAttribute('aria-pressed', 'true');
-        expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).dithering).toBe('pattern');
+        await expectSaved((s) => expect(s.dithering).toBe('pattern'));
     });
 
     it('saves the palette with colour names', async () => {

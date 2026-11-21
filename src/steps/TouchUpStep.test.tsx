@@ -1,5 +1,5 @@
 import { fireEvent, screen, within } from '@testing-library/react';
-import { goTo, info, startMosaic, type User } from '../test/app';
+import { goTo, info, startMosaic, type User, expectSaved } from '../test/app';
 
 /**
  * The map canvas, laid out so each brick is 10 px square on screen (jsdom does no layout), and a way to press, move
@@ -29,11 +29,9 @@ const tool = (name: string | RegExp) =>
     within(screen.getByRole('complementary', { name: 'Tools' })).getByRole('button', { name });
 /** The toast's action button. */
 const toastAction = (name: string) => within(screen.getByRole('status')).getByRole('button', { name });
-/** Bricks touched up to black (BrickLink 11), from the saved touch-ups. */
-const blackBricks = (): number =>
-    (JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps?.edits ?? []).filter(
-        (e: unknown[]) => e[2] === 11,
-    ).length;
+/** Wait until the saved touch-ups have `n` bricks touched up to black (BrickLink 11). */
+const expectBlackSaved = (n: number) =>
+    expectSaved((s) => expect((s.touchUps?.edits ?? []).filter((e) => e[2] === 11).length).toBe(n));
 /** The touched-up count, from the step's Info. */
 const touchedUp = (n: number) => expect(info('Touched up')).toBe(`${n} brick${n === 1 ? '' : 's'}`);
 const noneTouchedUp = () => touchedUp(0);
@@ -147,8 +145,8 @@ describe('Touch up step', () => {
         m.click(4, 4);
         touchedUp(1);
         // the painted brick is saved with the settings
-        expect(blackBricks()).toBe(1);
-        expect(JSON.parse(localStorage.getItem('mosaic-creator:settings')!).touchUps.edits).toEqual([[4, 4, 11]]);
+        await expectBlackSaved(1);
+        await expectSaved((s) => expect(s.touchUps?.edits).toEqual([[4, 4, 11]]));
 
         m.down(6, 4);
         m.move(7, 4);
@@ -190,7 +188,7 @@ describe('Touch up step', () => {
         await brush(user, 3, 'Square');
         map().click(5, 5);
         touchedUp(9);
-        expect(blackBricks()).toBe(9);
+        await expectBlackSaved(9);
 
         await brush(user, 3, 'Round');
         expect(tool('Round brush')).toHaveAttribute('aria-pressed', 'true');
@@ -263,7 +261,7 @@ describe('Touch up step', () => {
         // the brush then paints with the picked colour
         await user.click(tool('Brush'));
         m.click(6, 6);
-        expect(blackBricks()).toBe(2);
+        await expectBlackSaved(2);
     });
 
     it('compares before and after, without painting while showing before', async () => {
@@ -291,28 +289,28 @@ describe('Touch up step', () => {
 
         await paintWith(user, 'Black');
         map().click(4, 4);
-        expect(blackBricks()).toBe(1);
+        await expectBlackSaved(1);
         await user.click(tool('Clean up single bricks'));
         expect(screen.getByText('Cleaned up 1 brick.')).toBeInTheDocument();
-        expect(blackBricks()).toBe(0);
+        await expectBlackSaved(0);
         // the toast offers Undo
         await user.click(toastAction('Undo'));
-        expect(blackBricks()).toBe(1);
+        await expectBlackSaved(1);
         await user.click(tool('Clean up single bricks'));
-        expect(blackBricks()).toBe(0);
+        await expectBlackSaved(0);
 
         // pairs too
         await user.click(tool('Undo'));
         map().click(5, 4);
-        expect(blackBricks()).toBe(2);
+        await expectBlackSaved(2);
         await user.click(tool('Clean up single bricks'));
         expect(screen.getByText('No stray bricks to clean up.')).toBeInTheDocument();
         await user.click(tool('Clean up single bricks and pairs'));
         expect(screen.getByText('Cleaned up 2 bricks.')).toBeInTheDocument();
-        expect(blackBricks()).toBe(0);
+        await expectBlackSaved(0);
 
         await user.click(tool('Undo'));
-        expect(blackBricks()).toBe(2);
+        await expectBlackSaved(2);
     });
 
     it('zooms with the control or Ctrl + wheel, and scrolls the zoomed map with Space or the middle button', async () => {

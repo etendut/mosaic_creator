@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { catalog } from '../data/catalog';
-import { forgetImage, rememberImage } from '../lib/imageStore';
 import { cardColorCounts, cardGridSize, cellsPerCard, compileMosaicCards } from '../mosaic/cards';
 import { cardLayout } from '../mosaic/layout';
 import type { ColorMetric } from '../mosaic/color';
@@ -14,40 +13,19 @@ import type { CardSettings } from '../mosaic/types';
 
 export { MAX_PLATES_ACROSS } from '../mosaic/project';
 
-const STORAGE_KEY = 'mosaic-creator:settings';
-
 /** How many touch-up steps Undo can go back. */
 export const UNDO_LIMIT = 50;
 
-// Browser storage can be missing or blocked (private windows, locked-down machines); the app works without it.
-const recall = (): ProjectSettings => {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? sanitizeSettings(JSON.parse(saved)) : DEFAULT_PROJECT;
-    } catch {
-        return DEFAULT_PROJECT;
-    }
-};
-const remember = (settings: ProjectSettings) => {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch {
-        // not remembered this time; nothing else depends on it
-    }
-};
-
-/** All app state plus everything derived from it. */
+/** One mosaic's state plus everything derived from it. Keeping it between visits is the library's job. */
 export const useMosaic = () => {
     const [image, setImageState] = useState<HTMLCanvasElement | null>(null);
-    const [project, setProject] = useState<ProjectSettings>(recall);
+    const [project, setProject] = useState<ProjectSettings>(DEFAULT_PROJECT);
     // touch-ups before (past) and after (future) the current ones, for undo and redo; not saved
     const [history, setHistory] = useState<{ past: (TouchUps | null)[]; future: (TouchUps | null)[] }>({
         past: [],
         future: [],
     });
     const { brickId, plateId, platesAcross, card: settings, preset, maxColors, metric, dithering } = project;
-
-    useEffect(() => remember(project), [project]);
 
     const update = (change: Partial<ProjectSettings>) => setProject((p) => ({ ...p, ...change }));
 
@@ -157,13 +135,8 @@ export const useMosaic = () => {
         update({ touchUps: null });
     };
 
-    /** Use a new image (or none). It is remembered for the next visit unless it came from there. */
-    const setImage = (next: HTMLCanvasElement | null, { remember = true } = {}) => {
-        setImageState(next);
-        if (!remember) return;
-        if (next) rememberImage(next);
-        else forgetImage();
-    };
+    /** Use a new image (or none). The open project saves it (src/library/useProjectSession.ts). */
+    const setImage = (next: HTMLCanvasElement | null) => setImageState(next);
 
     return {
         image,

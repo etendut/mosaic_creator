@@ -79,6 +79,10 @@ export const RADIUS_CONTROL_PX = 6;
 export const sizes = {
     /** `tour-card`: a walkthrough card's width on desktop; on a phone it's the screen less `space-2` each side. */
     tourCard: 320,
+    /** `project-card`: the narrowest a ProjectCard gets in the Mosaics grid. */
+    projectCard: 220,
+    /** `empty-card`: the empty-state card's width. */
+    emptyCard: 380,
 } as const;
 
 /** The attribute MUI puts on <html> for the colour scheme; a printed page sets it to light on itself. */
