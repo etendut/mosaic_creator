@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { configure } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import 'fake-indexeddb/auto';
 import { createElement, useEffect } from 'react';
@@ -36,6 +36,9 @@ vi.mock('react-easy-crop', () => ({
 }));
 
 afterEach(() => {
+    // unmount first: unmounting runs any effects still pending, such as the app's start once its library has loaded,
+    // which can write a project into the URL; reset after that, or it leaks into the next test
+    cleanup();
     // each test starts as a first visit: nothing remembered, and no step in the URL
     localStorage.clear();
     window.history.replaceState(null, '', '/');
