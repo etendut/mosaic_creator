@@ -5,7 +5,7 @@
 // on every visit, installs the new worker with its own cache, and the new worker waits until the page asks it to take
 // over ("A new version is ready", Reload). Nothing reloads by itself.
 
-const VERSION = 'bdc62357511aabbd64147b8a3fa5e2aa2ebc99de';
+const VERSION = 'd9e48e429c556c31085acfa0fc362df565d140a6';
 const CACHE = `mosaic-creator-${VERSION}`;
 const APP = ['./', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png'];
 
