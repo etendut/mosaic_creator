@@ -1,23 +1,40 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react';
 import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { defineConfig, type Plugin } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { releaseVersion } from './src/lib/releaseVersion';
 
-// The commit shown as the app's version. CI sets COMMIT_SHA (for a PR, its head commit rather than the temporary
-// merge commit it checks out); otherwise it's the checked-out commit, or empty outside a git checkout.
-const commit = () => {
-    if (process.env.COMMIT_SHA) return process.env.COMMIT_SHA;
+/** A git command's output, or undefined outside a git checkout. */
+const git = (command: string) => {
     try {
-        // eslint-disable-next-line sonarjs/no-os-command-from-path -- build time only, on the developer's or CI's own git
-        return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+        return execSync(`git ${command}`, { stdio: ['ignore', 'pipe', 'ignore'] })
             .toString()
             .trim();
     } catch {
-        return '';
+        return undefined;
     }
 };
+
+// The commit the app was built from: it versions the service worker, and About links to it. CI sets COMMIT_SHA (for a
+// PR, its head commit rather than the temporary merge commit it checks out); otherwise the checked-out commit, or
+// empty outside a git checkout.
+const commit = () => process.env.COMMIT_SHA || git('rev-parse HEAD') || '';
+
+/**
+ * The version people see: major.PR.0 (src/lib/releaseVersion.ts). The major is package.json's, changed by hand for a
+ * big release; CI and previews set PR_NUMBER for a PR being built; a deploy builds main's merge commit, which names
+ * its PR.
+ */
+const appVersion = () =>
+    releaseVersion({
+        packageVersion: JSON.parse(readFileSync('package.json', 'utf8')).version,
+        prNumber: process.env.PR_NUMBER,
+        headSubject: git('log -1 --format=%s'),
+        lastMergeSubject: git('log --merges --first-parent -1 --format=%s'),
+    });
 
 /** Writes the commit into the built service worker, so each deploy is a changed sw.js and installs as a new version. */
 const versionServiceWorker = (): Plugin => ({
@@ -34,7 +51,8 @@ const versionServiceWorker = (): Plugin => ({
 // deploy also gets public/: the manifest, the icons and the service worker that make it an installable, offline app.
 export default defineConfig({
     plugins: [react(), viteSingleFile(), versionServiceWorker()],
-    define: { __COMMIT__: JSON.stringify(commit()) },
+    // the commit still versions the service worker, so every deploy installs as an update, whatever the version says
+    define: { __COMMIT__: JSON.stringify(commit()), __APP_VERSION__: JSON.stringify(appVersion()) },
     build: {
         outDir: 'dist',
     },

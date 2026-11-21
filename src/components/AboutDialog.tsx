@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
-import { COMMIT_URL, REPO_URL, VERSION } from '../lib/version';
+import { BUILD, COMMIT_URL, REPO_URL, VERSION } from '../lib/version';
 
 /** What the app is, where it comes from, and which build this is. */
 const AboutDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) => (
@@ -12,17 +12,20 @@ const AboutDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) 
                     build and order the parts with a BrickLink wanted list.
                 </Typography>
                 <Typography>
-                    The app runs in your browser, so your images stay on this device. The browser keeps your settings
-                    and last image for next time.
+                    The app runs in your browser, so your images stay on this device. Your mosaics are kept in this
+                    browser, or in a folder you choose.
                 </Typography>
                 <Typography>
-                    You&apos;re using version{' '}
-                    {COMMIT_URL ? (
-                        <Link href={COMMIT_URL} target="_blank" rel="noreferrer" sx={{ fontFamily: 'monospace' }}>
-                            {VERSION}
-                        </Link>
-                    ) : (
-                        VERSION
+                    You&apos;re using version {VERSION}
+                    {BUILD && COMMIT_URL && (
+                        <>
+                            {' '}
+                            (build{' '}
+                            <Link href={COMMIT_URL} target="_blank" rel="noreferrer" sx={{ fontFamily: 'monospace' }}>
+                                {BUILD}
+                            </Link>
+                            )
+                        </>
                     )}
                     . Report a problem or ask for a feature on{' '}
                     <Link href={REPO_URL} target="_blank" rel="noreferrer">

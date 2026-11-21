@@ -31,6 +31,8 @@ jobs:
       - run: npm ci && npm run build
         env:
           COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          # the preview shows the version this PR gets on merge, marked as a preview
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         if: github.event.action != 'closed'
       - uses: rossjrw/pr-preview-action@873417d2df72380da1f3978378fb58560bcde976 # v1.8.2
         with:
