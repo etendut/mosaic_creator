@@ -81,13 +81,13 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 
 The app has two views, and each uses the three zones.
 
-- **Mosaic** edits one project through the six steps. Its app bar holds ☰, a _Projects_ link, the project's name, the step tabs and the step's action. The link is `FolderOutlined` and the word on desktop, the icon alone on a phone (its name read out). The name is `subtitle1`, cut short with an ellipsis, and it's where you rename: click it and it turns into a text field; Enter or leaving it saves, Esc cancels.
-- **Projects** holds every project, as a collection page (below). Its app bar holds ☰, "Projects" in `subtitle1`, and the view's actions. It has no step tabs.
-- Your first visit, with no projects yet, opens Mosaic on Image. After that the app opens on the project you had open last, at its step.
+- **Editor** edits one mosaic through the six steps. Its app bar holds ☰, a _Mosaics_ link, the project's name, the step tabs and the step's action. The link is `Collections` and the word on desktop, the icon alone on a phone (its name read out). The name is `subtitle1`, cut short with an ellipsis, and it's where you rename: click it and it turns into a text field; Enter or leaving it saves, Esc cancels.
+- **Mosaics** holds every project, as a collection page (below). Its app bar holds ☰, "Mosaics" in `subtitle1`, and the view's actions. It has no step tabs.
+- Your first visit, with no projects yet, opens the editor on Image. After that the app opens on the project you had open last, at its step.
 
 ### Collection pages
 
-A page of things you choose between, where a step is one result you change. Projects is the first.
+A page of things you choose between, where a step is one result you change. Mosaics is the first.
 
 - **Canvas**: a grid of cards, `project-card` (220px) at their narrowest and `space-2` apart, filling the Stage; one column on a phone. The current item comes first, then the rest in the chosen order. Screen readers get a list, each card labelled by its item's name.
 - **Tools**: what decides which items show and in what order, and where they're kept, as ControlSections like any step's tools. An empty collection keeps its tools, unlike an empty step: they're how you'd bring items in.
@@ -125,15 +125,15 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 
 ## Actions
 
-| Kind            | Style                                  | Where                                                                                                                                               |
-| --------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main action     | contained `azure`, one per step        | app bar right, or ending the tools when it follows from them                                                                                        |
-| Secondary       | outlined                               | beside the main action on desktop, in ☰ on a phone                                                                                                 |
-| In a group      | small text button                      | under the setting it acts on                                                                                                                        |
-| Tool            | icon + label, with an `aria-label`     | tools zone                                                                                                                                          |
-| Destructive     | text, with confirmation or undo        | in a group or ☰                                                                                                                                    |
-| On one item     | small text button, `muted` until hover | on the item's card, in a collection                                                                                                                 |
-| Project and app | menu items                             | ☰. In Mosaic: _Download project_, _Save as template_. In Projects: _Open file…_ on a phone. In both: _Show me around_, _Install app_, Theme, About |
+| Kind            | Style                                  | Where                                                                                                                                                  |
+| --------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Main action     | contained `azure`, one per step        | app bar right, or ending the tools when it follows from them                                                                                           |
+| Secondary       | outlined                               | beside the main action on desktop, in ☰ on a phone                                                                                                    |
+| In a group      | small text button                      | under the setting it acts on                                                                                                                           |
+| Tool            | icon + label, with an `aria-label`     | tools zone                                                                                                                                             |
+| Destructive     | text, with confirmation or undo        | in a group or ☰                                                                                                                                       |
+| On one item     | small text button, `muted` until hover | on the item's card, in a collection                                                                                                                    |
+| Project and app | menu items                             | ☰. In the editor: _Download project_, _Save as template_. In Mosaics: _Open file…_ on a phone. In both: _Show me around_, _Install app_, Theme, About |
 
 - Each action lives in one place only: printing is on the Print step only.
 - An action that follows from the tools (_Print cards_ after Paper and Pages; _Download BrickLink XML_ after Spares) ends the tools, with one line above it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page."). On desktop it is the last block of the column; on a phone a strip just above the tool bar. It is then the step's main action, so the app bar has none.
@@ -147,9 +147,9 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 - Disabled: 35% opacity in the tool bar; a turned-off swatch is 30% opacity and struck through.
 - Messages after an action are a Toast: one look, `ink` with `tray` text; errors in `danger` with an icon, staying until closed. `danger` is for errors only.
 - **Saving.** The app saves as you work. A save that works shows nothing: no "Saved" text, no spinner. A save that fails shows an error Toast that waits, saying what didn't save and what to do. A save that couldn't overwrite its file (something else changed it) goes to a new file, and a normal Toast says where.
-- **Prompts.** A Toast you didn't ask for, such as a backup reminder or a suggestion, comes at most once a visit, when you open Projects, never while you're working on a step. It has one action, and closing it means no: that prompt stays away until its reason comes back (more changes since your last backup). The update Toast isn't a prompt; it answers a new version.
+- **Prompts.** A Toast you didn't ask for, such as a backup reminder or a suggestion, comes at most once a visit, when you open Mosaics, never while you're working on a step. It has one action, and closing it means no: that prompt stays away until its reason comes back (more changes since your last backup). The update Toast isn't a prompt; it answers a new version.
 - No motion beyond MUI's defaults, except the Walkthrough's smooth scroll to a target off screen.
-- The view, project and step are in the URL (`#/projects`, `#/<project>/touch-up`): a refresh comes back to them, and the browser's back and forward move between them. Without an image, every step shows Image.
+- The view, project and step are in the URL (`#/mosaics`, `#/<project>/touch-up`): a refresh comes back to them, and the browser's back and forward move between them. Without an image, every step shows Image.
 
 ## Installing and offline
 
@@ -173,7 +173,7 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 | Parts    | _Download BrickLink XML_ and _Copy XML_, ending the tools under Spares | Spares                                                                                   | Parts · Lots                                                                  |
 | Print    | _Print map page_ / _Print cards_, ending the tools under its summary   | Paper, Pages                                                                             | Cards · Card pages · Per page                                                 |
 
-The Projects view isn't a step. Main action _New mosaic_, secondary _Open file…_; tools Storage and Sort; Info bar Projects · Space · Backed up (the last only while projects are in the browser).
+The Mosaics view isn't a step. Main action _New mosaic_, secondary _Open file…_; tools Storage and Sort; Info bar Mosaics · Space · Backed up (the last only while projects are in the browser).
 
 A new step gets the layout, tap targets and states by using `StepLayout`, `AppBarAction`, `ChoiceRow` and the theme, not its own controls.
 

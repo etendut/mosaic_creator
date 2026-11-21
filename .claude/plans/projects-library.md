@@ -1,6 +1,6 @@
-# Projects: a library of mosaics, and an editor for one
+# Mosaics: a library of mosaics, and an editor for one
 
-The app gets two views. **Projects** lists every mosaic you've made, starts a new one and opens one. **Mosaic** is
+The app gets two views. **Mosaics** lists every mosaic you've made, starts a new one and opens one. the **editor** is
 today's app: the six steps, editing the open project, with its name in the app bar. Projects live as ordinary
 `.mosaic.zip` files, in the browser or in a folder you choose. There's no cloud service: if the folder sits inside
 Google Drive, OneDrive or Dropbox on your computer, their sync apps copy it, and the app never talks to them.
@@ -19,21 +19,21 @@ Google Drive, OneDrive or Dropbox on your computer, their sync apps copy it, and
 
 ## Two views
 
-| View     | URL                     | App bar                                                            | Holds                                |
-| -------- | ----------------------- | ------------------------------------------------------------------ | ------------------------------------ |
-| Projects | `#/projects`            | ☰, "Projects", main action _New mosaic_, secondary _Open file…_   | the library: a grid of project cards |
-| Mosaic   | `#/<project id>/<step>` | ☰, _Projects_ link, the project's name, ① to ⑥, the step's action | one project, through the six steps   |
+| View    | URL                     | App bar                                                           | Holds                                |
+| ------- | ----------------------- | ----------------------------------------------------------------- | ------------------------------------ |
+| Mosaics | `#/mosaics`             | ☰, "Mosaics", main action _New mosaic_, secondary _Open file…_   | the library: a grid of project cards |
+| Editor  | `#/<project id>/<step>` | ☰, _Mosaics_ link, the project's name, ① to ⑥, the step's action | one project, through the six steps   |
 
-- **Getting between them.** In Mosaic, a _Projects_ link sits left of the name, so the app bar reads "Projects /
-  Balloon" like a short trail. On a phone the first row holds ☰, the link as an icon (`FolderOutlined`, labelled
-  "Projects"), the name (cut short with an ellipsis) and the step's action; the step tabs keep the second row.
-  Opening a card in Projects goes to that project on Bricks (on Image if it has no picture yet). The browser's
+- **Getting between them.** In the editor, a _Mosaics_ link sits left of the name, so the app bar reads "Mosaics /
+  Balloon" like a short trail. On a phone the first row holds ☰, the link as an icon (`Collections`, labelled
+  "Mosaics"), the name (cut short with an ellipsis) and the step's action; the step tabs keep the second row.
+  Opening a card in Mosaics goes to that project on Bricks (on Image if it has no picture yet). The browser's
   back and forward move between the views, as they move between steps now.
-- **Where the app opens.** With no projects: Mosaic on Image, as now, so a first visit never lands on an empty
-  library. With projects: the project that was open last, at its last step. The _Projects_ link is one click
+- **Where the app opens.** With no projects: the editor on Image, as now, so a first visit never lands on an empty
+  library. With projects: the project that was open last, at its last step. The _Mosaics_ link is one click
   away.
 - **The name.** Each project gets a `name` of its own, apart from the card title. You rename it by clicking the
-  name in Mosaic's app bar: it turns into a text field, and Enter or leaving the field saves it. A new project
+  name in the editor's app bar: it turns into a text field, and Enter or leaving the field saves it. A new project
   takes its name from the image's file name ("balloon.jpg" becomes "Balloon"); one with no image yet is "New
   mosaic". The card title starts as the name and stays editable on Cards, so the cards can say "Library Day 2026"
   while the project is called "Balloon". The file name follows the project name.
@@ -49,26 +49,26 @@ Google Drive, OneDrive or Dropbox on your computer, their sync apps copy it, and
    extends that to every mosaic. The open project saves itself about two seconds after your last change. The
    alternative, an explicit Save, adds an unsaved state and a "leave without saving?" prompt the app doesn't have
    today.
-3. **Opening on the last project, with projects in the library** (above). The alternative is opening on Projects
+3. **Opening on the last project, with projects in the library** (above). The alternative is opening on Mosaics
    each visit, which costs a click for the common case of carrying on with one mosaic.
 4. **Actions on every card, or only on the open one.** Each card's _Duplicate_ and _Delete_ make 60 buttons in a
    grid of 30. Recommendation: every card shows them, as two small text buttons in `muted` that turn `azure` on
    hover and focus, so the grid reads as pictures first. Hiding them behind a ⋮ menu goes against "show, don't
    hide".
 5. **Templates stay out of the library for now.** Files ending ` template.mosaic.zip` are ignored in the folder;
-   Mosaic's ☰ → _Save as template_ keeps downloading them.
+   the editor's ☰ → _Save as template_ keeps downloading them.
 
-## The Projects view
+## The Mosaics view
 
 Checked against `docs/design-system/README.md`, with the new conventions this branch adds (Two views, Collection
 pages, Saving, Prompts, Dates and sizes).
 
-| Zone     | Desktop                                                           | Phone                                            |
-| -------- | ----------------------------------------------------------------- | ------------------------------------------------ |
-| App bar  | ☰, "Projects", _Open file…_ (outlined), _New mosaic_ (contained) | ☰, "Projects", _New mosaic_; _Open file…_ in ☰ |
-| Info bar | Projects 7 · Space 18 MB · Backed up 3 Nov                        | same band                                        |
-| Canvas   | a grid of project cards in the Stage, the open one first          | one column of cards, full width                  |
-| Tools    | Storage, Sort, in the 340px tools column                          | bottom bar: Storage, Sort                        |
+| Zone     | Desktop                                                          | Phone                                           |
+| -------- | ---------------------------------------------------------------- | ----------------------------------------------- |
+| App bar  | ☰, "Mosaics", _Open file…_ (outlined), _New mosaic_ (contained) | ☰, "Mosaics", _New mosaic_; _Open file…_ in ☰ |
+| Info bar | Mosaics 7 · Space 18 MB · Backed up 3 Nov                        | same band                                       |
+| Canvas   | a grid of project cards in the Stage, the open one first         | one column of cards, full width                 |
+| Tools    | Storage, Sort, in the 340px tools column                         | bottom bar: Storage, Sort                       |
 
 - **Info bar.** _Backed up_ shows the last backup's date, or "Never", while the library is in the browser; in a
   folder it goes, since the folder is the copy. A sum of bricks across unrelated mosaics helps nobody plan, so
@@ -101,16 +101,16 @@ pages, Saving, Prompts, Dates and sizes).
   folder.", button _Allow access_ (the browser only asks after a click), no tip. Chrome's "Allow on every visit"
   stops this after the first time.
 
-## The Mosaic view
+## The editor view
 
-- Unchanged apart from the app bar (the _Projects_ link and the name) and ☰.
-- **☰ in Mosaic:** _Download project_ (a copy to send or keep), _Save as template_, then the app items.
-- **☰ in Projects:** _Open file…_ on a phone (on desktop it's beside _New mosaic_), then the app items.
+- Unchanged apart from the app bar (the _Mosaics_ link and the name) and ☰.
+- **☰ in the editor:** _Download project_ (a copy to send or keep), _Save as template_, then the app items.
+- **☰ in Mosaics:** _Open file…_ on a phone (on desktop it's beside _New mosaic_), then the app items.
 - **App items, in both:** _Show me around_, _Install app_, Theme, About.
-- Gone from ☰: _Open project or template…_ (now _Open file…_ in Projects), _Save project_ (it saves itself),
+- Gone from ☰: _Open project or template…_ (now _Open file…_ in Mosaics), _Save project_ (it saves itself),
   _Reset to defaults_ (a new mosaic starts from the defaults), _Forget image_ (delete the project from its card).
   Each action now lives in one place.
-- **Walkthrough:** stop 8 points at the _Projects_ link instead of ☰: "Open Projects to find every mosaic you've made, saved as you work."
+- **Walkthrough:** stop 8 points at the _Mosaics_ link instead of ☰: "Open Mosaics to find every mosaic you've made, saved as you work."
 
 All copy above went through stop-slop; run it again on the final strings in the PR.
 
@@ -163,7 +163,7 @@ interface ProjectStore {
 - **Migration on first run:** if the old settings or `last` image exist, they become the first project in the
   browser library, then the old keys are deleted.
 - _Open file…_ imports the file into the library and opens it; given a backup zip, it restores every project in
-  it and stays on Projects.
+  it and stays on Mosaics.
 
 ### Keeping a browser library safe
 
@@ -182,11 +182,11 @@ or fourth, so the aim is that a lost library is never the only copy.
   project; one whose id is already in the library and is newer there is skipped, and the Toast says how many came
   back and how many were skipped. Pack with fflate, PNGs stored without recompressing, as `packProject` does.
 - **Backup reminder** (PR 2). A prompt, so it follows the Prompts convention. Store when the last backup happened
-  and count projects saved since. At 5 changed projects or 14 days, whichever comes first, on opening Projects: a
+  and count projects saved since. At 5 changed projects or 14 days, whichever comes first, on opening Mosaics: a
   Toast that waits, "7 mosaics changed since your last backup." with _Back up_. Only while the library is in the
   browser.
 - **Suggest a folder** (PR 2). A prompt too. Where the browser supports folders, once there are 3 projects in the
-  browser, on opening Projects: "Keep your mosaics as files you can see and sync." with _Choose folder…_. Closing
+  browser, on opening Mosaics: "Keep your mosaics as files you can see and sync." with _Choose folder…_. Closing
   it means no, for good.
 - **Keep the previous save.** Each project keeps one earlier version (a `previous` record in BrowserStore, a
   `.previous.mosaic.zip` beside the file in FolderStore, hidden from the grid). Before any write, unpack the new zip
@@ -207,9 +207,9 @@ Written in this branch, ahead of the code, so the conventions can be argued over
   - Prompts (States and interaction)
   - Dates, sizes and names (Content fundamentals)
   - the Actions table's ☰ row, per view
-  - the Projects view in "The steps"
+  - the Mosaics view in "The steps"
 - `components/ProjectCard/README.md`: new.
-- `components/StepTabs/README.md`: Mosaic's app bar gains the _Projects_ link and the name.
+- `components/StepTabs/README.md`: the editor's app bar gains the _Mosaics_ link and the name.
 - `components/EmptyState/README.md`: the blocked variant.
 - `components/Toast/README.md`: prompts, and the waiting cases they add.
 - `tokens.json`: `project-card` (220px), the narrowest a card gets in the grid.
@@ -231,7 +231,7 @@ When the code lands: `theme.ts` gets the token, Refinements loses the item, and 
 
 - Unit tests for both stores against one shared suite: `fake-indexeddb` (already a dev dependency) for
   BrowserStore; for FolderStore, an in-memory fake of `FileSystemDirectoryHandle` in jsdom.
-- App tests through Testing Library: open from a card, back to Projects, rename, duplicate, delete with Undo,
+- App tests through Testing Library: open from a card, back to Mosaics, rename, duplicate, delete with Undo,
   autosave after a change, a failed save's Toast, migration from the old keys, opening on the last project or on
   Image with none, the routes and back button. Coverage stays at 80% or more.
 - Safety: a backup round trip (back up, clear the store, restore, compare), restore skipping a newer copy, a
@@ -240,7 +240,7 @@ When the code lands: `theme.ts` gets the token, Refinements loses the item, and 
 - Playwright in Chrome at 1280 × 800 and 390 × 844, light and dark: the grid, the empty and blocked states, a long
   name in both app bars, 30 projects. For the folder, an init script replaces `showDirectoryPicker` with
   `navigator.storage.getDirectory()`, which gives a real directory handle without the system picker.
-- A `frontend-design` pass on the grid, the card and Mosaic's app bar, then the README's "Checking a change"
+- A `frontend-design` pass on the grid, the card and the editor's app bar, then the README's "Checking a change"
   list.
 
 ## Open questions for later

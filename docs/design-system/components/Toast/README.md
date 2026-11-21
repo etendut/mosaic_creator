@@ -8,7 +8,7 @@ A short message about what just happened, after an action: "Cleaned up 7 bricks.
 
 **A message that waits.** One that needs you to act, and would be missed if it went, stays until you act on it or close it: the normal look, with its action and a close button. Three cases: an update ("A new version is ready." with _Reload_), a save that failed, and a prompt.
 
-**Prompts.** A Toast you didn't ask for ("7 mosaics changed since your last backup." with _Back up_) waits, and follows the Prompts rule in the README: at most one a visit, when you open Projects, never while you're working on a step, and closing it means no until its reason comes back.
+**Prompts.** A Toast you didn't ask for ("7 mosaics changed since your last backup." with _Back up_) waits, and follows the Prompts rule in the README: at most one a visit, when you open Mosaics, never while you're working on a step, and closing it means no until its reason comes back.
 
 **Where.** Bottom centre, `space-2` above the bottom of the window on desktop, and above the tool bar (and any open panel or strip) on a phone. One at a time; a new one replaces the old. A toast sits under any menu or dialog you open, so one that waits never covers what you're doing.
 

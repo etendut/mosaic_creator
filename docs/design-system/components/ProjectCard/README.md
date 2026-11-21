@@ -1,6 +1,6 @@
 # ProjectCard
 
-One project in the Projects view: its picture, its name and when you last changed it, with the actions on that project.
+One project in the Mosaics view: its picture, its name and when you last changed it, with the actions on that project.
 
 **Look.** A Tray (`tray`, `groove` border, `radius-tray`, `space-2` padding, no shadow), at least `project-card` (220px) wide, filling its grid column. From the top:
 
