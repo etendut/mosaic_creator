@@ -1,11 +1,13 @@
 import { screen, within } from '@testing-library/react';
+import { DEFAULT_PROJECT } from '../mosaic/project';
 import { goTo, info, infoLabels, startMosaic } from '../test/app';
+import { renderStep } from '../test/step';
+import PartsStep from './PartsStep';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 describe('Parts step', () => {
     it('lists bricks by colour, then plates', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Parts');
+        await renderStep(PartsStep);
         expect(screen.getByText('BrickLink part 98138')).toBeInTheDocument();
         expect(screen.getByText('BrickLink part 41539')).toBeInTheDocument();
         expect(Number(info('Lots'))).toBeGreaterThan(0);
@@ -14,16 +16,14 @@ describe('Parts step', () => {
     });
 
     it('adds the pins for plates that need them', async () => {
-        const user = await startMosaic();
-        await user.click(screen.getByRole('button', { name: '16 by 16 studs' }));
-        await goTo(user, 'Parts');
+        // black 16 × 16 plates, which are joined with pins
+        await renderStep(PartsStep, { plateId: '6302092' });
         const table = screen.getByRole('table');
         expect(within(table).getByText(/Pin/)).toBeInTheDocument();
     });
 
     it('downloads and copies the BrickLink wanted list', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Parts');
+        const { user } = await renderStep(PartsStep);
         await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));
         expect(downloads.at(-1)!.name).toBe('Mosaic Creator.xml');
         const xml = await lastDownloadText();
@@ -83,19 +83,17 @@ describe('Parts step', () => {
     });
 
     it('ends the tools with Download and Copy XML, like Print', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Parts');
+        await renderStep(PartsStep);
         const tools = within(screen.getByRole('complementary', { name: 'Tools' }));
         expect(tools.getByRole('button', { name: 'Download BrickLink XML' })).toBeInTheDocument();
         expect(tools.getByRole('button', { name: 'Copy XML' })).toBeInTheDocument();
-        expect(within(screen.getByRole('banner')).queryByRole('button', { name: /XML/ })).not.toBeInTheDocument();
+        // and nowhere else: not as an app-bar action
+        const column = screen.getByRole('complementary', { name: 'Tools' });
+        for (const button of screen.getAllByRole('button', { name: /XML/ })) expect(column).toContainElement(button);
     });
 
     it('names the file "mosaic" when the title is empty', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Cards');
-        await user.clear(screen.getByRole('textbox', { name: 'Title' }));
-        await goTo(user, 'Parts');
+        const { user } = await renderStep(PartsStep, { card: { ...DEFAULT_PROJECT.card, title: '' } });
         await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));
         expect(downloads.at(-1)!.name).toBe('mosaic.xml');
     });

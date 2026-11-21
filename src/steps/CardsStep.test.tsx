@@ -1,10 +1,11 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { goTo, info, startMosaic } from '../test/app';
+import { info } from '../test/app';
+import { renderStep } from '../test/step';
+import CardsStep from './CardsStep';
 
 describe('Cards step', () => {
     it('previews the first card with the card text', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Cards');
+        const { user } = await renderStep(CardsStep);
         expect(screen.getByRole('group', { name: 'Card A1' })).toBeInTheDocument();
 
         // pasted rather than typed: each keystroke redraws the card, which is slow under coverage
@@ -20,8 +21,7 @@ describe('Cards step', () => {
     });
 
     it('switches between real size and compact cards', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Cards');
+        const { user } = await renderStep(CardsStep);
         expect(screen.getByText(/printed at real size/)).toBeVisible();
         expect(info('Per page')).toBe('8 on A4 landscape');
         expect(info('Brick on the card')).toBe('8.0 mm');
@@ -33,8 +33,7 @@ describe('Cards step', () => {
     });
 
     it('adds a bag list to each card, showing what it costs in cards per page', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Cards');
+        const { user } = await renderStep(CardsStep);
         expect(screen.queryByRole('list', { name: 'Bricks for card A1' })).not.toBeInTheDocument();
         expect(info('Per page')).toBe('8 on A4 landscape');
 
@@ -46,8 +45,7 @@ describe('Cards step', () => {
     });
 
     it('warns when instructions are too long for the card', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Cards');
+        const { user } = await renderStep(CardsStep);
         expect(screen.queryByText(/longer than the card has room for/)).not.toBeInTheDocument();
         await user.click(screen.getByRole('textbox', { name: 'Instructions above the grid' }));
         await user.paste(' and then some more words'.repeat(8));
@@ -55,8 +53,7 @@ describe('Cards step', () => {
     });
 
     it('changes the card colour', async () => {
-        const user = await startMosaic();
-        await goTo(user, 'Cards');
+        await renderStep(CardsStep);
         fireEvent.input(screen.getByLabelText('Card colour'), { target: { value: '#112233' } });
         expect(screen.getByRole('group', { name: 'Card A1' })).toHaveStyle({ backgroundColor: '#112233' });
     });
