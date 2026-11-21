@@ -12,6 +12,8 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 - Keep it short, active and specific: a subject and a verb, no filler, no "simply" or "just".
 - Talk to the reader as "you". Name things as builders know them: _plate_, _brick_, _card_, _colour_, not _grid cell_ or _palette entry_. British spelling: _colour_.
 - Give numbers with their unit, and use × for sizes: _32 × 20 bricks_, _256 mm_, _8 × 8 plate_.
+- Dates as the day and short month, _3 Nov_, with the year only when it isn't this year (_3 Nov 2025_), and _Today_ or _Yesterday_ for the last two days. No times, unless two things on screen share a day. File sizes in kB or MB, with one decimal under 10: _840 kB_, _2.4 MB_, _18 MB_.
+- A project's name is yours: the picture's file name made readable (_balloon.jpg_ becomes _Balloon_) until you change it, and _New mosaic_ before there's a picture. Never the app's name.
 - Name an action by what happens, and keep the name everywhere: _Print cards_, _Download BrickLink XML_, _Use this image_. Never _Submit_ or _OK_.
 - A message after an action says what happened and what to do next: "Template saved: your settings, without an image." "Touch-ups cleared. Undo brings them back." It's a toast, not standing text.
 - No standing text on a page: no purpose sentences, no instructions the tools already show. Counts and sizes go in the Info bar.
@@ -45,7 +47,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 
 ## Layout
 
-Every step is laid out like a photo editor, with three zones that never move.
+Every page is laid out like a photo editor, with three zones that never move.
 
 - **App bar** (`tray`, `groove` bottom border, sticky): ☰ menu at the left, the step tabs, and at most one contained main action at the right.
 - **Canvas**: the result as large as it fits, full width on a phone with the 8px gutter. Above it, in this order and nothing else: the Info bar, alerts about the result, and facts that are also tools (Colours used).
@@ -75,6 +77,25 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 └────────────────────────────┘
 ```
 
+### Two views
+
+The app has two views, and each uses the three zones.
+
+- **Mosaic** edits one project through the six steps. Its app bar holds ☰, a _Projects_ link, the project's name, the step tabs and the step's action. The link is `FolderOutlined` and the word on desktop, the icon alone on a phone (its name read out). The name is `subtitle1`, cut short with an ellipsis, and it's where you rename: click it and it turns into a text field; Enter or leaving it saves, Esc cancels.
+- **Projects** holds every project, as a collection page (below). Its app bar holds ☰, "Projects" in `subtitle1`, and the view's actions. It has no step tabs.
+- Your first visit, with no projects yet, opens Mosaic on Image. After that the app opens on the project you had open last, at its step.
+
+### Collection pages
+
+A page of things you choose between, where a step is one result you change. Projects is the first.
+
+- **Canvas**: a grid of cards, `project-card` (220px) at their narrowest and `space-2` apart, filling the Stage; one column on a phone. The current item comes first, then the rest in the chosen order. Screen readers get a list, each card labelled by its item's name.
+- **Tools**: what decides which items show and in what order, and where they're kept, as ControlSections like any step's tools. An empty collection keeps its tools, unlike an empty step: they're how you'd bring items in.
+- **Actions**: the main action makes a new item (_New mosaic_); a secondary one brings one in (_Open file…_). Actions on one item sit on its card and nowhere else, not also in ☰: small text buttons in `muted` that turn `azure` on hover and focus, in the same order on every card, never behind a ⋮ menu. Deleting offers Undo.
+- **Current item** (the open project): an `azure` ring outside a `tray` gap, with `aria-current`, as on a ColorSwatch. Current isn't selected: you don't choose it with a toggle, so it never takes the `azureWash` selected state.
+- **Loading**: each card shows as a plain `tray` tile at its final size until its content arrives. No spinner, no shimmer.
+- **Info bar**: facts about the collection (how many, the space they take, the last backup). Never a total that adds up unrelated items.
+
 ### One job per step
 
 A step does one job, named by its tab. The signs it's doing two: its tools need more than one screen on desktop, or more than five groups in the phone bar; it has tools for two different results (setting up the mosaic _and_ editing single bricks); you'd describe its purpose with "and". Split it into two steps, as Bricks and Touch up were split. Don't hide controls instead.
@@ -93,7 +114,7 @@ Like a document or photo viewer: it fills the space to the bottom of the window 
 
 ### Empty states
 
-When a step can't show a result yet, the canvas holds one centred EmptyState card: what to do, one main button, and a tip. The tools zone stays empty until there's something to change. On Image, until you've finished or skipped the Walkthrough once, a text button under the tip offers it: "Show me around".
+When a step can't show a result yet, the canvas holds one centred EmptyState card: what to do, one main button, and a tip. The tools zone stays empty until there's something to change (a collection page keeps its tools). When a page can't reach what it shows, such as a folder the browser needs your OK for again, the same card says so and holds the one button that fixes it, with no tip. On Image, until you've finished or skipped the Walkthrough once, a text button under the tip offers it: "Show me around".
 
 ## Help text
 
@@ -104,14 +125,15 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 
 ## Actions
 
-| Kind            | Style                              | Where                                                                                     |
-| --------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
-| Main action     | contained `azure`, one per step    | app bar right, or ending the tools when it follows from them                              |
-| Secondary       | outlined                           | beside the main action on desktop, in ☰ on a phone                                       |
-| In a group      | small text button                  | under the setting it acts on                                                              |
-| Tool            | icon + label, with an `aria-label` | tools zone                                                                                |
-| Destructive     | text, with confirmation or undo    | in a group or ☰                                                                          |
-| Project and app | menu items                         | ☰ (open, save, template, reset, forget image, Show me around, Install app, Theme, About) |
+| Kind            | Style                                  | Where                                                                                                                                               |
+| --------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main action     | contained `azure`, one per step        | app bar right, or ending the tools when it follows from them                                                                                        |
+| Secondary       | outlined                               | beside the main action on desktop, in ☰ on a phone                                                                                                 |
+| In a group      | small text button                      | under the setting it acts on                                                                                                                        |
+| Tool            | icon + label, with an `aria-label`     | tools zone                                                                                                                                          |
+| Destructive     | text, with confirmation or undo        | in a group or ☰                                                                                                                                    |
+| On one item     | small text button, `muted` until hover | on the item's card, in a collection                                                                                                                 |
+| Project and app | menu items                             | ☰. In Mosaic: _Download project_, _Save as template_. In Projects: _Open file…_ on a phone. In both: _Show me around_, _Install app_, Theme, About |
 
 - Each action lives in one place only: printing is on the Print step only.
 - An action that follows from the tools (_Print cards_ after Paper and Pages; _Download BrickLink XML_ after Spares) ends the tools, with one line above it saying what it will do ("12 cards on 2 pages, 8 per A4 landscape page."). On desktop it is the last block of the column; on a phone a strip just above the tool bar. It is then the step's main action, so the app bar has none.
@@ -124,8 +146,10 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 - Selected tool-bar item: `azure` text, weight 500, a 3px `azure` top border. Unselected: `muted`.
 - Disabled: 35% opacity in the tool bar; a turned-off swatch is 30% opacity and struck through.
 - Messages after an action are a Toast: one look, `ink` with `tray` text; errors in `danger` with an icon, staying until closed. `danger` is for errors only.
+- **Saving.** The app saves as you work. A save that works shows nothing: no "Saved" text, no spinner. A save that fails shows an error Toast that waits, saying what didn't save and what to do. A save that couldn't overwrite its file (something else changed it) goes to a new file, and a normal Toast says where.
+- **Prompts.** A Toast you didn't ask for, such as a backup reminder or a suggestion, comes at most once a visit, when you open Projects, never while you're working on a step. It has one action, and closing it means no: that prompt stays away until its reason comes back (more changes since your last backup). The update Toast isn't a prompt; it answers a new version.
 - No motion beyond MUI's defaults, except the Walkthrough's smooth scroll to a target off screen.
-- The current step is in the URL (`#/touch-up`): a refresh comes back to it, and the browser's back and forward move between steps. Without an image, every step shows Image.
+- The view, project and step are in the URL (`#/projects`, `#/<project>/touch-up`): a refresh comes back to them, and the browser's back and forward move between them. Without an image, every step shows Image.
 
 ## Installing and offline
 
@@ -148,6 +172,8 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 | Cards    | none                                                                   | Card size, Card text, Card colour                                                        | Cards · Pages · Per page · Brick                                              |
 | Parts    | _Download BrickLink XML_ and _Copy XML_, ending the tools under Spares | Spares                                                                                   | Parts · Lots                                                                  |
 | Print    | _Print map page_ / _Print cards_, ending the tools under its summary   | Paper, Pages                                                                             | Cards · Card pages · Per page                                                 |
+
+The Projects view isn't a step. Main action _New mosaic_, secondary _Open file…_; tools Storage and Sort; Info bar Projects · Space · Backed up (the last only while projects are in the browser).
 
 A new step gets the layout, tap targets and states by using `StepLayout`, `AppBarAction`, `ChoiceRow` and the theme, not its own controls.
 
