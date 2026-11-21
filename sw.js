@@ -5,7 +5,7 @@
 // on every visit, installs the new worker with its own cache, and the new worker waits until the page asks it to take
 // over ("A new version is ready", Reload). Nothing reloads by itself.
 
-const VERSION = '1b45970d7e82f39fc9a5a135ba50002cb949f2de';
+const VERSION = '2c878fa4b5169a254eb674459c40c7bf9a47447c';
 const CACHE = `mosaic-creator-${VERSION}`;
 const APP = ['./', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png'];
 
@@ -13,7 +13,10 @@ self.addEventListener('install', (event) => {
     event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP)));
 });
 
+// only this app's own pages may ask the new version to take over (Reload); a service worker only hears from pages of
+// its origin anyway, but the check says so
 self.addEventListener('message', (event) => {
+    if (event.origin !== self.location.origin) return;
     if (event.data === 'skip-waiting') self.skipWaiting();
 });
 
