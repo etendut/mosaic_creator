@@ -171,6 +171,9 @@ const App = () => {
             if (!known(route.projectId)) goProjects({ replace: true });
             return;
         }
+        // a picture already in use (the library took a while to read): that's a new mosaic, kept where you are, not
+        // swapped for the one open last or left behind for Mosaics
+        if (hasImage) return goProject(session.adopt(), inUrl() ?? 'Bricks', { replace: true });
         const last = readOpen();
         const id = library.migratedId ?? last?.id ?? null;
         if (known(id)) {
