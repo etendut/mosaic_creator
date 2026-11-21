@@ -199,7 +199,7 @@ describe('Mosaics: the library', () => {
             JSON.stringify({ ...DEFAULT_PROJECT, card: { ...DEFAULT_PROJECT.card, title: 'Library Day' } }),
         );
         render(<App />, { wrapper: AppProviders });
-        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 }, { timeout: 3000 })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Library Day, rename' })).toBeInTheDocument();
         expect(await savedNames()).toEqual(['Library Day']);
         expect(localStorage.getItem(OLD_SETTINGS_KEY)).toBeNull();

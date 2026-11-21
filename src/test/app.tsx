@@ -21,9 +21,19 @@ export const renderApp = () => {
 export const chooseImage = (user: User, name?: string) =>
     user.upload(screen.getByTestId('image-file'), imageFile(name));
 
-/** "Use this image" shows twice (under the image on phones, in the controls otherwise); either does the same. */
-export const applyImage = async (user: User) =>
-    user.click((await screen.findAllByRole('button', { name: 'Use this image' }))[0]);
+/**
+ * "Use this image" shows twice (under the image on phones, in the controls otherwise); either does the same. It stays
+ * disabled until the cropper reports its crop, which a busy machine (CI) can be slow to do, and a click on it before
+ * then does nothing: wait for it to be enabled first.
+ */
+export const applyImage = async (user: User) => {
+    const button = await waitFor(() => {
+        const [first] = screen.getAllByRole('button', { name: 'Use this image' });
+        expect(first).toBeEnabled();
+        return first;
+    });
+    await user.click(button);
+};
 
 /** A project in the browser's library, with the fake picture, open last at `step`: as if from an earlier visit. */
 export const seedProject = async (
@@ -42,14 +52,11 @@ export const seedProject = async (
 
 /** The settings autosave last wrote, once `check` passes on them. */
 export const expectSaved = (check: (settings: ProjectSettings) => void) =>
-    waitFor(
-        async () => {
-            const [latest] = (await browserStore.list()).sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
-            expect(latest).toBeDefined();
-            check(unpackProject(await browserStore.read(latest.id)).settings);
-        },
-        { timeout: 3000 },
-    );
+    waitFor(async () => {
+        const [latest] = (await browserStore.list()).sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+        expect(latest).toBeDefined();
+        check(unpackProject(await browserStore.read(latest.id)).settings);
+    });
 
 /**
  * Open the app, choose an image and use it: lands on the bricks step with a mosaic. With `settings`, the mosaic is

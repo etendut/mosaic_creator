@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import AppProviders from './AppProviders';
 import { rememberImage } from '../lib/imageStore';
@@ -42,12 +42,13 @@ describe('<App />', () => {
         await rememberImage(canvas);
         render(<App />, { wrapper: AppProviders });
         // it moves into the library first, which takes a few storage round trips
-        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 }, { timeout: 3000 })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
     });
 
     it('keeps the step in the URL, so back and forward move between steps', async () => {
         const user = await startMosaic();
-        expect(window.location.hash).toMatch(/^#\/[\w-]+\/bricks$/);
+        // a picture used before the library has loaded shows at #/bricks; the open project joins the URL once it has
+        await waitFor(() => expect(window.location.hash).toMatch(/^#\/[\w-]+\/bricks$/));
         await goTo(user, 'Touch up');
         expect(window.location.hash).toMatch(/\/touch-up$/);
         await goTo(user, 'Print');
