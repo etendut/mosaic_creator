@@ -1,11 +1,12 @@
 import { screen, within } from '@testing-library/react';
-import { chooseImage, renderApp, applyImage } from '../test/app';
+import { applyImage, chooseImage } from '../test/app';
+import { renderImageStep } from '../test/step';
 
 const slider = (name: string) => screen.getByRole('slider', { name });
 
 describe('Image step', () => {
     it('opens the file picker from the drop area and from "Choose another"', async () => {
-        const user = renderApp();
+        const { user } = renderImageStep();
         const pick = vi.spyOn(screen.getByTestId('image-file'), 'click');
         await user.click(screen.getByRole('button', { name: 'Choose an image' }));
         expect(pick).toHaveBeenCalledTimes(1);
@@ -15,7 +16,7 @@ describe('Image step', () => {
     });
 
     it('shows the chosen image with framing and colour controls', async () => {
-        const user = renderApp();
+        const { user } = renderImageStep();
         await chooseImage(user);
         expect(await screen.findByTestId('cropper')).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Frame' })).toBeInTheDocument();
@@ -23,14 +24,14 @@ describe('Image step', () => {
     });
 
     it('starts with one card to choose an image, and no controls until there is one', async () => {
-        renderApp();
+        renderImageStep();
         expect(screen.getByRole('button', { name: 'Choose an image' })).toBeInTheDocument();
         expect(screen.getByText(/Your image stays on this device/)).toBeInTheDocument();
         expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
     });
 
     it('says so when a file is not an image, and keeps the image it had', async () => {
-        const user = renderApp();
+        const { user } = renderImageStep();
         await chooseImage(user, 'broken.png');
         expect(await screen.findByText('Could not load that image')).toBeInTheDocument();
         expect(screen.getByText('Start with a picture')).toBeInTheDocument();
@@ -44,13 +45,13 @@ describe('Image step', () => {
     });
 
     it('ignores a cancelled file picker', async () => {
-        const user = renderApp();
+        const { user } = renderImageStep();
         await user.upload(screen.getByTestId('image-file'), []);
         expect(screen.getByText('Start with a picture')).toBeInTheDocument();
     });
 
     it('edits the frame and colours, and resets the edits', async () => {
-        const user = renderApp();
+        const { user } = renderImageStep();
         await chooseImage(user);
         await screen.findByTestId('cropper');
 
@@ -79,10 +80,13 @@ describe('Image step', () => {
         expect(screen.queryByText('101%')).not.toBeInTheDocument();
     });
 
-    it('uses the edited image for the mosaic', async () => {
-        const user = renderApp();
-        await chooseImage(user);
+    it('hands on the framed picture and its file name when you use it', async () => {
+        const { user, onApply } = renderImageStep();
+        await chooseImage(user, 'beach day.png');
         await applyImage(user);
-        expect(await screen.findByRole('heading', { name: 'Bricks', level: 1 })).toBeInTheDocument();
+        expect(onApply).toHaveBeenCalledTimes(1);
+        const [picture, fileName] = onApply.mock.calls[0];
+        expect(picture).toBeInstanceOf(HTMLCanvasElement);
+        expect(fileName).toBe('beach day.png');
     });
 });

@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useEffect, type ComponentType } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
+import { vi } from 'vitest';
 import AppProviders from '../app/AppProviders';
+import { AppBarSlot } from '../app/appBarSlot';
+import ImageStep from '../steps/ImageStep';
 import { useMosaic, type Mosaic } from '../hooks/useMosaic';
 import type { ProjectSettings } from '../mosaic/project';
 import { FAKE_IMAGE_SIZE } from './fakes';
@@ -37,4 +40,26 @@ export const renderStep = async (Step: ComponentType<{ mosaic: Mosaic }>, settin
     // the mosaic is built from the picture in the first update after it's set
     await screen.findByRole('complementary', { name: 'Tools' });
     return { user, mosaic: () => current! };
+};
+
+/**
+ * The Image step on its own, with a stand-in app bar for its main action (Use this image). `onApply` is what it hands
+ * on: the framed picture and its file's name.
+ */
+export const renderImageStep = () => {
+    const onApply = vi.fn<(image: HTMLCanvasElement, fileName?: string) => void>();
+    const Harness = () => {
+        const [slot, setSlot] = useState<HTMLElement | null>(null);
+        return (
+            <>
+                <header ref={setSlot} />
+                <AppBarSlot.Provider value={slot}>
+                    <ImageStep onApply={onApply} />
+                </AppBarSlot.Provider>
+            </>
+        );
+    };
+    const user = userEvent.setup();
+    render(<Harness />, { wrapper: AppProviders });
+    return { user, onApply };
 };
