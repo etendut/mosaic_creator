@@ -1,5 +1,9 @@
 import { fireEvent, screen, within } from '@testing-library/react';
-import { goTo, info, startMosaic, type User, expectSaved } from '../test/app';
+import type { Mosaic } from '../hooks/useMosaic';
+import { colorsUsed } from '../mosaic/partsList';
+import { expectSaved, goTo, info, startMosaic, type User } from '../test/app';
+import { renderStep } from '../test/step';
+import TouchUpStep from './TouchUpStep';
 
 /**
  * The map canvas, laid out so each brick is 10 px square on screen (jsdom does no layout), and a way to press, move
@@ -29,9 +33,11 @@ const tool = (name: string | RegExp) =>
     within(screen.getByRole('complementary', { name: 'Tools' })).getByRole('button', { name });
 /** The toast's action button. */
 const toastAction = (name: string) => within(screen.getByRole('status')).getByRole('button', { name });
-/** Wait until the saved touch-ups have `n` bricks touched up to black (BrickLink 11). */
-const expectBlackSaved = (n: number) =>
-    expectSaved((s) => expect((s.touchUps?.edits ?? []).filter((e) => e[2] === 11).length).toBe(n));
+/** The step's mosaic, as it is now. */
+let mosaic: () => Mosaic;
+/** The touch-ups hold `n` bricks touched up to black (BrickLink 11). */
+const expectBlack = (n: number) =>
+    expect((mosaic().project.touchUps?.edits ?? []).filter((e) => e[2] === 11).length).toBe(n);
 /** The touched-up count, from the step's Info. */
 const touchedUp = (n: number) => expect(info('Touched up')).toBe(`${n} brick${n === 1 ? '' : 's'}`);
 const noneTouchedUp = () => touchedUp(0);
@@ -47,8 +53,15 @@ const brush = async (user: User, size: number, shape: 'Round' | 'Square') => {
     await user.click(tool(`${shape} brush`));
 };
 
-/** Open the app with a mosaic, on the Touch up step. */
+/** The Touch up step on its own, with a mosaic. */
 const startTouchUp = async () => {
+    const step = await renderStep(TouchUpStep);
+    mosaic = step.mosaic;
+    return step.user;
+};
+
+/** The whole app with a mosaic, on the Touch up step: for the journeys between it and Bricks. */
+const startTouchUpInApp = async () => {
     const user = await startMosaic();
     await goTo(user, 'Touch up');
     return user;
@@ -71,19 +84,15 @@ describe('Touch up step', () => {
             return counts;
         };
         const before = await listCounts();
-        // the same counts as Colours used on Bricks
-        await goTo(user, 'Bricks');
-        const onBricks = Object.fromEntries(
-            within(screen.getByRole('group', { name: 'Colours used' }))
-                .getAllByRole('button')
-                .map((b) => b.getAttribute('aria-label')!.split(': '))
-                .map(([name, n]) => [name, Number(n)]),
-        );
-        expect(before).toEqual(onBricks);
+        // the same counts as Colours used on Bricks: both list the mosaic's colours used
+        const used = () =>
+            Object.fromEntries(
+                colorsUsed(mosaic().parts, mosaic().brick.partId).map((line) => [line.color.name, line.quantity]),
+            );
+        expect(before).toEqual(used());
         expect(before.Black).toBeUndefined();
 
         // painting a brick black adds one black brick and takes one from its old colour
-        await goTo(user, 'Touch up');
         await paintWith(user, 'Black');
         map().click(5, 5);
         const after = await listCounts();
@@ -94,7 +103,6 @@ describe('Touch up step', () => {
 
     it('lays the tools out in one consistent column: history, tools, palette, clean-up, clearing', async () => {
         await startTouchUp();
-        expect(screen.getByRole('heading', { name: 'Touch up' })).toBeInTheDocument();
         const column = within(screen.getByRole('complementary', { name: 'Tools' }));
         const names = column
             .getAllByRole('button')
@@ -124,7 +132,7 @@ describe('Touch up step', () => {
     });
 
     it('is where touch-ups are made; the Bricks step shows them on its map and says how many', async () => {
-        const user = await startTouchUp();
+        const user = await startTouchUpInApp();
         await user.click(tool('Eraser'));
         map().click(2, 2);
         await paintWith(user, 'Black');
@@ -134,6 +142,8 @@ describe('Touch up step', () => {
         expect(info('Touched up')).toBe('2 bricks');
         // the colours used, and so the cards and parts, follow the touched-up bricks
         expect(screen.getByTitle('Black: 1')).toBeInTheDocument();
+        // and the touch-ups are saved with the mosaic
+        await expectSaved((s) => expect(s.touchUps?.edits).toHaveLength(2));
     });
 
     it('paints single bricks, drags to paint several, and undoes a drag in one step', async () => {
@@ -144,9 +154,8 @@ describe('Touch up step', () => {
         expect(tool(/^Paint colour/)).toHaveAccessibleName('Paint colour: Black');
         m.click(4, 4);
         touchedUp(1);
-        // the painted brick is saved with the settings
-        await expectBlackSaved(1);
-        await expectSaved((s) => expect(s.touchUps?.edits).toEqual([[4, 4, 11]]));
+        // the painted brick is kept with the settings (saving them is the whole app's job)
+        expect(mosaic().project.touchUps?.edits).toEqual([[4, 4, 11]]);
 
         m.down(6, 4);
         m.move(7, 4);
@@ -188,7 +197,7 @@ describe('Touch up step', () => {
         await brush(user, 3, 'Square');
         map().click(5, 5);
         touchedUp(9);
-        await expectBlackSaved(9);
+        expectBlack(9);
 
         await brush(user, 3, 'Round');
         expect(tool('Round brush')).toHaveAttribute('aria-pressed', 'true');
@@ -261,7 +270,7 @@ describe('Touch up step', () => {
         // the brush then paints with the picked colour
         await user.click(tool('Brush'));
         m.click(6, 6);
-        await expectBlackSaved(2);
+        expectBlack(2);
     });
 
     it('compares before and after, without painting while showing before', async () => {
@@ -289,28 +298,28 @@ describe('Touch up step', () => {
 
         await paintWith(user, 'Black');
         map().click(4, 4);
-        await expectBlackSaved(1);
+        expectBlack(1);
         await user.click(tool('Clean up single bricks'));
         expect(screen.getByText('Cleaned up 1 brick.')).toBeInTheDocument();
-        await expectBlackSaved(0);
+        expectBlack(0);
         // the toast offers Undo
         await user.click(toastAction('Undo'));
-        await expectBlackSaved(1);
+        expectBlack(1);
         await user.click(tool('Clean up single bricks'));
-        await expectBlackSaved(0);
+        expectBlack(0);
 
         // pairs too
         await user.click(tool('Undo'));
         map().click(5, 4);
-        await expectBlackSaved(2);
+        expectBlack(2);
         await user.click(tool('Clean up single bricks'));
         expect(screen.getByText('No stray bricks to clean up.')).toBeInTheDocument();
         await user.click(tool('Clean up single bricks and pairs'));
         expect(screen.getByText('Cleaned up 2 bricks.')).toBeInTheDocument();
-        await expectBlackSaved(0);
+        expectBlack(0);
 
         await user.click(tool('Undo'));
-        await expectBlackSaved(2);
+        expectBlack(2);
     });
 
     it('zooms with the control or Ctrl + wheel, and scrolls the zoomed map with Space or the middle button', async () => {
@@ -402,7 +411,7 @@ describe('Touch up step', () => {
     });
 
     it('hides touch-ups made at another size until the size comes back, and says so on both steps', async () => {
-        const user = await startTouchUp();
+        const user = await startTouchUpInApp();
         await user.click(tool('Eraser'));
         map().click(2, 2);
         await goTo(user, 'Bricks');
