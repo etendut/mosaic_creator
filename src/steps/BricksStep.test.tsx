@@ -1,5 +1,7 @@
 import { screen, within } from '@testing-library/react';
-import { info, infoLabels, startMosaic, expectSaved } from '../test/app';
+import { info, infoLabels } from '../test/app';
+import { renderStep } from '../test/step';
+import BricksStep from './BricksStep';
 import { downloads, lastDownloadText } from '../test/fakes';
 
 const palette = () => screen.getByRole('heading', { name: 'Colours' }).parentElement!;
@@ -13,7 +15,7 @@ const colorsOn = () =>
 
 describe('Bricks step', () => {
     it('changes the plate size, keeping its colour when that size comes in it', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         await user.click(screen.getByRole('button', { name: '16 by 16 studs' }));
         expect(screen.getByRole('button', { name: /Black.*joined with 4 pins/ })).toHaveAttribute(
             'aria-pressed',
@@ -30,14 +32,14 @@ describe('Bricks step', () => {
     });
 
     it('changes the brick', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         await user.click(screen.getByRole('button', { name: 'Brick 1×1' }));
         expect(screen.getByRole('button', { name: 'Brick 1×1' })).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByRole('button', { name: 'Tile round 1×1' })).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('explains the backing plate in muted help text', async () => {
-        await startMosaic();
+        await renderStep(BricksStep);
         const help = screen.getByText('Each card is one 8 × 8 plate: 64 bricks.');
         // `muted` (#5B636B in light), where MUI 9 ignored the dotted color="text.secondary" and left help in the body
         // colour
@@ -45,7 +47,7 @@ describe('Bricks step', () => {
     });
 
     it('sets the size from the box or the slider, within limits', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         const box = screen.getByRole('spinbutton', { name: 'Plates across' });
         await user.clear(box);
         // a cleared box snaps to 1, so typing 6 after it makes 16
@@ -65,7 +67,7 @@ describe('Bricks step', () => {
     });
 
     it('switches colour sets and turns single colours on and off', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         const solid = colorsOn();
         await user.click(screen.getByRole('button', { name: 'All colours' }));
         expect(colorsOn()).toBeGreaterThan(solid);
@@ -80,7 +82,7 @@ describe('Bricks step', () => {
     });
 
     it('shows colour names on request, for touch screens', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         expect(within(palette()).queryByText('White')).not.toBeInTheDocument();
         await user.click(screen.getByRole('switch', { name: 'Names' }));
         // beside the chip, never printed on the brick colour
@@ -90,7 +92,7 @@ describe('Bricks step', () => {
     });
 
     it('limits the number of colours and changes how they are matched', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         const max = screen.getByRole('spinbutton', { name: 'Max colours' });
         await user.type(max, '2');
         expect(within(screen.getByRole('group', { name: 'Colours used' })).getAllByRole('button')).toHaveLength(2);
@@ -105,7 +107,7 @@ describe('Bricks step', () => {
     });
 
     it('dithers photos when asked', async () => {
-        const user = await startMosaic();
+        const { user, mosaic } = await renderStep(BricksStep);
         const dithering = within(screen.getByRole('group', { name: 'Dithering' }));
         expect(dithering.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText(/Best for logos and flat art/)).toBeInTheDocument();
@@ -121,11 +123,11 @@ describe('Bricks step', () => {
         // pressing the chosen one again keeps it
         await user.click(dithering.getByRole('button', { name: 'Pattern' }));
         expect(dithering.getByRole('button', { name: 'Pattern' })).toHaveAttribute('aria-pressed', 'true');
-        await expectSaved((s) => expect(s.dithering).toBe('pattern'));
+        expect(mosaic().project.dithering).toBe('pattern');
     });
 
     it('saves the palette with colour names', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         await user.click(screen.getByRole('button', { name: 'Save palette' }));
         expect(downloads.at(-1)!.name).toBe('Mosaic Creator.palette.json');
         const file = JSON.parse(await lastDownloadText());
@@ -135,7 +137,7 @@ describe('Bricks step', () => {
     });
 
     it('loads a palette, naming the colours the brick does not come in', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         const json = JSON.stringify({ name: 'Club', colors: [{ id: 1 }, { name: 'black' }, { name: 'Unobtainium' }] });
         await user.upload(screen.getByTestId('palette-file'), new File([json], 'club.palette.json'));
         expect(await screen.findByText(/Loaded "Club"\. Unobtainium doesn't come in/)).toBeInTheDocument();
@@ -152,7 +154,7 @@ describe('Bricks step', () => {
     });
 
     it('refuses files that are not palettes, or have no usable colours', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         await user.upload(screen.getByTestId('palette-file'), new File(['{"hello":1}'], 'x.json'));
         expect(await screen.findByText('Not a palette file')).toBeInTheDocument();
         await user.upload(
@@ -163,7 +165,7 @@ describe('Bricks step', () => {
     });
 
     it('swaps a used colour for another, and undoes it', async () => {
-        const user = await startMosaic();
+        const { user } = await renderStep(BricksStep);
         const used = screen.getByRole('group', { name: 'Colours used' });
         const [first] = within(used).getAllByRole('button');
         const fromName = first.getAttribute('aria-label')!.split(':')[0];
@@ -184,7 +186,7 @@ describe('Bricks step', () => {
     });
 
     it('lists the numbers an organiser plans around in Info', async () => {
-        await startMosaic();
+        await renderStep(BricksStep);
         expect(info('Cards')).toBe('12 (4 × 3)');
         expect(info('Mosaic')).toBe('32 × 20 bricks');
         expect(info('Finished size')).toBe('256 × 192 mm');
@@ -197,7 +199,7 @@ describe('Bricks step', () => {
     });
 
     it('leaves printing to the Print step', async () => {
-        await startMosaic();
+        await renderStep(BricksStep);
         expect(screen.queryByRole('button', { name: /^Print/ })).not.toBeInTheDocument();
     });
 });

@@ -10,10 +10,9 @@ import { autosave } from '../library/useProjectSession';
 
 // saves come soon after a change, so tests needn't wait the real two seconds
 autosave.ms = 10;
-// the app reads its library from IndexedDB as it starts, and a first visit moves the old remembered mosaic in: about a
-// second here under coverage, and CI runs two to three times slower. A wait ends as soon as its element appears, so
-// this only lengthens a real failure.
-configure({ asyncUtilTimeout: 6000 });
+// the app reads its library from IndexedDB as it starts: well under a second, so a wait longer than this is a fault
+// to find (as the start-up race and the test leak were), not a slow machine to wait out
+configure({ asyncUtilTimeout: 3000 });
 
 installFakes();
 

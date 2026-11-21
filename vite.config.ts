@@ -42,8 +42,8 @@ export default defineConfig({
         environment: 'jsdom',
         globals: true,
         setupFiles: ['./src/test/setup.ts'],
-        // whole-app tests rebuild the mosaic on every change: the slowest take about 10s here under coverage, and a CI
-        // runner can take two to three times that. A limit only cuts short a test that would fail anyway.
+        // the longest whole-app journeys (Touch up's colour counts, the Walkthrough's eight stops) take about 10s here
+        // under coverage and CI runs about 1.6 times slower: room for those, until they're thinned into step tests
         testTimeout: 30000,
         coverage: {
             provider: 'v8',

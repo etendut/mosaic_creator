@@ -21,19 +21,9 @@ export const renderApp = () => {
 export const chooseImage = (user: User, name?: string) =>
     user.upload(screen.getByTestId('image-file'), imageFile(name));
 
-/**
- * "Use this image" shows twice (under the image on phones, in the controls otherwise); either does the same. It stays
- * disabled until the cropper reports its crop, which a busy machine (CI) can be slow to do, and a click on it before
- * then does nothing: wait for it to be enabled first.
- */
-export const applyImage = async (user: User) => {
-    const button = await waitFor(() => {
-        const [first] = screen.getAllByRole('button', { name: 'Use this image' });
-        expect(first).toBeEnabled();
-        return first;
-    });
-    await user.click(button);
-};
+/** "Use this image" shows twice (under the image on phones, in the controls otherwise); either does the same. */
+export const applyImage = async (user: User) =>
+    user.click((await screen.findAllByRole('button', { name: 'Use this image' }))[0]);
 
 /** A project in the browser's library, with the fake picture, open last at `step`: as if from an earlier visit. */
 export const seedProject = async (
