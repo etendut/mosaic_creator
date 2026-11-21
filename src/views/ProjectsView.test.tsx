@@ -348,6 +348,29 @@ describe('Mosaics: keeping them in a folder', () => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
+    it('stops using the folder after asking, copying its mosaics into the browser and leaving the files', async () => {
+        const f = fakeFolder('Mosaics');
+        withFolderPicker(f.folder);
+        const user = await openMosaicsWith('Balloon');
+        await user.click(screen.getByRole('button', { name: 'Use a folder…' }));
+        await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Not now' }));
+        f.put('Fox.mosaic.zip', packProject({ settings: DEFAULT_PROJECT, image: FAKE_PNG, meta: { name: 'Fox' } }));
+
+        // asks first, and Cancel keeps the folder
+        await user.click(await screen.findByRole('button', { name: 'Stop using this folder' }));
+        const ask = await screen.findByRole('dialog', { name: 'Stop using Mosaics?' });
+        await user.click(within(ask).getByRole('button', { name: 'Cancel' }));
+        expect(await screen.findByRole('button', { name: 'Change folder…' })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Stop using this folder' }));
+        const confirm = await screen.findByRole('dialog', { name: 'Stop using Mosaics?' });
+        await user.click(within(confirm).getByRole('button', { name: 'Stop using folder' }));
+        expect(await screen.findByText(/^Copied 1 mosaic from Mosaics\./)).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Use a folder…' })).toBeInTheDocument();
+        expect(screen.getByRole('listitem', { name: 'Fox' })).toBeInTheDocument();
+        expect(f.names()).toContain('Fox.mosaic.zip');
+    });
+
     it('asks again for the folder when the browser needs your OK, then lists it', async () => {
         const f = fakeFolder('Mosaics', { permission: 'prompt' });
         f.put('Fox.mosaic.zip', packProject({ settings: DEFAULT_PROJECT, image: FAKE_PNG, meta: { name: 'Fox' } }));

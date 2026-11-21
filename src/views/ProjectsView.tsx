@@ -110,6 +110,8 @@ const ProjectsView = ({
     const [message, setMessage] = useState<ToastMessage | null>(null);
     // after choosing a folder: how many mosaics the browser has to copy across
     const [offerCopy, setOfferCopy] = useState<{ count: number; folder: string } | null>(null);
+    // asking before you stop using the folder
+    const [confirmStop, setConfirmStop] = useState(false);
     // the prompt on screen, and whether you acted on it (closing it otherwise means no)
     const showing = useRef<Exclude<LibraryPrompt, null> | null>(null);
     const acted = useRef(false);
@@ -222,9 +224,14 @@ const ProjectsView = ({
                     <HelpText>{storageHelp(library)}</HelpText>
                     <Stack direction="row" spacing={1}>
                         {kind === 'folder' ? (
-                            <Button size="small" onClick={() => void chooseFolder().catch(fail)}>
-                                Change folder…
-                            </Button>
+                            <>
+                                <Button size="small" onClick={() => void chooseFolder().catch(fail)}>
+                                    Change folder…
+                                </Button>
+                                <Button size="small" onClick={() => setConfirmStop(true)}>
+                                    Stop using this folder
+                                </Button>
+                            </>
                         ) : (
                             <>
                                 <Button size="small" onClick={() => void backUp()} disabled={projects.length === 0}>
@@ -344,6 +351,36 @@ const ProjectsView = ({
             <StepLayout groups={groups} info={info}>
                 <Stage sx={{ display: 'flex', flexDirection: 'column' }}>{canvas()}</Stage>
             </StepLayout>
+            <Dialog open={confirmStop} onClose={() => setConfirmStop(false)}>
+                <DialogTitle>Stop using {library.folderName || 'this folder'}?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        The app copies your mosaics into this browser and keeps them here from now on. The files in{' '}
+                        {library.folderName || 'the folder'} stay where they are.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmStop(false)}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={async () => {
+                            const folder = library.folderName || 'the folder';
+                            setConfirmStop(false);
+                            try {
+                                const count = await library.stopUsingFolder();
+                                onStorageChanged();
+                                setMessage({
+                                    text: `Copied ${mosaics(count)} from ${folder}. This browser keeps them from now on.`,
+                                });
+                            } catch (e) {
+                                fail(e);
+                            }
+                        }}
+                    >
+                        Stop using folder
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <Dialog open={!!offerCopy} onClose={() => setOfferCopy(null)}>
                 <DialogTitle>Copy your mosaics into {offerCopy?.folder}?</DialogTitle>
                 <DialogContent>

@@ -82,7 +82,7 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 The app has two views, and each uses the three zones.
 
 - **Editor** edits one mosaic through the six steps. Its app bar holds ☰, a _Mosaics_ link, the project's name, the step tabs and the step's action. The link is `Collections` and the word on desktop, the icon alone on a phone (its name read out). The name is `subtitle1`, cut short with an ellipsis, and it's where you rename: click it and it turns into a text field; Enter or leaving it saves, Esc cancels.
-- **Mosaics** holds every project, as a collection page (below). Its app bar holds ☰, "Mosaics" in `subtitle1`, and the view's actions. It has no step tabs.
+- **Mosaics** holds every project, as a collection page (below). Its app bar holds ☰, the view's name with the `Collections` icon (set as the editor's link to it is, so it stays in place when you switch views), and the view's actions. It has no step tabs.
 - Your first visit, with no projects yet, opens the editor on Image. After that the app opens on the project you had open last, at its step.
 
 ### Collection pages
@@ -90,7 +90,7 @@ The app has two views, and each uses the three zones.
 A page of things you choose between, where a step is one result you change. Mosaics is the first.
 
 - **Canvas**: a grid of cards, `project-card` (220px) at their narrowest and `space-2` apart, filling the Stage; one column on a phone. The current item comes first, then the rest in the chosen order. Screen readers get a list, each card labelled by its item's name.
-- **Tools**: what decides which items show and in what order, and where they're kept, as ControlSections like any step's tools. An empty collection keeps its tools, unlike an empty step: they're how you'd bring items in. Where items are kept is a state with one way to change it, not a toggle: once you've linked a folder, it shows as a fact (its icon and name) with _Change folder…_, and the default it replaced isn't offered beside it.
+- **Tools**: what decides which items show and in what order, and where they're kept, as ControlSections like any step's tools. An empty collection keeps its tools, unlike an empty step: they're how you'd bring items in. Where items are kept is a state with one way to change it, not a toggle: once you've linked a folder, it shows as a fact (its icon and name; browsers give the name, never the path) with _Change folder…_ and _Stop using this folder_, and the default it replaced isn't offered beside it as a toggle.
 - **Actions**: the main action makes a new item (_New mosaic_); a secondary one brings one in (_Open file…_). Actions on one item sit on its card and nowhere else, not also in ☰: small text buttons in `muted` that turn `azure` on hover and focus, in the same order on every card, never behind a ⋮ menu. Deleting offers Undo.
 - **Current item** (the open project): an `azure` ring outside a `tray` gap, with `aria-current`, as on a ColorSwatch. Current isn't selected: you don't choose it with a toggle, so it never takes the `azureWash` selected state.
 - **Loading**: each card shows as a plain `tray` tile at its final size until its content arrives. No spinner, no shimmer.

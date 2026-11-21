@@ -83,8 +83,11 @@ pages, Saving, Prompts, Dates and sizes).
   - **In the browser:** the help line, then two small text buttons: _Back up all_ and, where the browser supports
     folders, _Use a folder…_. Choosing a folder offers to copy the browser's mosaics into it.
   - **In a folder:** the folder as a fact (`FolderOutlined` in `muted`, its name in `body1` at 500), the help line,
-    and _Change folder…_. No way back to the browser: change the folder instead. Changing folder doesn't offer the
-    browser's old mosaics again.
+    and two small text buttons: _Change folder…_ and _Stop using this folder_. Changing folder doesn't offer the
+    browser's old mosaics again. Stopping asks first ("Stop using Mosaics?"), copies the folder's mosaics into the
+    browser (a newer copy already there stays), forgets the folder and leaves its files where they are.
+  - **The name, not a path.** The File System Access API gives the app the folder's name only, never its path, so
+    the group shows "Mosaics", not `C:\Users\…\Mosaics`.
   - **Without folder support:** the browser help line and _Back up all_.
   - The help line follows the rule (you can't see where files go, so it gets one line) and changes with what the
     browser has granted (see "Keeping a browser library safe"):

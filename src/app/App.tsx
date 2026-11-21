@@ -350,11 +350,23 @@ const App = () => {
                     onShowMeAround={(opener) => startTour(opener)}
                 />
                 {inProjects ? (
+                    // the view's name, with the icon the editor's link to it carries, set where that link sits
                     <Typography
-                        variant="subtitle1"
+                        variant="button"
                         component="h1"
-                        sx={{ flexGrow: 1, minHeight: { xs: 52, md: 60 }, display: 'flex', alignItems: 'center' }}
+                        sx={{
+                            flexGrow: 1,
+                            minHeight: { xs: 52, md: 60 },
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            // where the link's icon sits: 10px into the phone's 44px icon button; on desktop, the
+                            // button's 8px padding less the 4px MUI pulls its start icon in by
+                            paddingInline: { xs: 1.25, md: 0.5 },
+                            color: tokens.ink,
+                        }}
                     >
+                        <CollectionsIcon sx={{ fontSize: { xs: 24, md: 20 } }} aria-hidden />
                         Mosaics
                     </Typography>
                 ) : (

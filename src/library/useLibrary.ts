@@ -318,6 +318,30 @@ export const useLibrary = () => {
         return here.length;
     }, [upsert]);
 
+    /**
+     * Stop using the folder: copy its mosaics into the browser (a newer copy already in the browser stays), forget the
+     * folder, and keep mosaics in the browser from now on. The folder's files stay as they are. Returns how many came
+     * across.
+     */
+    const stopUsingFolder = useCallback(async () => {
+        const from = storeRef.current;
+        let copied = 0;
+        if (from.kind === 'folder') {
+            const inBrowser = new Map((await browserStore.list()).map((entry) => [entry.id, entry]));
+            for (const entry of await from.list()) {
+                const there = inBrowser.get(entry.id);
+                if (there && there.savedAt >= entry.savedAt) continue;
+                await browserStore.write(entry, await from.read(entry.id));
+                copied++;
+            }
+        }
+        await clearFolderCache().catch(() => {});
+        await updateMeta({ storage: 'browser', folder: null });
+        setStatus('loading');
+        await load(browserStore, null);
+        return copied;
+    }, [load, updateMeta]);
+
     /** How many projects the browser holds, to offer copying them into a newly chosen folder. */
     const browserCount = useCallback(async () => (await browserStore.list().catch(() => [])).length, []);
 
@@ -361,6 +385,7 @@ export const useLibrary = () => {
         chooseFolder,
         allowAccess,
         copyBrowserIntoFolder,
+        stopUsingFolder,
         browserCount,
         closePrompt,
     };
