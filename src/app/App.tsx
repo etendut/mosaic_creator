@@ -238,9 +238,21 @@ const App = () => {
     // a new version, published since this page opened: offered with Reload, never reloaded by itself
     const [update, setUpdate] = useState<(() => void) | null>(null);
     useEffect(() => {
-        registerServiceWorker((reload) => setUpdate(() => reload)).catch(() => {
-            // no offline copy this time; the app works as before
-        });
+        let stop: (() => void) | null = null;
+        let gone = false;
+        registerServiceWorker((reload) => setUpdate(() => reload))
+            .then((stopChecking) => {
+                if (gone) stopChecking();
+                else stop = stopChecking;
+            })
+            .catch(() => {
+                // no offline copy this time; the app works as before
+            });
+        // stop looking for new versions once the app has gone (tests unmount it; a page never does)
+        return () => {
+            gone = true;
+            stop?.();
+        };
     }, []);
 
     /** Open file…: a backup restores its mosaics, a project opens, a template starts a new mosaic. */
