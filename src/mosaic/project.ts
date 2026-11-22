@@ -33,7 +33,8 @@ export const DEFAULT_CARD: CardSettings = {
     clubEvent: 'Our Brick Club',
     topMessage: 'Take the ticket and using the bricks on the table, copy the grid below',
     bottomMessage: 'Then hand it to one of the volunteers.\nStand back and watch the magic',
-    backgroundColor: '#4CAF50',
+    // white: cheapest to print, and the printed cutting guides show where to cut
+    backgroundColor: '#FFFFFF',
     paperSize: 'A4',
     cardSize: 'real',
     // off by default: it costs space, e.g. 8×8 real size cards fit 4 to a page with it instead of 8

@@ -2,6 +2,8 @@ import type { CardSize, PaperSize } from './types';
 
 export const PAGE_MARGIN_MM = 5;
 export const CARD_GAP_MM = 2;
+/** The printed cutting guide round each card: a thin dashed line, half the gap out from the card's edge. */
+export const CUT_LINE_MM = 0.2;
 
 const SHEETS = {
     A4: { width: 210, height: 297 },

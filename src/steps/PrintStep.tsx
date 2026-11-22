@@ -7,7 +7,7 @@ import MapPage from '../components/MapPage';
 import PrintPageStyle from '../components/PrintPageStyle';
 import StepLayout, { type ToolGroup } from '../ui/StepLayout';
 import { Stage } from '../ui/Tray';
-import { CARD_GAP_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
+import { CARD_GAP_MM, CUT_LINE_MM, mapPageLayout, mmToPx, PAGE_MARGIN_MM, type PageLayout } from '../mosaic/layout';
 import { colorsUsed } from '../mosaic/partsList';
 import type { MosaicCard, PaperSize } from '../mosaic/types';
 import { COLOR_SCHEME_ATTRIBUTE, tokens } from '../app/theme';
@@ -193,13 +193,24 @@ const PrintStep = ({ mosaic }: { mosaic: Mosaic }) => {
                                     }}
                                 >
                                     {page.cards.map((card) => (
-                                        <BuildingCard
+                                        // a cutting guide round each card, half the gap out, so neighbouring cards share
+                                        // one line in the middle of the gap: one cut between two cards, square cornered
+                                        // for a trimmer, and visible on a white card
+                                        <Box
                                             key={card.id}
-                                            card={card}
-                                            settings={settings}
-                                            brick={brick}
-                                            layout={layout}
-                                        />
+                                            data-testid="cutting-guide"
+                                            sx={{
+                                                outline: `${CUT_LINE_MM}mm dashed ${tokens.muted}`,
+                                                outlineOffset: `${CARD_GAP_MM / 2}mm`,
+                                            }}
+                                        >
+                                            <BuildingCard
+                                                card={card}
+                                                settings={settings}
+                                                brick={brick}
+                                                layout={layout}
+                                            />
+                                        </Box>
                                     ))}
                                 </Box>
                             )}
