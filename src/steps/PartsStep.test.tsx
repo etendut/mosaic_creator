@@ -92,6 +92,27 @@ describe('Parts step', () => {
         for (const button of screen.getAllByRole('button', { name: /XML/ })) expect(column).toContainElement(button);
     });
 
+    it('downloads the mosaic as a 3D model for BrickLink Studio, a model per card', async () => {
+        const { user } = await renderStep(PartsStep);
+        const model = within(screen.getByRole('complementary', { name: 'Tools' }));
+        expect(model.getByText(/Open it in BrickLink Studio/)).toBeInTheDocument();
+        await user.click(model.getByRole('button', { name: 'Download for Studio' }));
+        expect(downloads.at(-1)!.name).toBe('Mosaic Creator.mpd');
+        const mpd = await lastDownloadText();
+        expect(mpd.startsWith('0 FILE mosaic.ldr\r\n0 Mosaic Creator\r\n')).toBe(true);
+        // the test picture's mosaic: 4 × 3 cards
+        expect(mpd.match(/^0 FILE card-[a-z]\d+\.ldr/gm)).toHaveLength(12);
+    });
+
+    it('says why when a mosaic is too big for one model', async () => {
+        // 40 48 × 48 baseplates across: millions of bricks
+        const { user } = await renderStep(PartsStep, { plateId: '4278193', platesAcross: 40 });
+        await user.click(screen.getByRole('button', { name: 'Download for Studio' }));
+        expect(screen.getByRole('alert')).toHaveTextContent(/too many for one model/);
+        await user.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Close' }));
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
     it('names the file "mosaic" when the title is empty', async () => {
         const { user } = await renderStep(PartsStep, { card: { ...DEFAULT_PROJECT.card, title: '' } });
         await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));

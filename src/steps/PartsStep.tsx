@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { Fragment, useState } from 'react';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
+import ThreeDRotationOutlinedIcon from '@mui/icons-material/ThreeDRotationOutlined';
 import ColorSwatch from '../ui/ColorSwatch';
 import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
 import StepLayout from '../ui/StepLayout';
@@ -23,6 +24,7 @@ import { Tray } from '../ui/Tray';
 import { catalog } from '../data/catalog';
 import { downloadFile } from '../lib/download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
+import { ldrawFileName, toLdraw } from '../mosaic/ldraw';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
@@ -85,7 +87,7 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
 };
 
 const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { order: parts, settings, brick, plate, sparesPercent, setSparesPercent } = mosaic;
+    const { order: parts, settings, brick, plate, cards, cardGrid, sparesPercent, setSparesPercent } = mosaic;
 
     const iconFor = (partId: string) => {
         if (partId === brick.partId)
@@ -107,10 +109,27 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
 
     const download = () => downloadFile(xml(), `${settings.title || 'mosaic'}.xml`, 'application/xml');
 
+    // the mosaic as a 3D model for BrickLink Studio: exact bricks, as the cards show them, not the order's spares
+    const [modelError, setModelError] = useState('');
+    const downloadModel = () => {
+        try {
+            const model = toLdraw({ title: settings.title, cards, columns: cardGrid.columns, brick, plate });
+            downloadFile(model, ldrawFileName(settings.title), 'text/plain');
+            setModelError('');
+        } catch (e) {
+            setModelError(e instanceof Error ? e.message : String(e));
+        }
+    };
+
     return (
         <StepLayout
             alerts={
-                copied && (
+                (modelError && (
+                    <Alert severity="error" onClose={() => setModelError('')}>
+                        {modelError}
+                    </Alert>
+                )) ||
+                (copied && (
                     <Alert severity="success" onClose={() => setCopied(false)}>
                         Copied. Paste it into BrickLink&apos;s{' '}
                         <Link href={BRICKLINK_UPLOAD_URL} target="_blank" rel="noreferrer">
@@ -118,7 +137,7 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
                         </Link>{' '}
                         page.
                     </Alert>
-                )
+                ))
             }
             info={[
                 ['Parts', total.toLocaleString()],
@@ -150,6 +169,24 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
                                     ? `${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates stay exact, and the cards still show exact counts.`
                                     : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
                             </HelpText>
+                        </>
+                    ),
+                },
+                {
+                    id: 'model',
+                    label: '3D model',
+                    icon: <ThreeDRotationOutlinedIcon />,
+                    content: (
+                        <>
+                            <HelpText>
+                                Open it in BrickLink Studio: the finished mosaic, with each card as its own model for
+                                Studio&apos;s building instructions.
+                            </HelpText>
+                            <Box>
+                                <Button size="small" onClick={downloadModel}>
+                                    Download for Studio
+                                </Button>
+                            </Box>
                         </>
                     ),
                 },
