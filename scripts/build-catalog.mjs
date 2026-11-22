@@ -41,8 +41,8 @@ const PLATES = [
     { id: '4624911', partId: '41539', colorId: 1 },
     { id: '4620130', partId: '91405', colorId: 86 },
     { id: '4618526', partId: '91405', colorId: 1 },
-    // the Technic brick is joined to its neighbours with 4 pins per plate
-    { id: '6302092', partId: '65803', colorId: 11, pinsPerPlate: 4 },
+    // the Technic brick is joined to each neighbour with 3 pins, along the edge they share
+    { id: '6302092', partId: '65803', colorId: 11, pinsPerJoin: 3 },
     { id: '6061048', partId: '3811', colorId: 86 },
     { id: '6295194', partId: '3811', colorId: 1 },
     { id: '4278193', partId: '4186', colorId: 86 },
@@ -118,12 +118,12 @@ const bricks = BRICKS.map(({ partId, size, profile }) => {
     };
 });
 
-const plates = PLATES.map(({ id, partId, colorId, pinsPerPlate = 0 }) => {
+const plates = PLATES.map(({ id, partId, colorId, pinsPerJoin = 0 }) => {
     const name = nameOf(partId);
     const size = Number(name.match(/(\d+) x \1/)?.[1]);
     if (!size) problems.push(`can't read plate size from "${name}"`);
     const profile = PLATE_PROFILES[partId] ?? 'plate';
-    return { id, partId, name, size, profile, color: colorOf(colorId), pinsPerPlate };
+    return { id, partId, name, size, profile, color: colorOf(colorId), pinsPerJoin };
 }).sort((a, b) => a.size - b.size || a.name.localeCompare(b.name) || a.color.name.localeCompare(b.color.name));
 
 const pin = { partId: PIN.partId, name: nameOf(PIN.partId), color: colorOf(PIN.colorId) };

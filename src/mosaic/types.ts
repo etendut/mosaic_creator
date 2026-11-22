@@ -39,7 +39,8 @@ export interface PlateOption {
     size: number;
     profile: PartProfile;
     color: PaletteColor;
-    pinsPerPlate: number;
+    /** Pins joining it to each neighbouring plate, along the edge they share (0: plates that aren't pinned). */
+    pinsPerJoin: number;
 }
 
 export interface PinOption {

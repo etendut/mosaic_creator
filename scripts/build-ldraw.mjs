@@ -33,7 +33,7 @@ const resolve = (name) => {
 // Studio maps it to
 const studioParts = table('StudioPartDefinition2.txt');
 const parts = {};
-const partIds = [...catalog.bricks.map((b) => b.partId), ...catalog.plates.map((p) => p.partId)];
+const partIds = [...catalog.bricks.map((b) => b.partId), ...catalog.plates.map((p) => p.partId), catalog.pin.partId];
 for (const id of new Set(partIds)) {
     const mapped = studioParts.filter((row) => row[2] === id).map((row) => row[4]);
     const own = `${id}.dat`;
@@ -50,6 +50,7 @@ const colors = {};
 const colorIds = [
     ...catalog.bricks.flatMap((b) => b.colors.map((c) => c.id)),
     ...catalog.plates.map((p) => p.color.id),
+    catalog.pin.color.id,
 ];
 for (const id of new Set(colorIds)) {
     const row = studioColors.find((r) => r[1] === String(id) && r[2] !== '');

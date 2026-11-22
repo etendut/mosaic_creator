@@ -7,6 +7,8 @@
         "jsx": "react-jsx",
         "strict": true,
         "noEmit": true,
+        // vite.config.ts imports with the .ts extension, as Vite's native config loader will need
+        "allowImportingTsExtensions": true,
         "isolatedModules": true,
         "verbatimModuleSyntax": true,
         "resolveJsonModule": true,

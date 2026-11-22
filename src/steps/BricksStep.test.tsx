@@ -17,7 +17,7 @@ describe('Bricks step', () => {
     it('changes the plate size, keeping its colour when that size comes in it', async () => {
         const { user } = await renderStep(BricksStep);
         await user.click(screen.getByRole('button', { name: '16 by 16 studs' }));
-        expect(screen.getByRole('button', { name: /Black.*joined with 4 pins/ })).toHaveAttribute(
+        expect(screen.getByRole('button', { name: /Black.*joined to each neighbour with 3 pins/ })).toHaveAttribute(
             'aria-pressed',
             'true',
         );

@@ -1,5 +1,5 @@
 import ldraw from '../data/ldraw.json';
-import type { BrickOption, MosaicCard, PlateOption } from './types';
+import type { BrickOption, MosaicCard, PinOption, PlateOption } from './types';
 
 /**
  * A mosaic as an LDraw model, for BrickLink Studio (or any LDraw editor): one .mpd file with a submodel per card, a
@@ -33,9 +33,20 @@ const color = (id: number) => {
     return code;
 };
 
-/** One part, unrotated: LDraw's type 1 line (colour, position, the identity matrix, the file). */
-const place = (code: number, x: number, y: number, z: number, file: string) =>
-    `1 ${code} ${x} ${y} ${z} 1 0 0 0 1 0 0 0 1 ${file}`;
+/** Unrotated, and turned a quarter about the vertical (a pin joining rows rather than columns). */
+const UPRIGHT = '1 0 0 0 1 0 0 0 1';
+const QUARTER_TURN = '0 0 1 0 1 0 -1 0 0';
+
+/** One part: LDraw's type 1 line (colour, position, rotation, the file). */
+const place = (code: number, x: number, y: number, z: number, file: string, rotation = UPRIGHT) =>
+    `1 ${code} ${x} ${y} ${z} ${rotation} ${file}`;
+
+/**
+ * Where pins go along an edge two pinned plates share (the 16 × 16 Technic brick), as built in Studio: through the
+ * side holes 18 below the top face, at the middle of the edge and 5 studs either side of it.
+ */
+const PIN_DEPTH = 18;
+const PIN_OFFSETS = [-100, 0, 100];
 
 /** A card's submodel file name, as Studio lists it: card-a1.ldr. */
 export const cardFile = (id: string) => `card-${id.toLowerCase()}.ldr`;
@@ -54,13 +65,16 @@ export const toLdraw = ({
     columns,
     brick,
     plate,
+    pin,
 }: {
     title: string;
     cards: MosaicCard[];
     /** Cards across: the cards come row by row. */
     columns: number;
     brick: Pick<BrickOption, 'partId' | 'size' | 'profile'>;
-    plate: Pick<PlateOption, 'partId' | 'size' | 'color'>;
+    plate: Pick<PlateOption, 'partId' | 'size' | 'color' | 'pinsPerJoin'>;
+    /** The pin that joins pinned plates. */
+    pin: Pick<PinOption, 'partId' | 'color'>;
 }) => {
     const bricks = cards.reduce((sum, card) => sum + card.brickCount, 0);
     if (bricks > MAX_LDRAW_BRICKS)
@@ -79,6 +93,22 @@ export const toLdraw = ({
         const [x, z] = [(i % columns) * span, (rows - 1 - Math.floor(i / columns)) * span];
         lines.push(place(16, x, 0, z, cardFile(card.id)));
     });
+    // pinned plates: pins along each edge two cards share, to the next card across and to the one below
+    if (plate.pinsPerJoin > 0) {
+        const pinFile = part(pin.partId);
+        const pinColor = color(pin.color.id);
+        const offsets = PIN_OFFSETS.slice(0, plate.pinsPerJoin);
+        cards.forEach((_, i) => {
+            const [c, r] = [i % columns, Math.floor(i / columns)];
+            const [x, z] = [c * span, (rows - 1 - r) * span];
+            if (c < columns - 1 && i + 1 < cards.length)
+                for (const along of offsets)
+                    lines.push(place(pinColor, x + span, PIN_DEPTH, z + span / 2 + along, pinFile));
+            if (r < rows - 1 && i + columns < cards.length)
+                for (const along of offsets)
+                    lines.push(place(pinColor, x + span / 2 + along, PIN_DEPTH, z, pinFile, QUARTER_TURN));
+        });
+    }
     lines.push('0 NOFILE');
     for (const card of cards) {
         lines.push(...header(`Card ${card.id}`, cardFile(card.id)));

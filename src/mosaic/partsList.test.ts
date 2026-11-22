@@ -1,6 +1,6 @@
 import { toBrickLinkXml } from './bricklinkXml';
 import { compileMosaicCards } from './cards';
-import { buildPartsList, sparesFor, withSpares } from './partsList';
+import { buildPartsList, cardJoins, sparesFor, withSpares } from './partsList';
 import type { BrickOption, PinOption, PlateOption } from './types';
 
 const B = { id: 11, name: 'Black', hex: '#212121', type: 'Solid' as const };
@@ -20,7 +20,7 @@ const plate: PlateOption = {
     size: 2,
     profile: 'plate',
     color: B,
-    pinsPerPlate: 0,
+    pinsPerJoin: 0,
 };
 const pin: PinOption = { partId: '2780', name: 'Pin', color: B };
 
@@ -38,20 +38,47 @@ const cards = compileMosaicCards(
 
 describe('buildPartsList', () => {
     it('counts exact bricks per colour, most first, then one plate per card', () => {
-        expect(buildPartsList(cards, brick, plate, pin).map((l) => [l.partId, l.color.name, l.quantity])).toEqual([
+        expect(buildPartsList(cards, 2, brick, plate, pin).map((l) => [l.partId, l.color.name, l.quantity])).toEqual([
             ['98138', 'White', 5],
             ['98138', 'Black', 2],
             ['41539', 'Black', 2],
         ]);
     });
 
-    it('adds pins for plates that need them', () => {
-        const lines = buildPartsList(cards, brick, { ...plate, pinsPerPlate: 4 }, pin);
-        expect(lines.at(-1)).toMatchObject({ partId: '2780', quantity: 8 });
+    it("adds pins for plates that need them: the plate's pins for each join between neighbouring cards", () => {
+        // two cards side by side: one join
+        const lines = buildPartsList(cards, 2, brick, { ...plate, pinsPerJoin: 3 }, pin);
+        expect(lines.at(-1)).toMatchObject({ partId: '2780', quantity: 3 });
+        // a card on its own needs none
+        const one = compileMosaicCards(
+            {
+                width: 2,
+                height: 2,
+                rows: [
+                    [W, W],
+                    [W, B],
+                ],
+            },
+            2,
+        );
+        expect(buildPartsList(one, 1, brick, { ...plate, pinsPerJoin: 3 }, pin).some((l) => l.partId === '2780')).toBe(
+            false,
+        );
+    });
+
+    it('counts the joins between neighbouring cards, across each row and down each column', () => {
+        // a 3 × 3 built in Studio: 12 joins, 36 pins
+        expect(cardJoins(9, 3)).toBe(12);
+        expect(cardJoins(4, 2)).toBe(4);
+        expect(cardJoins(12, 4)).toBe(17);
+        expect(cardJoins(100, 10)).toBe(180);
+        expect(cardJoins(3, 3)).toBe(2);
+        expect(cardJoins(1, 1)).toBe(0);
+        expect(cardJoins(0, 0)).toBe(0);
     });
 
     it('is empty with no cards', () => {
-        expect(buildPartsList([], brick, plate, pin)).toEqual([]);
+        expect(buildPartsList([], 0, brick, plate, pin)).toEqual([]);
     });
 });
 
@@ -64,7 +91,7 @@ describe('spares', () => {
     });
 
     it('adds at least the percentage to every brick and pin line, but not the plates', () => {
-        const exact = buildPartsList(cards, brick, { ...plate, pinsPerPlate: 4 }, pin);
+        const exact = buildPartsList(cards, 2, brick, { ...plate, pinsPerJoin: 3 }, pin);
         const order = withSpares(exact, 10, plate.partId);
         order.forEach((line, i) => {
             if (line.partId === plate.partId) expect(line).toMatchObject({ quantity: exact[i].quantity, spares: 0 });
@@ -75,7 +102,7 @@ describe('spares', () => {
     });
 
     it('changes nothing at 0%', () => {
-        const exact = buildPartsList(cards, brick, plate, pin);
+        const exact = buildPartsList(cards, 2, brick, plate, pin);
         expect(withSpares(exact, 0, plate.partId).map((l) => l.quantity)).toEqual(exact.map((l) => l.quantity));
     });
 });

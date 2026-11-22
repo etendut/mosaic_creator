@@ -83,7 +83,7 @@ export const PlatePicker = ({ value, onChange }: { value: PlateOption; onChange:
                         <Typography variant="body2">{p.color.name}</Typography>
                         <Typography variant="caption" color="textSecondary" component="div">
                             {partName(p.name)}
-                            {p.pinsPerPlate > 0 && `, joined with ${p.pinsPerPlate} pins`}
+                            {p.pinsPerJoin > 0 && `, joined to each neighbour with ${p.pinsPerJoin} pins`}
                         </Typography>
                     </Choice>
                 ))}

@@ -115,7 +115,14 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
     const [modelError, setModelError] = useState('');
     const downloadModel = () => {
         try {
-            const model = toLdraw({ title: fileTitle, cards, columns: cardGrid.columns, brick, plate });
+            const model = toLdraw({
+                title: fileTitle,
+                cards,
+                columns: cardGrid.columns,
+                brick,
+                plate,
+                pin: catalog.pin,
+            });
             downloadFile(model, exportFileName(fileTitle, 'mpd'), 'text/plain');
             setModelError('');
         } catch (e) {
