@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { Fragment, useState } from 'react';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
+import NumbersIcon from '@mui/icons-material/Numbers';
 import ColorSwatch from '../ui/ColorSwatch';
 import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
 import StepLayout from '../ui/StepLayout';
@@ -25,8 +26,8 @@ import { downloadFile, exportFileName } from '../lib/download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
 import { SLOW_LDRAW_BRICKS, toLdraw } from '../mosaic/ldraw';
 import Toast, { type ToastMessage } from '../ui/Toast';
-import type { PartLine } from '../mosaic/partsList';
-import { MAX_SPARES_PERCENT } from '../mosaic/project';
+import { roundUpTo, type PartLine } from '../mosaic/partsList';
+import { MAX_ROUND_UP, MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
 import { partName } from '../mosaic/units';
 import { tokens } from '../app/theme';
@@ -42,28 +43,40 @@ const groupByPart = (lines: PartLine[]) => {
     return [...groups.values()];
 };
 
-const SPARES_PRESETS = [0, 5, 10];
+interface PresetControlProps {
+    /** The row's name, for screen readers: _Spares_. */
+    label: string;
+    value: number;
+    onChange: (n: number) => void;
+    /** The presets, 0 first, which shows as None. */
+    presets: number[];
+    /** How a preset reads on its button: _10%_. */
+    format: (n: number) => string;
+    /** The Custom field's label: _Spares %_. */
+    fieldLabel: string;
+    max: number;
+}
 
-/** Spares as a percentage: none, 5%, 10% or any whole number up to MAX_SPARES_PERCENT. */
-const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: number) => void }) => {
+/** A row of presets (None first) and Custom, which shows a field for any whole number from 0 (None) to `max`. */
+const PresetControl = ({ label, value, onChange, presets, format, fieldLabel, max }: PresetControlProps) => {
     const [custom, setCustom] = useState(false);
-    const selected = custom || !SPARES_PRESETS.includes(percent) ? 'custom' : percent;
+    const selected = custom || !presets.includes(value) ? 'custom' : value;
     return (
         <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
             <ToggleButtonGroup
                 exclusive
                 size="small"
                 value={selected}
-                onChange={(_, value: number | 'custom' | null) => {
-                    if (value === null) return;
-                    setCustom(value === 'custom');
-                    if (value !== 'custom') onChange(value);
+                onChange={(_, choice: number | 'custom' | null) => {
+                    if (choice === null) return;
+                    setCustom(choice === 'custom');
+                    if (choice !== 'custom') onChange(choice);
                 }}
-                aria-label="Spares"
+                aria-label={label}
             >
-                {SPARES_PRESETS.map((n) => (
+                {presets.map((n) => (
                     <ToggleButton key={n} value={n}>
-                        {n === 0 ? 'None' : `${n}%`}
+                        {n === 0 ? 'None' : format(n)}
                     </ToggleButton>
                 ))}
                 <ToggleButton value="custom">Custom</ToggleButton>
@@ -72,13 +85,13 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
                 <TextField
                     type="number"
                     size="small"
-                    label="Spares %"
-                    value={percent}
+                    label={fieldLabel}
+                    value={value}
                     onChange={(e) => {
                         const n = Math.round(Number(e.target.value));
-                        if (Number.isFinite(n)) onChange(Math.min(MAX_SPARES_PERCENT, Math.max(0, n)));
+                        if (Number.isFinite(n)) onChange(Math.min(max, Math.max(0, n)));
                     }}
-                    slotProps={{ htmlInput: { min: 0, max: MAX_SPARES_PERCENT, step: 1 } }}
+                    slotProps={{ htmlInput: { min: 0, max, step: 1 } }}
                     sx={{ width: 110 }}
                 />
             )}
@@ -88,7 +101,18 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
 
 /** `name`: the mosaic's own name, which names the downloads (the card title is what the cards print). */
 const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
-    const { order: parts, settings, brick, plate, cards, cardGrid, sparesPercent, setSparesPercent } = mosaic;
+    const {
+        order: parts,
+        settings,
+        brick,
+        plate,
+        cards,
+        cardGrid,
+        sparesPercent,
+        setSparesPercent,
+        roundUp,
+        setRoundUp,
+    } = mosaic;
 
     const iconFor = (partId: string) => {
         if (partId === brick.partId)
@@ -188,11 +212,44 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
                     icon: <LibraryAddIcon />,
                     content: (
                         <>
-                            <SparesControl percent={sparesPercent} onChange={setSparesPercent} />
+                            <PresetControl
+                                label="Spares"
+                                value={sparesPercent}
+                                onChange={setSparesPercent}
+                                presets={[0, 5, 10]}
+                                format={(n) => `${n}%`}
+                                fieldLabel="Spares %"
+                                max={MAX_SPARES_PERCENT}
+                            />
                             <HelpText>
                                 {sparesPercent > 0
                                     ? `${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates stay exact, and the cards still show exact counts.`
-                                    : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
+                                    : roundUp > 1
+                                      ? 'Extra bricks for any lost on the day. No spares beyond what Round up adds.'
+                                      : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
+                            </HelpText>
+                        </>
+                    ),
+                },
+                {
+                    id: 'round-up',
+                    label: 'Round up',
+                    icon: <NumbersIcon />,
+                    content: (
+                        <>
+                            <PresetControl
+                                label="Round up"
+                                value={roundUp}
+                                onChange={setRoundUp}
+                                presets={[0, 10, 100]}
+                                format={(n) => n.toLocaleString('en-GB')}
+                                fieldLabel="Round up to"
+                                max={MAX_ROUND_UP}
+                            />
+                            <HelpText>
+                                {roundUp > 0
+                                    ? `You buy each brick colour and the pins in ${roundUp.toLocaleString('en-GB')}s, after spares: ${roundUpTo(64, roundUp).toLocaleString('en-GB')} for a colour that needs 64. Plates stay exact.`
+                                    : 'You buy the exact count of each colour, plus any spares.'}
                             </HelpText>
                         </>
                     ),

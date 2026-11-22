@@ -54,7 +54,8 @@ describe('Parts step', () => {
         const exact = quantities();
         expect(infoLabels()).not.toContain('Spares');
 
-        await user.click(screen.getByRole('button', { name: '10%' }));
+        const spares = () => within(screen.getByRole('group', { name: 'Spares' }));
+        await user.click(spares().getByRole('button', { name: '10%' }));
         // how many extra: a number the setting doesn't show
         expect(info('Spares')).toMatch(/^[\d,]+$/);
         expect(screen.getByText(/10% extra of each brick colour/)).toBeInTheDocument();
@@ -72,14 +73,62 @@ describe('Parts step', () => {
         // the cards and the map page keep exact counts
         expect(await legend()).toBe(exactLegend);
 
-        await user.click(screen.getByRole('button', { name: 'Custom' }));
+        await user.click(spares().getByRole('button', { name: 'Custom' }));
         const field = screen.getByRole('spinbutton', { name: 'Spares %' });
         await user.clear(field);
         await user.type(field, '25');
         expect(screen.getByText(/25% extra of each brick colour/)).toBeInTheDocument();
-        await user.click(screen.getByRole('button', { name: 'None' }));
+        await user.click(spares().getByRole('button', { name: 'None' }));
         expect(screen.getByText(/the list has exact counts/)).toBeInTheDocument();
         expect(quantities()).toEqual(exact);
+    });
+
+    it('rounds each brick colour and the pins up after the spares, but not the plates', async () => {
+        const { user, mosaic } = await renderStep(PartsStep);
+        const roundUp = within(screen.getByRole('group', { name: 'Round up' }));
+        const exact = mosaic().parts;
+        const isPlate = (partId: string) => partId === mosaic().plate.partId;
+        expect(roundUp.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByText('You buy the exact count of each colour, plus any spares.')).toBeInTheDocument();
+
+        await user.click(roundUp.getByRole('button', { name: '10' }));
+        expect(mosaic().project.roundUp).toBe(10);
+        expect(
+            screen.getByText(
+                'You buy each brick colour and the pins in 10s, after spares: 70 for a colour that needs 64. Plates stay exact.',
+            ),
+        ).toBeInTheDocument();
+        mosaic().order.forEach((line, i) =>
+            expect(line.quantity).toBe(
+                isPlate(line.partId) ? exact[i].quantity : Math.ceil(exact[i].quantity / 10) * 10,
+            ),
+        );
+        // what it adds shows as spares, in Info and on the lines
+        expect(info('Spares')).toMatch(/^[\d,]+$/);
+        // so with no spares, Spares no longer says the counts are exact
+        expect(screen.getByText(/No spares beyond what Round up adds/)).toBeInTheDocument();
+
+        // after the spares: 10% of each colour first, then up to the next 100
+        await user.click(within(screen.getByRole('group', { name: 'Spares' })).getByRole('button', { name: '10%' }));
+        await user.click(roundUp.getByRole('button', { name: '100' }));
+        mosaic().order.forEach((line, i) => {
+            const n = exact[i].quantity;
+            if (!isPlate(line.partId)) expect(line.quantity).toBe(Math.ceil((n + Math.ceil(n / 10)) / 100) * 100);
+        });
+
+        await user.click(roundUp.getByRole('button', { name: 'Custom' }));
+        const field = screen.getByRole('spinbutton', { name: 'Round up to' });
+        await user.clear(field);
+        await user.type(field, '25');
+        expect(mosaic().project.roundUp).toBe(25);
+        expect(screen.getByText(/in 25s, after spares: 75 for a colour that needs 64/)).toBeInTheDocument();
+        // no more than 1,000
+        await user.type(field, '000');
+        expect(mosaic().project.roundUp).toBe(1000);
+
+        await user.click(roundUp.getByRole('button', { name: 'None' }));
+        expect(mosaic().project.roundUp).toBe(0);
+        expect(screen.queryByRole('spinbutton', { name: 'Round up to' })).not.toBeInTheDocument();
     });
 
     it('ends the tools with Download and Copy XML, like Print', async () => {
