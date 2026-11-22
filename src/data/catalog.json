@@ -3422,7 +3422,7 @@
                 "hex": "#2E2E2E",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4211474",
@@ -3436,7 +3436,7 @@
                 "hex": "#B9B9B9",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4144012",
@@ -3450,7 +3450,7 @@
                 "hex": "#F3F4EF",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4166619",
@@ -3464,7 +3464,7 @@
                 "hex": "#2E2E2E",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4166618",
@@ -3478,7 +3478,7 @@
                 "hex": "#B9B9B9",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4624911",
@@ -3492,7 +3492,7 @@
                 "hex": "#F3F4EF",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4620130",
@@ -3506,7 +3506,7 @@
                 "hex": "#B9B9B9",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4618526",
@@ -3520,7 +3520,7 @@
                 "hex": "#F3F4EF",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "6302092",
@@ -3534,7 +3534,7 @@
                 "hex": "#2E2E2E",
                 "type": "Solid"
             },
-            "pinsPerPlate": 4
+            "pinsPerJoin": 3
         },
         {
             "id": "6061048",
@@ -3548,7 +3548,7 @@
                 "hex": "#B9B9B9",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "6295194",
@@ -3562,7 +3562,7 @@
                 "hex": "#F3F4EF",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         },
         {
             "id": "4278193",
@@ -3576,7 +3576,7 @@
                 "hex": "#B9B9B9",
                 "type": "Solid"
             },
-            "pinsPerPlate": 0
+            "pinsPerJoin": 0
         }
     ],
     "pin": {

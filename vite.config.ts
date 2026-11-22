@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { defineConfig, type Plugin } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
-import { releaseVersion } from './src/lib/releaseVersion';
+import { releaseVersion } from './src/lib/releaseVersion.ts';
 
 /** A git command's output, or undefined outside a git checkout. */
 const git = (command: string) => {

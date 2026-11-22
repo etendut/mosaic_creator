@@ -65,12 +65,15 @@ export const useMosaic = () => {
         [swapped, project.touchUps, brick.colors],
     );
     const cards = useMemo(() => (grid ? compileMosaicCards(grid, cellsPerSide) : []), [grid, cellsPerSide]);
-    const parts = useMemo(() => buildPartsList(cards, brick, plate, catalog.pin), [cards, brick, plate]);
+    const cardGrid = grid ? cardGridSize(grid, cellsPerSide) : { columns: 0, rows: 0 };
+    const parts = useMemo(
+        () => buildPartsList(cards, cardGrid.columns, brick, plate, catalog.pin),
+        [cards, cardGrid.columns, brick, plate],
+    );
     const order = useMemo(
         () => withSpares(parts, project.sparesPercent, plate.partId),
         [parts, project.sparesPercent, plate.partId],
     );
-    const cardGrid = grid ? cardGridSize(grid, cellsPerSide) : { columns: 0, rows: 0 };
     const maxCardColors = useMemo(
         () => cards.reduce((most, card) => Math.max(most, cardColorCounts(card).length), 0),
         [cards],
