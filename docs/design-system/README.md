@@ -81,8 +81,8 @@ Phone (under 900 px)                    Desktop (900 px and wider)
 
 The app has two views, and each uses the three zones.
 
-- **Editor** edits one mosaic through the six steps. Its app bar holds ☰, a _Mosaics_ link, the project's name, the step tabs and the step's action. The link is `Collections` and the word on desktop, the icon alone on a phone (its name read out). The name is `subtitle1`, cut short with an ellipsis, and it's where you rename: click it and it turns into a text field; Enter or leaving it saves, Esc cancels.
-- **Mosaics** holds every project, as a collection page (below). Its app bar holds ☰, the view's name with the `Collections` icon (set as the editor's link to it is, so it stays in place when you switch views), and the view's actions. It has no step tabs.
+- **Editor** edits one mosaic through the six steps. Its app bar holds ☰, a _Mosaics_ link, the project's name, the step tabs and the step's action. The link is the mark and the word on desktop, the mark alone on a phone (its name read out). The name is `subtitle1`, cut short with an ellipsis, and it's where you rename: click it and it turns into a text field; Enter or leaving it saves, Esc cancels.
+- **Mosaics** holds every project, as a collection page (below). Its app bar holds ☰, the view's name with the mark (set as the editor's link to it is, so it stays in place when you switch views), and the view's actions. It has no step tabs.
 - Your first visit, with no projects yet, opens the editor on Image. After that the app opens on the project you had open last, at its step.
 
 ### Collection pages
@@ -160,7 +160,7 @@ When a step can't show a result yet, the canvas holds one centred EmptyState car
 ## Iconography
 
 - Material icons from `@mui/icons-material`, outlined where a variant exists (`InfoOutlined`). Always with a label or tooltip and an `aria-label`.
-- The mark (`src/favicon.svg`) is a picture turning into bricks: a rounded square with a smooth landscape (sky, sun, hills) in the top-left half that turns, along the diagonal, into the same scene as stud plates on `ink` in the bottom-right. No line divides them: the picture runs straight into the bricks. It's the one place outside the mosaic where brick colours appear, since the mark stands for the mosaic. It's the favicon and the app icon (`public/icons/`, with a full-bleed `src/favicon-maskable.svg` for the maskable one); the app shows no logo in its own interface.
+- The mark (`src/favicon.svg`) is a picture turning into bricks: a rounded square with a smooth landscape (sky, sun, hills) in the top-left half that turns, along the diagonal, into the same scene as stud plates on `ink` in the bottom-right. No line divides them: the picture runs straight into the bricks. It's the one place outside the mosaic where brick colours appear, since the mark stands for the mosaic. It's the favicon and the app icon (`public/icons/`, with a full-bleed `src/favicon-maskable.svg` for the maskable one); inside the app it appears in one place only: as Mosaics' icon, in its title and in the editor's link back to it (`Mark`, at 20px, 24px on a phone), standing for your collection of mosaics. Nowhere else, and never as decoration.
 
 ## The steps
 

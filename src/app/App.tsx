@@ -1,5 +1,4 @@
 import { Box, Button, IconButton, Stack, Tab, Tabs, Typography } from '@mui/material';
-import CollectionsIcon from '@mui/icons-material/Collections';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBarSlot } from './appBarSlot';
 import ProjectMenu from '../components/ProjectMenu';
@@ -13,6 +12,7 @@ import { useProjectSession } from '../library/useProjectSession';
 import ProjectsView from '../views/ProjectsView';
 import { registerServiceWorker } from '../lib/pwa';
 import Toast, { type ToastMessage } from '../ui/Toast';
+import Mark from '../ui/Mark';
 import { imageToCanvas, loadImage } from '../mosaic/image';
 import samplePicture from '../assets/sample-picture.svg';
 import Walkthrough, { type TourStop } from '../components/Walkthrough';
@@ -380,7 +380,7 @@ const App = () => {
                             color: tokens.ink,
                         }}
                     >
-                        <CollectionsIcon sx={{ fontSize: { xs: 24, md: 20 } }} aria-hidden />
+                        <Mark size={{ xs: 24, md: 20 }} />
                         Mosaics
                     </Typography>
                 ) : (
@@ -397,7 +397,7 @@ const App = () => {
                                 e.preventDefault();
                                 goProjects();
                             }}
-                            startIcon={<CollectionsIcon />}
+                            startIcon={<Mark />}
                             sx={{ display: { xs: 'none', md: 'inline-flex' }, flexShrink: 0, color: tokens.ink }}
                         >
                             Mosaics
@@ -411,7 +411,7 @@ const App = () => {
                             }}
                             sx={{ display: { md: 'none' }, flexShrink: 0, width: 44, height: 44 }}
                         >
-                            <CollectionsIcon />
+                            <Mark size={24} />
                         </IconButton>
                         <Typography aria-hidden sx={{ display: { xs: 'none', md: 'block' }, color: tokens.muted }}>
                             /

@@ -25,7 +25,7 @@ Google Drive, OneDrive or Dropbox on your computer, their sync apps copy it, and
 | Editor  | `#/<project id>/<step>` | ☰, _Mosaics_ link, the project's name, ① to ⑥, the step's action | one project, through the six steps   |
 
 - **Getting between them.** In the editor, a _Mosaics_ link sits left of the name, so the app bar reads "Mosaics /
-  Balloon" like a short trail. On a phone the first row holds ☰, the link as an icon (`Collections`, labelled
+  Balloon" like a short trail. On a phone the first row holds ☰, the link as the mark (`src/ui/Mark.tsx`, labelled
   "Mosaics"), the name (cut short with an ellipsis) and the step's action; the step tabs keep the second row.
   Opening a card in Mosaics goes to that project on Bricks (on Image if it has no picture yet). The browser's
   back and forward move between the views, as they move between steps now.
