@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { DEFAULT_PROJECT } from '../mosaic/project';
 import { goTo, info, infoLabels, startMosaic } from '../test/app';
 import { renderStep } from '../test/step';
@@ -104,13 +104,38 @@ describe('Parts step', () => {
         expect(mpd.match(/^0 FILE card-[a-z]\d+\.ldr/gm)).toHaveLength(12);
     });
 
+    it('downloads a big model, but warns that Studio will be slow with it', async () => {
+        // 5 48 × 48 plates across: 240 × 150 bricks
+        const { user } = await renderStep((props) => <PartsStep {...props} name="Balloon" />, {
+            plateId: '4278193',
+            platesAcross: 5,
+        });
+        await user.click(screen.getByRole('button', { name: 'Download for Studio' }));
+        expect(downloads.at(-1)!.name).toBe('Balloon.mpd');
+        // a warning, not an error: it waits until you close it
+        const toast = screen.getByRole('status');
+        expect(toast).toHaveTextContent(
+            /^Balloon\.mpd has 3\d,\d{3} bricks, and Studio gets slow past about 30,000\. Use fewer plates across on the Bricks step for a lighter model\.$/,
+        );
+        await user.click(within(toast).getByRole('button', { name: 'Close' }));
+        // (it slides away first)
+        await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    });
+
+    it('says nothing after downloading a model Studio handles easily', async () => {
+        const { user } = await renderStep(PartsStep);
+        await user.click(screen.getByRole('button', { name: 'Download for Studio' }));
+        expect(downloads.at(-1)!.name).toMatch(/\.mpd$/);
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
     it('says why when a mosaic is too big for one model', async () => {
         // 40 48 × 48 baseplates across: millions of bricks
         const { user } = await renderStep(PartsStep, { plateId: '4278193', platesAcross: 40 });
         await user.click(screen.getByRole('button', { name: 'Download for Studio' }));
         expect(screen.getByRole('alert')).toHaveTextContent(/more than Studio can work with/);
         await user.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Close' }));
-        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
     });
 
     it('names the BrickLink XML after the mosaic', async () => {

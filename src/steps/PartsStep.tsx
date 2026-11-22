@@ -23,7 +23,8 @@ import { Tray } from '../ui/Tray';
 import { catalog } from '../data/catalog';
 import { downloadFile, exportFileName } from '../lib/download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
-import { toLdraw } from '../mosaic/ldraw';
+import { SLOW_LDRAW_BRICKS, toLdraw } from '../mosaic/ldraw';
+import Toast, { type ToastMessage } from '../ui/Toast';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
@@ -112,7 +113,7 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
     const download = () => downloadFile(xml(), exportFileName(fileTitle, 'xml'), 'application/xml');
 
     // the mosaic as a 3D model for BrickLink Studio: exact bricks, as the cards show them, not the order's spares
-    const [modelError, setModelError] = useState('');
+    const [modelMessage, setModelMessage] = useState<ToastMessage | null>(null);
     const downloadModel = () => {
         try {
             const model = toLdraw({
@@ -123,22 +124,27 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
                 plate,
                 pin: catalog.pin,
             });
-            downloadFile(model, exportFileName(fileTitle, 'mpd'), 'text/plain');
-            setModelError('');
+            const file = exportFileName(fileTitle, 'mpd');
+            downloadFile(model, file, 'text/plain');
+            // a big model still downloads, but say Studio will be slow with it, and what makes it lighter
+            const bricks = cards.reduce((sum, card) => sum + card.brickCount, 0);
+            setModelMessage(
+                bricks > SLOW_LDRAW_BRICKS
+                    ? {
+                          text: `${file} has ${bricks.toLocaleString('en-GB')} bricks, and Studio gets slow past about ${SLOW_LDRAW_BRICKS.toLocaleString('en-GB')}. Use fewer plates across on the Bricks step for a lighter model.`,
+                          stays: true,
+                      }
+                    : null,
+            );
         } catch (e) {
-            setModelError(e instanceof Error ? e.message : String(e));
+            setModelMessage({ error: true, text: e instanceof Error ? e.message : String(e) });
         }
     };
 
     return (
         <StepLayout
             alerts={
-                (modelError && (
-                    <Alert severity="error" onClose={() => setModelError('')}>
-                        {modelError}
-                    </Alert>
-                )) ||
-                (copied && (
+                copied && (
                     <Alert severity="success" onClose={() => setCopied(false)}>
                         Copied. Paste it into BrickLink&apos;s{' '}
                         <Link href={BRICKLINK_UPLOAD_URL} target="_blank" rel="noreferrer">
@@ -146,7 +152,7 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
                         </Link>{' '}
                         page.
                     </Alert>
-                ))
+                )
             }
             info={[
                 ['Parts', total.toLocaleString()],
@@ -261,6 +267,7 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
                     </TableBody>
                 </Table>
             </Tray>
+            <Toast message={modelMessage} onClose={() => setModelMessage(null)} />
         </StepLayout>
     );
 };

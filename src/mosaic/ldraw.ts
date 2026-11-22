@@ -22,6 +22,9 @@ const HEIGHT: Record<BrickOption['profile'], number> = { brick: 24, plate: 8, ti
  */
 export const MAX_LDRAW_BRICKS = 120_000;
 
+/** Past this many bricks Studio still opens the model, but it gets slow to work with (an 82,944-brick mosaic was). */
+export const SLOW_LDRAW_BRICKS = 30_000;
+
 const parts = ldraw.parts as Record<string, string>;
 const colors = ldraw.colors as Record<string, number>;
 
