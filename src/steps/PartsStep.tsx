@@ -21,8 +21,9 @@ import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
 import StepLayout from '../ui/StepLayout';
 import { Tray } from '../ui/Tray';
 import { catalog } from '../data/catalog';
-import { downloadFile } from '../lib/download';
+import { downloadFile, exportFileName } from '../lib/download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
+import { toLdraw } from '../mosaic/ldraw';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
@@ -84,8 +85,9 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
     );
 };
 
-const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
-    const { order: parts, settings, brick, plate, sparesPercent, setSparesPercent } = mosaic;
+/** `name`: the mosaic's own name, which names the downloads (the card title is what the cards print). */
+const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
+    const { order: parts, settings, brick, plate, cards, cardGrid, sparesPercent, setSparesPercent } = mosaic;
 
     const iconFor = (partId: string) => {
         if (partId === brick.partId)
@@ -105,12 +107,31 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
         setCopied(true);
     };
 
-    const download = () => downloadFile(xml(), `${settings.title || 'mosaic'}.xml`, 'application/xml');
+    // both downloads are named after the mosaic; without one, the card title
+    const fileTitle = name ?? settings.title;
+    const download = () => downloadFile(xml(), exportFileName(fileTitle, 'xml'), 'application/xml');
+
+    // the mosaic as a 3D model for BrickLink Studio: exact bricks, as the cards show them, not the order's spares
+    const [modelError, setModelError] = useState('');
+    const downloadModel = () => {
+        try {
+            const model = toLdraw({ title: fileTitle, cards, columns: cardGrid.columns, brick, plate });
+            downloadFile(model, exportFileName(fileTitle, 'mpd'), 'text/plain');
+            setModelError('');
+        } catch (e) {
+            setModelError(e instanceof Error ? e.message : String(e));
+        }
+    };
 
     return (
         <StepLayout
             alerts={
-                copied && (
+                (modelError && (
+                    <Alert severity="error" onClose={() => setModelError('')}>
+                        {modelError}
+                    </Alert>
+                )) ||
+                (copied && (
                     <Alert severity="success" onClose={() => setCopied(false)}>
                         Copied. Paste it into BrickLink&apos;s{' '}
                         <Link href={BRICKLINK_UPLOAD_URL} target="_blank" rel="noreferrer">
@@ -118,7 +139,7 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
                         </Link>{' '}
                         page.
                     </Alert>
-                )
+                ))
             }
             info={[
                 ['Parts', total.toLocaleString()],
@@ -128,14 +149,24 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
             ]}
             // like Print: the order follows from the tools, so it ends them (a strip above the bar on phones)
             action={
-                <Stack direction={{ xs: 'row', md: 'column' }} spacing={1}>
-                    <Button variant="contained" onClick={download} sx={{ flex: 1 }} data-tour="download-xml">
+                // on a phone, the order across the top and the two other downloads under it; a column on desktop
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr' }, gap: 1 }}>
+                    <Button
+                        variant="contained"
+                        onClick={download}
+                        sx={{ gridColumn: { xs: '1 / -1', md: 'auto' } }}
+                        data-tour="download-xml"
+                    >
                         Download BrickLink XML
                     </Button>
-                    <Button variant="outlined" onClick={copy} sx={{ flex: { xs: '0 0 auto', md: 1 } }}>
+                    <Button variant="outlined" onClick={copy}>
                         Copy XML
                     </Button>
-                </Stack>
+                    {/* the mosaic as a 3D model: LDraw, which BrickLink Studio opens, a submodel per card */}
+                    <Button variant="outlined" onClick={downloadModel}>
+                        Download for Studio
+                    </Button>
+                </Box>
             }
             groups={[
                 {

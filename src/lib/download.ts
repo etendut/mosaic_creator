@@ -8,3 +8,10 @@ export const downloadFile = (content: string | Uint8Array, fileName: string, typ
     link.click();
     URL.revokeObjectURL(url);
 };
+
+/**
+ * A file's name for something the app saves, from the mosaic's name: "Balloon" → "Balloon.xml". Characters Windows
+ * won't allow in a file name go; an empty name is "mosaic".
+ */
+export const exportFileName = (name: string, extension: string) =>
+    `${name.replace(/[\\/:*?"<>|]+/g, '').trim() || 'mosaic'}.${extension}`;
