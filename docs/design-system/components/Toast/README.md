@@ -6,7 +6,7 @@ A short message about what just happened, after an action: "Cleaned up 7 bricks.
 
 **Errors** use the same shape with a `danger` fill, `on-danger` text and an error icon first, so the state never rests on colour alone, and a close button. An error stays until closed; a normal toast goes after 4 seconds. Success has no colour of its own: success is the normal toast.
 
-**A message that waits.** One that needs you to act, and would be missed if it went, stays until you act on it or close it: the normal look, with its action and a close button. Three cases: an update ("A new version is ready." with _Reload_), a save that failed, and a prompt.
+**A message that waits.** One that needs you to act, and would be missed if it went, stays until you act on it or close it: the normal look, with its action and a close button. Four cases: an update ("A new version is ready." with _Reload_), a save that failed, a prompt, and a warning about something you just downloaded ("Balloon.mpd has 82,944 bricks, and Studio gets slow past about 30,000. …").
 
 **Prompts.** A Toast you didn't ask for ("7 mosaics changed since your last backup." with _Back up_) waits, and follows the Prompts rule in the README: at most one a visit, when you open Mosaics, never while you're working on a step, and closing it means no until its reason comes back.
 
@@ -14,4 +14,4 @@ A short message about what just happened, after an action: "Cleaned up 7 bricks.
 
 **Words.** What happened, then what to do next if anything, in the system's voice: a subject and a verb, no "Successfully", no exclamation marks. The words name the action as its button does.
 
-The consumer supplies the text, an optional action (label and handler), `error` for an error, and `stays` for a message that waits. From `src/ui/Toast.tsx`, used by Touch up and the ☰ menu.
+The consumer supplies the text, an optional action (label and handler), `error` for an error, and `stays` for a message that waits. From `src/ui/Toast.tsx`, used by Touch up, the ☰ menu and Parts.

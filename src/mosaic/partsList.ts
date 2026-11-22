@@ -27,9 +27,20 @@ export const withSpares = (lines: PartLine[], percent: number, platePartId: stri
 export const colorsUsed = (parts: PartLine[], brickPartId: string) =>
     parts.filter((line) => line.partId === brickPartId);
 
-/** Exact part counts for the mosaic: bricks per colour, one plate per card, plus pins for plates that need them. */
+/** How many joins there are between neighbouring cards laid out `columns` across: each row's, then each column's. */
+export const cardJoins = (cardCount: number, columns: number) => {
+    if (cardCount === 0 || columns === 0) return 0;
+    const rows = Math.ceil(cardCount / columns);
+    return rows * (columns - 1) + columns * (rows - 1);
+};
+
+/**
+ * Exact part counts for the mosaic: bricks per colour, one plate per card, plus pins for plates that need them, the
+ * plate's pins for each join between neighbouring cards (`columns`: cards across).
+ */
 export const buildPartsList = (
     cards: MosaicCard[],
+    columns: number,
     brick: BrickOption,
     plate: PlateOption,
     pin: PinOption,
@@ -47,13 +58,8 @@ export const buildPartsList = (
 
     if (cards.length > 0) {
         lines.push({ partId: plate.partId, name: plate.name, color: plate.color, quantity: cards.length });
-        if (plate.pinsPerPlate > 0)
-            lines.push({
-                partId: pin.partId,
-                name: pin.name,
-                color: pin.color,
-                quantity: cards.length * plate.pinsPerPlate,
-            });
+        const pins = cardJoins(cards.length, columns) * plate.pinsPerJoin;
+        if (pins > 0) lines.push({ partId: pin.partId, name: pin.name, color: pin.color, quantity: pins });
     }
     return lines;
 };
