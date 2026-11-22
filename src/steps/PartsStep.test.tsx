@@ -92,14 +92,14 @@ describe('Parts step', () => {
         for (const button of screen.getAllByRole('button', { name: /XML/ })) expect(column).toContainElement(button);
     });
 
-    it('downloads the mosaic as a 3D model for BrickLink Studio, a model per card', async () => {
-        const { user } = await renderStep(PartsStep);
-        const model = within(screen.getByRole('complementary', { name: 'Tools' }));
-        expect(model.getByText(/Open it in BrickLink Studio/)).toBeInTheDocument();
-        await user.click(model.getByRole('button', { name: 'Download for Studio' }));
-        expect(downloads.at(-1)!.name).toBe('Mosaic Creator.mpd');
+    it('downloads the mosaic as a 3D model for BrickLink Studio, named after the mosaic, a model per card', async () => {
+        const { user } = await renderStep((props) => <PartsStep {...props} name="Balloon" />);
+        // with the other downloads, ending the tools
+        const tools = within(screen.getByRole('complementary', { name: 'Tools' }));
+        await user.click(tools.getByRole('button', { name: 'Download for Studio' }));
+        expect(downloads.at(-1)!.name).toBe('Balloon.mpd');
         const mpd = await lastDownloadText();
-        expect(mpd.startsWith('0 FILE mosaic.ldr\r\n0 Mosaic Creator\r\n')).toBe(true);
+        expect(mpd.startsWith('0 FILE mosaic.ldr\r\n0 Balloon\r\n')).toBe(true);
         // the test picture's mosaic: 4 × 3 cards
         expect(mpd.match(/^0 FILE card-[a-z]\d+\.ldr/gm)).toHaveLength(12);
     });

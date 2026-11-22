@@ -316,7 +316,7 @@ const App = () => {
             case 'Cards':
                 return <CardsStep mosaic={mosaic} />;
             case 'Parts':
-                return <PartsStep mosaic={mosaic} />;
+                return <PartsStep mosaic={mosaic} name={session.name} />;
             case 'Print':
                 return <PrintStep mosaic={mosaic} />;
         }

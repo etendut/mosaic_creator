@@ -42,14 +42,14 @@ describe('toLdraw', () => {
         expect(model.endsWith('0 NOFILE\r\n')).toBe(true);
     });
 
-    it('lays the cards out row by row, a plate apart (20 units a stud)', () => {
+    it('lays the cards out row by row, a plate apart (20 units a stud), the first row at +z so it reads top to bottom', () => {
         const cards = ['A1', 'A2', 'B1', 'B2'].map((id) => card(id, 6));
         const main = placed(toLdraw({ title: '', cards, columns: 2, brick: tile, plate }), 'mosaic.ldr');
         expect(main).toEqual([
-            '1 16 0 0 0 1 0 0 0 1 0 0 0 1 card-a1.ldr',
-            '1 16 120 0 0 1 0 0 0 1 0 0 0 1 card-a2.ldr',
-            '1 16 0 0 120 1 0 0 0 1 0 0 0 1 card-b1.ldr',
-            '1 16 120 0 120 1 0 0 0 1 0 0 0 1 card-b2.ldr',
+            '1 16 0 0 120 1 0 0 0 1 0 0 0 1 card-a1.ldr',
+            '1 16 120 0 120 1 0 0 0 1 0 0 0 1 card-a2.ldr',
+            '1 16 0 0 0 1 0 0 0 1 0 0 0 1 card-b1.ldr',
+            '1 16 120 0 0 1 0 0 0 1 0 0 0 1 card-b2.ldr',
         ]);
     });
 
@@ -64,11 +64,12 @@ describe('toLdraw', () => {
         const a1 = placed(model, 'card-a1.ldr');
         // the plate's centre: its origin is the middle of its top face
         expect(a1[0]).toBe('1 0 60 0 60 1 0 0 0 1 0 0 0 1 3958.dat');
-        // BrickLink White (1) is LDraw 15, Black (11) is 0; a tile's top is 8 above the plate; the empty cell has none
-        expect(a1[1]).toBe('1 15 10 -8 10 1 0 0 0 1 0 0 0 1 3070b.dat');
-        expect(a1[2]).toBe('1 0 30 -8 10 1 0 0 0 1 0 0 0 1 3070b.dat');
+        // BrickLink White (1) is LDraw 15, Black (11) is 0; a tile's top is 8 above the plate; rows run from +z;
+        // the empty cell has none
+        expect(a1[1]).toBe('1 15 10 -8 110 1 0 0 0 1 0 0 0 1 3070b.dat');
+        expect(a1[2]).toBe('1 0 30 -8 110 1 0 0 0 1 0 0 0 1 3070b.dat');
         expect(a1).toHaveLength(1 + 35);
-        expect(a1.some((l) => l.includes(' 50 -8 10 '))).toBe(false);
+        expect(a1.some((l) => l.includes(' 50 -8 110 '))).toBe(false);
     });
 
     it('stands taller bricks taller, and spaces 2 × 2 bricks two studs apart', () => {
@@ -79,7 +80,7 @@ describe('toLdraw', () => {
             brick: { partId: '3005', size: 1, profile: 'brick' },
             plate,
         });
-        expect(placed(brick, 'card-a1.ldr')[1]).toBe('1 15 10 -24 10 1 0 0 0 1 0 0 0 1 3005.dat');
+        expect(placed(brick, 'card-a1.ldr')[1]).toBe('1 15 10 -24 110 1 0 0 0 1 0 0 0 1 3005.dat');
 
         const big = toLdraw({
             title: '',
@@ -89,8 +90,8 @@ describe('toLdraw', () => {
             plate,
         });
         expect(placed(big, 'card-a1.ldr').slice(1, 3)).toEqual([
-            '1 15 20 -24 20 1 0 0 0 1 0 0 0 1 3003.dat',
-            '1 15 60 -24 20 1 0 0 0 1 0 0 0 1 3003.dat',
+            '1 15 20 -24 100 1 0 0 0 1 0 0 0 1 3003.dat',
+            '1 15 60 -24 100 1 0 0 0 1 0 0 0 1 3003.dat',
         ]);
     });
 

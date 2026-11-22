@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import { Fragment, useState } from 'react';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
-import ThreeDRotationOutlinedIcon from '@mui/icons-material/ThreeDRotationOutlined';
 import ColorSwatch from '../ui/ColorSwatch';
 import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
 import StepLayout from '../ui/StepLayout';
@@ -86,7 +85,8 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
     );
 };
 
-const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
+/** `name`: the mosaic's own name, which names the 3D model file (the card title is what the cards print). */
+const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
     const { order: parts, settings, brick, plate, cards, cardGrid, sparesPercent, setSparesPercent } = mosaic;
 
     const iconFor = (partId: string) => {
@@ -113,8 +113,9 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
     const [modelError, setModelError] = useState('');
     const downloadModel = () => {
         try {
-            const model = toLdraw({ title: settings.title, cards, columns: cardGrid.columns, brick, plate });
-            downloadFile(model, ldrawFileName(settings.title), 'text/plain');
+            const title = name ?? settings.title;
+            const model = toLdraw({ title, cards, columns: cardGrid.columns, brick, plate });
+            downloadFile(model, ldrawFileName(title), 'text/plain');
             setModelError('');
         } catch (e) {
             setModelError(e instanceof Error ? e.message : String(e));
@@ -147,14 +148,24 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
             ]}
             // like Print: the order follows from the tools, so it ends them (a strip above the bar on phones)
             action={
-                <Stack direction={{ xs: 'row', md: 'column' }} spacing={1}>
-                    <Button variant="contained" onClick={download} sx={{ flex: 1 }} data-tour="download-xml">
+                // on a phone, the order across the top and the two other downloads under it; a column on desktop
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr' }, gap: 1 }}>
+                    <Button
+                        variant="contained"
+                        onClick={download}
+                        sx={{ gridColumn: { xs: '1 / -1', md: 'auto' } }}
+                        data-tour="download-xml"
+                    >
                         Download BrickLink XML
                     </Button>
-                    <Button variant="outlined" onClick={copy} sx={{ flex: { xs: '0 0 auto', md: 1 } }}>
+                    <Button variant="outlined" onClick={copy}>
                         Copy XML
                     </Button>
-                </Stack>
+                    {/* the mosaic as a 3D model: LDraw, which BrickLink Studio opens, a submodel per card */}
+                    <Button variant="outlined" onClick={downloadModel}>
+                        Download for Studio
+                    </Button>
+                </Box>
             }
             groups={[
                 {
@@ -169,24 +180,6 @@ const PartsStep = ({ mosaic }: { mosaic: Mosaic }) => {
                                     ? `${sparesPercent}% extra of each brick colour and of the pins, at least 1 each. Plates stay exact, and the cards still show exact counts.`
                                     : 'Extra bricks for any lost on the day. No spares: the list has exact counts.'}
                             </HelpText>
-                        </>
-                    ),
-                },
-                {
-                    id: 'model',
-                    label: '3D model',
-                    icon: <ThreeDRotationOutlinedIcon />,
-                    content: (
-                        <>
-                            <HelpText>
-                                Open it in BrickLink Studio: the finished mosaic, with each card as its own model for
-                                Studio&apos;s building instructions.
-                            </HelpText>
-                            <Box>
-                                <Button size="small" onClick={downloadModel}>
-                                    Download for Studio
-                                </Button>
-                            </Box>
                         </>
                     ),
                 },

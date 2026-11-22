@@ -7,8 +7,10 @@ import type { BrickOption, MosaicCard, PlateOption } from './types';
  * each card is then its own model, ready for its instruction maker.
  *
  * LDraw units: a stud is 20 wide; a plate or tile is 8 high and a brick 24. A part's origin is the centre of its top
- * face, its body below it (+y is down), so a brick sits on a plate at y = −(its height). Part files and colour codes
- * come from src/data/ldraw.json (scripts/build-ldraw.mjs).
+ * face, its body below it (+y is down), so a brick sits on a plate at y = −(its height). Looking down on the studs,
+ * LDraw's +z runs the other way to the picture's rows, so rows run from +z to −z: a mosaic laid out with z
+ * increasing top to bottom came out upside down (mirrored) in Studio. Part files and colour codes come from src/data/ldraw.json
+ * (scripts/build-ldraw.mjs).
  */
 
 const STUD = 20;
@@ -72,10 +74,12 @@ export const toLdraw = ({
     const plateFile = part(plate.partId);
     const plateColor = color(plate.color.id);
     const span = plate.size * STUD;
+    const rows = Math.ceil(cards.length / columns);
     const lines = header(title || 'Mosaic', 'mosaic.ldr');
     // the finished mosaic: each card where it goes, in its own colours (16: as the submodel says)
     cards.forEach((card, i) => {
-        const [x, z] = [(i % columns) * span, Math.floor(i / columns) * span];
+        // the first row at +z, so the picture reads top to bottom looking down on the studs
+        const [x, z] = [(i % columns) * span, (rows - 1 - Math.floor(i / columns)) * span];
         lines.push(place(16, x, 0, z, cardFile(card.id)));
     });
     lines.push('0 NOFILE');
@@ -87,7 +91,8 @@ export const toLdraw = ({
             row.forEach((cell, c) => {
                 if (!cell) return;
                 const centre = (n: number) => (n * brick.size + brick.size / 2) * STUD;
-                lines.push(place(color(cell.id), centre(c), -HEIGHT[brick.profile], centre(r), brickFile));
+                // rows from +z, as the cards are
+                lines.push(place(color(cell.id), centre(c), -HEIGHT[brick.profile], span - centre(r), brickFile));
             }),
         );
         lines.push('0 NOFILE');
