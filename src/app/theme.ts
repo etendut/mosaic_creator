@@ -4,7 +4,9 @@ import '@fontsource/rubik/latin-500.css';
 import '@fontsource/rubik/latin-700.css';
 
 /**
- * The interface stays in baseplate greys with one azure accent, so the mosaic itself carries all the colour.
+ * The interface stays in baseplate greys with one azure accent, so the mosaic itself carries all the colour. The
+ * accent is the sky of the mark (src/favicon.svg), deepened for contrast in light and as it is in dark, so the app
+ * and its icon read as one.
  * Names follow the LEGO workbench: plate (background), tray (working surfaces), groove (borders). The values are
  * docs/design-system/tokens.json, in its two themes.
  */
@@ -15,10 +17,10 @@ const light = {
     groove: '#C3C8CE',
     ink: '#22262A',
     muted: '#5B636B',
-    azure: '#00788A',
+    azure: '#0F6BA8',
     /** The hover step of azure fills: darker in light, lighter in dark, away from the ground either way. */
-    azureDark: '#00616F',
-    azureWash: '#E3F2F4',
+    azureDark: '#0A5A8F',
+    azureWash: '#E4F0F9',
     /** Text and icons on an azure fill. */
     onAzure: '#FFFFFF',
     /** The inset edge of a colour swatch, so white bricks show on a white tray. */
@@ -27,7 +29,7 @@ const light = {
     brushOutline: '#FFFFFF',
     brushHalo: 'rgba(0, 0, 0, 0.6)',
     /** A text action on a toast, which is an ink fill. */
-    toastAction: '#7FD3DE',
+    toastAction: '#8FCBF0',
     /** Errors only, always with an icon and words. */
     danger: '#B3261E',
     onDanger: '#FFFFFF',
@@ -43,14 +45,14 @@ const dark: typeof light = {
     groove: '#5A6168',
     ink: '#E6E9EC',
     muted: '#A4ACB4',
-    azure: '#3FB6C7',
-    azureDark: '#6FCBD8',
-    azureWash: '#173A40',
-    onAzure: '#0B1D20',
+    azure: '#5AB4E6',
+    azureDark: '#86C8EE',
+    azureWash: '#163447',
+    onAzure: '#0B1A26',
     swatchEdge: 'rgba(255, 255, 255, 0.28)',
     brushOutline: '#FFFFFF',
     brushHalo: 'rgba(0, 0, 0, 0.6)',
-    toastAction: '#00616F',
+    toastAction: '#0A5E96',
     danger: '#F2B8B5',
     onDanger: '#5C1210',
     shade: 'rgba(34, 38, 42, 0.7)',
