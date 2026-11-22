@@ -113,6 +113,12 @@ describe('Parts step', () => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
+    it('names the BrickLink XML after the mosaic', async () => {
+        const { user } = await renderStep((props) => <PartsStep {...props} name="Balloon" />);
+        await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));
+        expect(downloads.at(-1)!.name).toBe('Balloon.xml');
+    });
+
     it('names the file "mosaic" when the title is empty', async () => {
         const { user } = await renderStep(PartsStep, { card: { ...DEFAULT_PROJECT.card, title: '' } });
         await user.click(screen.getByRole('button', { name: 'Download BrickLink XML' }));

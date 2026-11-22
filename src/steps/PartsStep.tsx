@@ -21,9 +21,9 @@ import { PART_ICON_BLUE, PartIcon, PinIcon } from '../components/PartIcon';
 import StepLayout from '../ui/StepLayout';
 import { Tray } from '../ui/Tray';
 import { catalog } from '../data/catalog';
-import { downloadFile } from '../lib/download';
+import { downloadFile, exportFileName } from '../lib/download';
 import { toBrickLinkXml } from '../mosaic/bricklinkXml';
-import { ldrawFileName, toLdraw } from '../mosaic/ldraw';
+import { toLdraw } from '../mosaic/ldraw';
 import type { PartLine } from '../mosaic/partsList';
 import { MAX_SPARES_PERCENT } from '../mosaic/project';
 import type { Fact } from '../mosaic/facts';
@@ -85,7 +85,7 @@ const SparesControl = ({ percent, onChange }: { percent: number; onChange: (n: n
     );
 };
 
-/** `name`: the mosaic's own name, which names the 3D model file (the card title is what the cards print). */
+/** `name`: the mosaic's own name, which names the downloads (the card title is what the cards print). */
 const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
     const { order: parts, settings, brick, plate, cards, cardGrid, sparesPercent, setSparesPercent } = mosaic;
 
@@ -107,15 +107,16 @@ const PartsStep = ({ mosaic, name }: { mosaic: Mosaic; name?: string }) => {
         setCopied(true);
     };
 
-    const download = () => downloadFile(xml(), `${settings.title || 'mosaic'}.xml`, 'application/xml');
+    // both downloads are named after the mosaic; without one, the card title
+    const fileTitle = name ?? settings.title;
+    const download = () => downloadFile(xml(), exportFileName(fileTitle, 'xml'), 'application/xml');
 
     // the mosaic as a 3D model for BrickLink Studio: exact bricks, as the cards show them, not the order's spares
     const [modelError, setModelError] = useState('');
     const downloadModel = () => {
         try {
-            const title = name ?? settings.title;
-            const model = toLdraw({ title, cards, columns: cardGrid.columns, brick, plate });
-            downloadFile(model, ldrawFileName(title), 'text/plain');
+            const model = toLdraw({ title: fileTitle, cards, columns: cardGrid.columns, brick, plate });
+            downloadFile(model, exportFileName(fileTitle, 'mpd'), 'text/plain');
             setModelError('');
         } catch (e) {
             setModelError(e instanceof Error ? e.message : String(e));

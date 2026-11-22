@@ -1,4 +1,4 @@
-import { cardFile, ldrawFileName, MAX_LDRAW_BRICKS, toLdraw } from './ldraw';
+import { cardFile, MAX_LDRAW_BRICKS, toLdraw } from './ldraw';
 import type { MosaicCard, PaletteColor } from './types';
 
 const white: PaletteColor = { id: 1, name: 'White', hex: '#FFFFFF', type: 'Solid' };
@@ -109,10 +109,7 @@ describe('toLdraw', () => {
         ).toThrow('No LDraw part for BrickLink part nope');
     });
 
-    it('names files from the title', () => {
-        expect(ldrawFileName('Library Day')).toBe('Library Day.mpd');
-        expect(ldrawFileName('  ')).toBe('mosaic.mpd');
-        expect(ldrawFileName('a/b:c')).toBe('abc.mpd');
+    it("names each card's submodel file after the card", () => {
         expect(cardFile('B12')).toBe('card-b12.ldr');
     });
 });

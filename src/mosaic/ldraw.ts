@@ -48,9 +48,6 @@ const header = (description: string, name: string) => [
     '0 Author: Mosaic Creator',
 ];
 
-/** The model file's name, from the title: "Library Day" → "Library Day.mpd". */
-export const ldrawFileName = (title: string) => `${title.replace(/[\\/:*?"<>|]+/g, '').trim() || 'mosaic'}.mpd`;
-
 export const toLdraw = ({
     title,
     cards,
