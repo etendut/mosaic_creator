@@ -16,8 +16,11 @@ import type { BrickOption, MosaicCard, PinOption, PlateOption } from './types';
 const STUD = 20;
 /** How far a brick's top sits above the plate it stands on: its own height. */
 const HEIGHT: Record<BrickOption['profile'], number> = { brick: 24, plate: 8, tile: 8, baseplate: 8, technic: 32 };
-/** The most bricks in one model: past this, Studio slows to a crawl (a 96 × 96 mosaic is about 9,000). */
-export const MAX_LDRAW_BRICKS = 25_000;
+/**
+ * The most bricks in one model. Studio has no limit of its own: people report models of over 60,000 parts working,
+ * and renders past 120,000 bricks; beyond that it gets too slow to use. The app's biggest mosaics run to millions.
+ */
+export const MAX_LDRAW_BRICKS = 120_000;
 
 const parts = ldraw.parts as Record<string, string>;
 const colors = ldraw.colors as Record<string, number>;
@@ -79,7 +82,7 @@ export const toLdraw = ({
     const bricks = cards.reduce((sum, card) => sum + card.brickCount, 0);
     if (bricks > MAX_LDRAW_BRICKS)
         throw new Error(
-            `This mosaic has ${bricks.toLocaleString('en-GB')} bricks, too many for one model: make it ${MAX_LDRAW_BRICKS.toLocaleString('en-GB')} or fewer.`,
+            `This mosaic has ${bricks.toLocaleString('en-GB')} bricks, more than Studio can work with (about ${MAX_LDRAW_BRICKS.toLocaleString('en-GB')}). Use fewer plates across on the Bricks step to download it for Studio.`,
         );
     const brickFile = part(brick.partId);
     const plateFile = part(plate.partId);

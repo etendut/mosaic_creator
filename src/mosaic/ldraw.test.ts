@@ -101,9 +101,12 @@ describe('toLdraw', () => {
     });
 
     it("refuses a mosaic too big for one model, and a colour or part it can't name", () => {
+        // a 288 × 288 mosaic (82,944 bricks) is fine; past 120,000 it says why, and what to change
+        const big = { ...card('A1', 1), brickCount: 82_944 };
+        expect(() => toLdraw({ title: '', cards: [big], columns: 1, brick: tile, plate, pin })).not.toThrow();
         const huge = { ...card('A1', 1), brickCount: MAX_LDRAW_BRICKS + 1 };
         expect(() => toLdraw({ title: '', cards: [huge], columns: 1, brick: tile, plate, pin })).toThrow(
-            /too many for one model/,
+            /has 120,001 bricks, more than Studio can work with \(about 120,000\)\. Use fewer plates across/,
         );
         const odd: PaletteColor = { id: 99999, name: 'Odd', hex: '#123456', type: 'Solid' };
         expect(() =>

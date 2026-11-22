@@ -108,7 +108,7 @@ describe('Parts step', () => {
         // 40 48 × 48 baseplates across: millions of bricks
         const { user } = await renderStep(PartsStep, { plateId: '4278193', platesAcross: 40 });
         await user.click(screen.getByRole('button', { name: 'Download for Studio' }));
-        expect(screen.getByRole('alert')).toHaveTextContent(/too many for one model/);
+        expect(screen.getByRole('alert')).toHaveTextContent(/more than Studio can work with/);
         await user.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Close' }));
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
