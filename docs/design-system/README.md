@@ -41,6 +41,7 @@ Mosaic Creator turns a picture into a LEGO mosaic and prints numbered building c
 ## Surfaces
 
 - **Stud texture.** The body is a baseplate: `plate` with `plateDot` dots of 3px radius every `stud-pitch` (16px), offset 8px. Print is plain white.
+- **Printed cards** are white by default (Card colour changes it). Each has a cutting guide: a 0.2mm dashed line in `muted`, square cornered, half the 2mm gap out from the card's edge, so neighbouring cards share one line and one cut separates them. It prints on every card, white or not, and shows on screen as it will print.
 - **Tray**: `tray` fill, 1px `groove` border, `radius-tray`, `space-2` padding, no shadow. For the tools column, panels and lists.
 - **Stage** holds the canvas with no background of its own, so the studs run through it unbroken: `radius-stage`, `space-1.5` padding on phones, `space-3` from 600px.
 - Shadows only on what floats over the canvas: the phone tool panel (`shadow-panel`), toasts, the zoom control and walkthrough cards (`shadow-float`). Everything else is `shadow-none`.
