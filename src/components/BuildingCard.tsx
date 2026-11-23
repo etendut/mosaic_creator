@@ -142,12 +142,21 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                         >
                             <Box
                                 component="span"
+                                // the same shape as the bricks on the grid above, so the list reads as those bricks
                                 sx={{
-                                    minWidth: mm(t.bagFontMm * 2.6),
-                                    paddingBlock: '0.4mm',
+                                    boxSizing: 'border-box',
+                                    width: mm(t.bagSwatchMm),
+                                    height: mm(t.bagSwatchMm),
+                                    flexShrink: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     border: `1px solid ${textColor}`,
+                                    borderRadius: brick.isRound ? '50%' : 0,
                                     backgroundColor: color.hex,
                                     color: contrastTextColor(color.hex),
+                                    // the grid's ratio of id to cell, a touch larger: a three-digit id still fits a circle
+                                    fontSize: mm(t.bagSwatchMm * 0.42),
                                 }}
                             >
                                 {color.id}

@@ -29,6 +29,8 @@ export const CARD_TEXT = {
         bagRowMm: 4.5,
         bagEntryMm: 13,
         bagFontMm: 2.4,
+        /** The colour beside each count: the brick's shape (square or round), with the colour id inside. */
+        bagSwatchMm: 4.2,
     },
     compact: {
         paddingMm: 2,
@@ -41,6 +43,7 @@ export const CARD_TEXT = {
         bagRowMm: 3.8,
         bagEntryMm: 11,
         bagFontMm: 2,
+        bagSwatchMm: 3.6,
     },
 } as const;
 export type CardTextStyle = (typeof CARD_TEXT)[CardSize];
