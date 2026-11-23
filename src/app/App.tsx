@@ -98,10 +98,10 @@ const TOUR_STOPS: TourStop<Step>[] = [
     },
     {
         step: 'Cards',
-        target: 'group-size',
+        target: 'group-text',
         phoneTools: true,
         phoneEdge: true,
-        text: 'Each card covers one plate. Pick Real size and builders can lay bricks straight on the card.',
+        text: 'Each card covers one plate, with bricks at real size so builders can lay them straight on it. Write what the cards say here.',
     },
     {
         step: 'Parts',

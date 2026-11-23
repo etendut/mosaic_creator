@@ -13,12 +13,12 @@ interface BuildingCardProps {
 
 const mm = (value: number) => `${value}mm`;
 
-/** A block of text cut off after `lines` lines, with an ellipsis. */
-const Message = ({ text, lines, lineMm }: { text: string; lines: number; lineMm: number }) =>
+/** A block of text, as wide as the grid, cut off after `lines` lines with an ellipsis. */
+const Message = ({ text, lines, lineMm, widthMm }: { text: string; lines: number; lineMm: number; widthMm: number }) =>
     lines > 0 ? (
         <Box
             sx={{
-                width: '100%',
+                width: mm(widthMm),
                 height: mm(lines * lineMm),
                 flexShrink: 0,
                 whiteSpace: 'pre-wrap',
@@ -37,10 +37,13 @@ const Message = ({ text, lines, lineMm }: { text: string; lines: number; lineMm:
  * mm with the sizes from `cardLayout`, which reserved exactly this much room, so it prints as laid out.
  */
 const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
-    const t = CARD_TEXT[settings.cardSize];
+    const t = CARD_TEXT;
     const { cellMm, text } = layout;
-    const textColor = contrastTextColor(settings.backgroundColor);
+    // cards print on white paper, cut out along their guides
+    const textColor = 'black';
     const cells = card.rows.length;
+    // a brick's size, as on the grid, unless a big brick would outgrow the bag list's row
+    const swatchMm = Math.min(cellMm, t.bagSwatchMm);
 
     return (
         <Box
@@ -55,8 +58,8 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                 gap: mm(t.gapMm),
                 padding: mm(t.paddingMm),
                 textAlign: 'center',
-                backgroundColor: settings.backgroundColor,
-                color: textColor,
+                backgroundColor: 'common.white',
+                color: 'common.black',
                 borderRadius: '2mm',
                 overflow: 'hidden',
                 fontSize: mm(t.fontMm),
@@ -82,7 +85,7 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                     {settings.title}
                 </Box>
             </Box>
-            <Message text={settings.topMessage} lines={text.topLines} lineMm={t.lineMm} />
+            <Message text={settings.topMessage} lines={text.topLines} lineMm={t.lineMm} widthMm={text.innerMm} />
             <Box
                 sx={{
                     display: 'grid',
@@ -114,22 +117,22 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                     )),
                 )}
             </Box>
-            <Message text={settings.bottomMessage} lines={text.bottomLines} lineMm={t.lineMm} />
-            {settings.bagList && (
+            <Message text={settings.bottomMessage} lines={text.bottomLines} lineMm={t.lineMm} widthMm={text.innerMm} />
+            {text.bagRows > 0 && (
                 <Box
                     component="ul"
                     aria-label={`Bricks for card ${card.id}`}
                     sx={{
+                        // as wide as the grid and the messages, its columns spread across that width
+                        width: mm(text.innerMm),
                         display: 'grid',
-                        gridTemplateColumns: `repeat(${text.bagColumns}, ${mm(t.bagEntryMm)})`,
+                        gridTemplateColumns: `repeat(${text.bagColumns}, minmax(0, 1fr))`,
                         gridAutoRows: mm(t.bagRowMm),
                         columnGap: mm(BAG_GAP_MM),
-                        justifyContent: 'center',
                         flexShrink: 0,
                         margin: 0,
                         padding: 0,
                         listStyle: 'none',
-                        fontSize: mm(t.bagFontMm),
                         lineHeight: 1,
                     }}
                 >
@@ -138,15 +141,15 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                             component="li"
                             key={color.id}
                             title={color.name}
-                            sx={{ display: 'flex', alignItems: 'center', gap: '0.8mm', whiteSpace: 'nowrap' }}
+                            sx={{ display: 'flex', alignItems: 'center', gap: '1mm', whiteSpace: 'nowrap' }}
                         >
                             <Box
                                 component="span"
                                 // the same shape as the bricks on the grid above, so the list reads as those bricks
                                 sx={{
                                     boxSizing: 'border-box',
-                                    width: mm(t.bagSwatchMm),
-                                    height: mm(t.bagSwatchMm),
+                                    width: mm(swatchMm),
+                                    height: mm(swatchMm),
                                     flexShrink: 0,
                                     display: 'flex',
                                     alignItems: 'center',
@@ -155,8 +158,7 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                                     borderRadius: brick.isRound ? '50%' : 0,
                                     backgroundColor: color.hex,
                                     color: contrastTextColor(color.hex),
-                                    // the grid's ratio of id to cell, a touch larger: a three-digit id still fits a circle
-                                    fontSize: mm(t.bagSwatchMm * 0.42),
+                                    fontSize: mm(swatchMm * 0.4),
                                 }}
                             >
                                 {color.id}
