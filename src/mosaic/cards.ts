@@ -9,7 +9,7 @@ export const rowLabel = (n: number): string => {
     return label;
 };
 
-/** The bricks one card needs, per colour: most first, then by colour id. */
+/** The bricks one card needs, per colour, by colour id: the number printed on each brick, so it's quick to find. */
 export const cardColorCounts = (card: MosaicCard) => {
     const counts = new Map<number, { color: PaletteColor; count: number }>();
     for (const row of card.rows)
@@ -19,7 +19,7 @@ export const cardColorCounts = (card: MosaicCard) => {
             if (entry) entry.count++;
             else counts.set(cell.id, { color: cell, count: 1 });
         }
-    return [...counts.values()].sort((a, b) => b.count - a.count || a.color.id - b.color.id);
+    return [...counts.values()].sort((a, b) => a.color.id - b.color.id);
 };
 
 /** How many mosaic cells (bricks) fit along one side of a card. */

@@ -109,12 +109,12 @@ describe('sanitizeSettings', () => {
         });
         expect(settings.brickId).toBe(DEFAULT_PROJECT.brickId);
         expect(settings.platesAcross).toBe(DEFAULT_PROJECT.platesAcross);
-        expect(settings.card.backgroundColor).toBe(DEFAULT_PROJECT.card.backgroundColor);
         expect(settings.card.paperSize).toBe(DEFAULT_PROJECT.card.paperSize);
         // the map page is chosen when printing now; an old file's setting is dropped
         expect(settings.card).not.toHaveProperty('includeMapPage');
-        expect(settings.card.cardSize).toBe('real');
-        expect(settings.card.bagList).toBe(false);
+        // cards are always real size, white and with a bag list now; an old file's settings for them are dropped
+        for (const dropped of ['cardSize', 'backgroundColor', 'bagList'])
+            expect(settings.card).not.toHaveProperty(dropped);
         expect(settings.card.title).toBe('Library Day');
         expect(settings.metric).toBe('rgb');
         expect(settings.dithering).toBe('none');

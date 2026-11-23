@@ -15,7 +15,7 @@ describe('Print step', () => {
             within(screen.getByRole('radiogroup', { name: 'Print' }))
                 .getAllByRole('radio')
                 .map((r) => r.getAttribute('value') && r.closest('label')!.textContent);
-        expect(options()).toEqual(['Map page', 'Cards, pages 1–2']);
+        expect(options()).toEqual(['Map page', 'Cards, pages 1–3']);
         expect(screen.getByRole('radio', { name: 'Map page' })).toBeChecked();
         expect(screen.getByRole('list', { name: 'Colours used' })).toBeInTheDocument();
         expect(screen.queryAllByRole('group', { name: /^Card / })).toHaveLength(0);
@@ -27,12 +27,14 @@ describe('Print step', () => {
         await user.click(tools().getByRole('button', { name: 'Print map page' }));
         expect(window.print).toHaveBeenCalled();
 
-        await choose(user, 'Print', 'Cards, pages 1–2');
+        await choose(user, 'Print', 'Cards, pages 1–3');
         expect(screen.queryByRole('list', { name: 'Colours used' })).not.toBeInTheDocument();
         expect(sheets()).toBe(12);
-        // white cards by default, each with a cutting guide: a thin dashed line half the gap out, so neighbouring
+        // white cards, each with a cutting guide: a thin dashed line half the gap out, so neighbouring
         // cards share one line in the middle of the gap
-        expect(screen.getByRole('group', { name: 'Card A1' })).toHaveStyle({ backgroundColor: '#FFFFFF' });
+        expect(getComputedStyle(screen.getByRole('group', { name: 'Card A1' })).backgroundColor).toBe(
+            'rgb(255, 255, 255)',
+        );
         const guides = screen.getAllByTestId('cutting-guide');
         expect(guides).toHaveLength(12);
         // dashed, in `muted`, 1mm out (the browser gives lengths in px: 1mm is 3.78px)
@@ -40,7 +42,7 @@ describe('Print step', () => {
         expect(guide.outlineStyle).toBe('dashed');
         expect(guide.outline).toContain('rgb(91, 99, 107)');
         expect(parseFloat(guide.outlineOffset)).toBeCloseTo(96 / 25.4, 2);
-        expect(tools().getByText('12 cards on 2 pages, 8 per A4 landscape page.')).toBeInTheDocument();
+        expect(tools().getByText('12 cards on 3 pages, 4 per A4 portrait page.')).toBeInTheDocument();
         expect(tools().getByRole('button', { name: 'Print cards' })).toBeInTheDocument();
     });
 
@@ -60,7 +62,7 @@ describe('Print step', () => {
         expect(screen.getAllByRole('radio', { name: /^(Map page|Cards)/ })).toHaveLength(2);
         expect(screen.getByRole('radio', { name: /^Cards/ })).toBeChecked();
         await choose(user, 'Paper', 'Letter');
-        expect(screen.getByText(/per Letter landscape page/)).toBeInTheDocument();
+        expect(screen.getByText(/per Letter (landscape|portrait) page/)).toBeInTheDocument();
     });
 
     it('splits big jobs into the map page and batches of cards', async () => {

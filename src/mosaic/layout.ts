@@ -1,4 +1,4 @@
-import type { CardSize, PaperSize } from './types';
+import type { PaperSize } from './types';
 
 export const PAGE_MARGIN_MM = 5;
 export const CARD_GAP_MM = 2;
@@ -15,37 +15,23 @@ type Sheet = keyof typeof SHEETS;
 
 /**
  * The type scale of a card, in mm. BuildingCard draws with these same numbers, so the space the layout reserves is
- * the space the card uses; mm rather than px so print and preview match. Compact cards use smaller type.
+ * the space the card uses; mm rather than px so print and preview match.
  */
 export const CARD_TEXT = {
-    real: {
-        paddingMm: 3,
-        /** Between the blocks stacked on a card (header, messages, grid, bag list, footer). */
-        gapMm: 1.2,
-        /** The card id and title. */
-        headerMm: 6,
-        idFontMm: 5,
-        fontMm: 2.8,
-        lineMm: 3.5,
-        footerMm: 3.5,
-        bagRowMm: 4.5,
-        bagEntryMm: 13,
-        bagFontMm: 2.4,
-    },
-    compact: {
-        paddingMm: 2,
-        gapMm: 0.8,
-        headerMm: 4.5,
-        idFontMm: 3.8,
-        fontMm: 2.2,
-        lineMm: 2.75,
-        footerMm: 2.75,
-        bagRowMm: 3.8,
-        bagEntryMm: 11,
-        bagFontMm: 2,
-    },
+    paddingMm: 3,
+    /** Between the blocks stacked on a card (header, messages, grid, bag list, footer). */
+    gapMm: 1.2,
+    /** The card id and title. */
+    headerMm: 6,
+    idFontMm: 5,
+    fontMm: 2.8,
+    lineMm: 3.5,
+    footerMm: 3.5,
+    /** Each colour in the bag list: a brick-sized square or circle with the colour id in it, then its count. */
+    bagSwatchMm: 8,
+    bagRowMm: 9,
+    bagEntryMm: 15,
 } as const;
-export type CardTextStyle = (typeof CARD_TEXT)[CardSize];
 
 /** Longer messages are cut off with an ellipsis; the cards step warns about it. */
 export const MAX_MESSAGE_LINES = 3;
@@ -55,8 +41,6 @@ export const BAG_GAP_MM = 1;
 export const STUD_MM = 8;
 /** Real size allows a little shrink (cards used to print at 7.9 mm) so a card isn't pushed onto a bigger sheet. */
 const REAL_SIZE_MIN = 0.94;
-/** Smallest cell in compact cards: the colour id in it is still about 2.4 mm tall. */
-export const COMPACT_CELL_MIN_MM = 6;
 
 /** Average glyph width as a share of the font size; generous, so line estimates err towards more lines. */
 const CHAR_WIDTH = 0.55;
@@ -75,14 +59,17 @@ export interface CardContent {
     topMessage: string;
     bottomMessage: string;
     clubEvent: string;
-    /** Most colours on any one card, when the bag list is shown; 0 for no bag list. */
+    /** Most colours on any one card: the bag list has room for that many. */
     bagListColors: number;
 }
 
-/** How a card's text is laid out at a given card width and size, and how tall it is in total. */
-export const cardText = (content: CardContent, cardWidthMm: number, size: CardSize) => {
-    const t = CARD_TEXT[size];
-    const innerMm = cardWidthMm - t.paddingMm * 2;
+/**
+ * How a card's text is laid out, and how tall it is in total. The messages and the bag list are as wide as the grid
+ * (`gridWidthMm`, at most the card's inner width), so they line up with it.
+ */
+export const cardText = (content: CardContent, cardWidthMm: number, gridWidthMm: number) => {
+    const t = CARD_TEXT;
+    const innerMm = Math.min(cardWidthMm - t.paddingMm * 2, gridWidthMm);
     const lines = (text: string) => Math.min(MAX_MESSAGE_LINES, messageLines(text, innerMm, t.fontMm));
     const topLines = lines(content.topMessage);
     const bottomLines = lines(content.bottomMessage);
@@ -147,16 +134,16 @@ const MAX_PER_SIDE = 12;
 /** The best card layout on one sheet: the most cards per page, then the biggest bricks; null if none fits. */
 const bestOnSheet = (
     sheet: Sheet,
-    fit: { cells: number; realMm: number; minMm: number; size: CardSize; content: CardContent },
+    fit: { cells: number; realMm: number; minMm: number; content: CardContent },
 ): Omit<CardLayout, 'usesPaper'> | null => {
-    const { cells, realMm, minMm, size, content } = fit;
+    const { cells, realMm, minMm, content } = fit;
     let best: Omit<CardLayout, 'usesPaper'> | null = null;
     const tryLayout = (landscape: boolean, columns: number, rows: number) => {
         const p = page(sheet, landscape, columns, rows);
-        const text = cardText(content, p.cardWidthMm, size);
+        const text = cardText(content, p.cardWidthMm, cells * realMm + GRID_BORDER_MM);
         const gridMm = Math.min(
-            p.cardWidthMm - CARD_TEXT[size].paddingMm * 2,
-            p.cardHeightMm - CARD_TEXT[size].paddingMm * 2 - text.heightMm,
+            p.cardWidthMm - CARD_TEXT.paddingMm * 2,
+            p.cardHeightMm - CARD_TEXT.paddingMm * 2 - text.heightMm,
         );
         const cellMm = Math.min(realMm, (gridMm - GRID_BORDER_MM) / cells);
         if (cellMm < minMm) return;
@@ -174,24 +161,23 @@ const bestOnSheet = (
 
 /**
  * How to print the cards: the sheet, orientation and number of cards across and down that fit the most cards per
- * page, with cells no smaller than the size allows. Tries the user's paper first, then A3 and A2 for cards too big
+ * page, with cells at real size or just under it. Tries the user's paper first, then A3 and A2 for cards too big
  * for it. Ties go to bigger cells.
  */
 export const cardLayout = (options: {
     plateStuds: number;
     brickStuds: number;
     paperSize: PaperSize;
-    size: CardSize;
     content: CardContent;
 }): CardLayout => {
-    const { plateStuds, brickStuds, paperSize, size, content } = options;
+    const { plateStuds, brickStuds, paperSize, content } = options;
     const cells = Math.floor(plateStuds / brickStuds);
     const realMm = STUD_MM * brickStuds;
-    const minMm = size === 'real' ? realMm * REAL_SIZE_MIN : Math.min(realMm, COMPACT_CELL_MIN_MM);
+    const minMm = realMm * REAL_SIZE_MIN;
 
     // the chosen paper first, then bigger sheets for cards that don't fit it
     for (const sheet of [...new Set<Sheet>([paperSize, 'A3', 'A2'])]) {
-        const best = bestOnSheet(sheet, { cells, realMm, minMm, size, content });
+        const best = bestOnSheet(sheet, { cells, realMm, minMm, content });
         if (best) return { ...best, usesPaper: sheet === paperSize };
     }
     throw new Error(`A ${plateStuds} stud card doesn't fit on any sheet`);

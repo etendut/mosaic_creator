@@ -78,14 +78,13 @@ export const useMosaic = () => {
         () => cards.reduce((most, card) => Math.max(most, cardColorCounts(card).length), 0),
         [cards],
     );
-    /** How cards print with the given card settings; the bag list reserves room for the busiest card. */
+    /** How cards print with the given card settings; the bag list has room for the busiest card's colours. */
     const layoutFor = (card: CardSettings) =>
         cardLayout({
             plateStuds: plate.size,
             brickStuds: brick.size,
             paperSize: card.paperSize,
-            size: card.cardSize,
-            content: { ...card, bagListColors: card.bagList ? maxCardColors : 0 },
+            content: { ...card, bagListColors: maxCardColors },
         });
 
     const updateSettings = (change: Partial<CardSettings>) =>

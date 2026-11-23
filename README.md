@@ -11,7 +11,7 @@ your machine. Supported browsers: Chrome and Edge.
    open the saved file; it's one self-contained HTML file.
 2. **Image** — choose or drop a picture, crop/rotate/adjust it, then _Use this image_.
 3. **Bricks** — pick the backing plate, the brick, and how many plates wide the mosaic is.
-4. **Cards** — set the title, messages and card colour.
+4. **Cards** — set the title and messages. Cards print white, with bricks at real size and a bag list of the bricks each one needs.
 5. **Parts** — download or copy a BrickLink wanted-list XML.
 6. **Print** — print the building cards. Each card shows the BrickLink colour id on every brick.
 
