@@ -132,7 +132,13 @@ const StepLayout = ({
                 // down to the window's bottom, so a Stage can centre its result in the space
                 minHeight: desktop ? `calc(100dvh - ${HEADER_PX + 32}px)` : undefined,
                 flexGrow: 1,
-                '@media print': { display: 'block', minHeight: 0 },
+                // in print, no spacing either: the Info bar above the canvas is hidden there, but Stack's spacing
+                // would still put 16px above the canvas, enough to push the first page onto the second
+                '@media print': {
+                    display: 'block',
+                    minHeight: 0,
+                    '& > :not(style) ~ :not(style)': { marginTop: 0 },
+                },
             }}
         >
             {/* the numbers first, in view as the page scrolls; on a phone they're under the app bar instead */}
@@ -164,9 +170,14 @@ const StepLayout = ({
                     display: 'grid',
                     gridTemplateColumns: desktopGroups.length || action ? '340px minmax(0, 1fr)' : 'minmax(0, 1fr)',
                     gap: 2,
-                    padding: 2,
+                    // the space above is a margin on each column, not the grid's top padding: Chrome lays out the
+                    // first printed page with the screen's top padding still in place, even where print sets it to
+                    // 0, and the first full-height sheet then starts on page 2
+                    paddingInline: 2,
+                    paddingBottom: 2,
+                    '& > *': { marginTop: 2 },
                     alignItems: 'start',
-                    '@media print': { display: 'block', padding: 0 },
+                    '@media print': { display: 'block', padding: 0, '& > *': { marginTop: 0 } },
                 }}
             >
                 {(desktopGroups.length > 0 || action) && (
@@ -210,7 +221,7 @@ const StepLayout = ({
                 minHeight: 'calc(100dvh - var(--app-bar-height, 0px))',
                 display: 'flex',
                 flexDirection: 'column',
-                '@media print': { display: 'block', minHeight: 0 },
+                '@media print': { display: 'block', minHeight: 0, padding: 0 },
             }}
         >
             {/* flush under the app bar, edge to edge, and in view as the page scrolls */}
