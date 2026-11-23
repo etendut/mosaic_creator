@@ -1,6 +1,6 @@
 import { toBrickLinkXml } from './bricklinkXml';
 import { compileMosaicCards } from './cards';
-import { buildPartsList, cardJoins, sparesFor, withSpares } from './partsList';
+import { buildPartsList, cardJoins, roundUpTo, sparesFor, withSpares } from './partsList';
 import type { BrickOption, PinOption, PlateOption } from './types';
 
 const B = { id: 11, name: 'Black', hex: '#212121', type: 'Solid' as const };
@@ -104,6 +104,31 @@ describe('spares', () => {
     it('changes nothing at 0%', () => {
         const exact = buildPartsList(cards, 2, brick, plate, pin);
         expect(withSpares(exact, 0, plate.partId).map((l) => l.quantity)).toEqual(exact.map((l) => l.quantity));
+    });
+});
+
+describe('round up', () => {
+    it('rounds up to a whole number of the step, and leaves a whole number alone', () => {
+        expect(roundUpTo(64, 10)).toBe(70);
+        expect(roundUpTo(70, 10)).toBe(70);
+        expect(roundUpTo(64, 100)).toBe(100);
+        expect(roundUpTo(64, 0)).toBe(64);
+    });
+
+    it('rounds every brick and pin line up after the spares, counting what it adds as spares, but not the plates', () => {
+        const exact = buildPartsList(cards, 2, brick, { ...plate, pinsPerJoin: 3 }, pin);
+        const order = withSpares(exact, 10, plate.partId, 10);
+        order.forEach((line, i) => {
+            if (line.partId === plate.partId) expect(line).toMatchObject({ quantity: exact[i].quantity, spares: 0 });
+            else expect(line.quantity).toBe(roundUpTo(exact[i].quantity + sparesFor(exact[i].quantity, 10), 10));
+            expect(line.quantity).toBe(exact[i].quantity + line.spares!);
+        });
+        // with no spares, rounding alone
+        expect(
+            withSpares(exact, 0, plate.partId, 100)
+                .filter((l) => l.partId !== plate.partId)
+                .map((l) => l.quantity),
+        ).toEqual(exact.filter((l) => l.partId !== plate.partId).map(() => 100));
     });
 });
 

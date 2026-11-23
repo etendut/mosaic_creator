@@ -23,6 +23,7 @@ const custom: ProjectSettings = {
     dithering: 'smooth',
     swaps: [[85, 86]],
     sparesPercent: 10,
+    roundUp: 100,
     touchUps: {
         width: 4,
         height: 4,
@@ -142,6 +143,12 @@ describe('sanitizeSettings', () => {
         expect(sanitizeSettings({ sparesPercent: 15 }).sparesPercent).toBe(15);
         for (const bad of [-5, 2.5, 101, '10', null])
             expect(sanitizeSettings({ sparesPercent: bad }).sparesPercent).toBe(0);
+    });
+
+    it('keeps the round-up to a whole number up to 1,000, and none for older projects', () => {
+        expect(sanitizeSettings({ roundUp: 25 }).roundUp).toBe(25);
+        expect(sanitizeSettings({}).roundUp).toBe(0);
+        for (const bad of [-10, 2.5, 1001, '10', null]) expect(sanitizeSettings({ roundUp: bad }).roundUp).toBe(0);
     });
 
     it('treats a missing or zero colour limit as no limit', () => {

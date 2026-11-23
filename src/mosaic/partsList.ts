@@ -13,14 +13,19 @@ export interface PartLine {
 export const sparesFor = (quantity: number, percent: number) =>
     percent > 0 ? Math.ceil((quantity * percent) / 100) : 0;
 
+/** A quantity rounded up to a whole number of `step`s (0: as it is). */
+export const roundUpTo = (quantity: number, step: number) => (step > 0 ? Math.ceil(quantity / step) * step : quantity);
+
 /**
- * The lines to buy: each line grows by `percent` spares, rounded up, except the plates (one per card, and big
- * enough not to go missing). The exact counts stay what the cards show.
+ * The lines to buy: each line grows by `percent` spares, rounded up, then up again to a whole number of `roundUp`
+ * (10: 64 becomes 70), except the plates (one per card, and big enough not to go missing). Everything added counts as
+ * spares. The exact counts stay what the cards show.
  */
-export const withSpares = (lines: PartLine[], percent: number, platePartId: string): PartLine[] =>
+export const withSpares = (lines: PartLine[], percent: number, platePartId: string, roundUp = 0): PartLine[] =>
     lines.map((line) => {
-        const spares = line.partId === platePartId ? 0 : sparesFor(line.quantity, percent);
-        return { ...line, quantity: line.quantity + spares, spares };
+        if (line.partId === platePartId) return { ...line, spares: 0 };
+        const quantity = roundUpTo(line.quantity + sparesFor(line.quantity, percent), roundUp);
+        return { ...line, quantity, spares: quantity - line.quantity };
     });
 
 /** The mosaic's own brick lines: one per colour used, with its count. */
