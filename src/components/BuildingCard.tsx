@@ -130,7 +130,9 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
                         gridAutoRows: mm(t.bagRowMm),
                         columnGap: mm(BAG_GAP_MM),
                         flexShrink: 0,
+                        // at the card's foot, just above the club line: the spare height goes above it
                         margin: 0,
+                        marginTop: 'auto',
                         padding: 0,
                         listStyle: 'none',
                         lineHeight: 1,
@@ -171,7 +173,8 @@ const BuildingCard = ({ card, settings, brick, layout }: BuildingCardProps) => {
             {settings.clubEvent.trim() && (
                 <Box
                     sx={{
-                        marginTop: 'auto',
+                        // with no bag list, the club line takes the card's foot itself
+                        marginTop: text.bagRows > 0 ? 0 : 'auto',
                         width: '100%',
                         height: mm(t.footerMm),
                         flexShrink: 0,

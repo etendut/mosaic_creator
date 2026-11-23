@@ -6,7 +6,7 @@ const W = { id: 1, name: 'White', hex: '#FFFFFF', type: 'Solid' as const };
 const grid = (rows: Cell[][]): PixelGrid => ({ width: rows[0].length, height: rows.length, rows });
 
 describe('cardColorCounts', () => {
-    it("counts a card's bricks per colour, most first, then by id, skipping empty cells", () => {
+    it("counts a card's bricks per colour, in colour id order, skipping empty cells", () => {
         const a = { id: 5, name: 'Red', hex: '#B30006', type: 'Solid' as const };
         const b = { id: 1, name: 'White', hex: '#FFFFFF', type: 'Solid' as const };
         const c = { id: 11, name: 'Black', hex: '#212121', type: 'Solid' as const };
@@ -21,8 +21,8 @@ describe('cardColorCounts', () => {
         };
         const counts = cardColorCounts(card);
         expect(counts.map((x) => [x.color.id, x.count])).toEqual([
-            [5, 3],
             [1, 2],
+            [5, 3],
             [11, 1],
         ]);
         expect(counts.reduce((sum, x) => sum + x.count, 0)).toBe(card.brickCount);
