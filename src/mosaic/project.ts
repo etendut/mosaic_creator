@@ -8,6 +8,7 @@ import type { CardSettings, CardSize, PaperSize } from './types';
 
 export const MAX_PLATES_ACROSS = 40;
 export const MAX_SPARES_PERCENT = 100;
+export const MAX_ROUND_UP = 1000;
 
 /** Everything about a mosaic except the image: what a project file and the browser's memory hold. */
 export interface ProjectSettings {
@@ -24,6 +25,8 @@ export interface ProjectSettings {
     swaps: [number, number][];
     /** Extra bricks to buy, as a whole percentage of each colour (0 to MAX_SPARES_PERCENT). */
     sparesPercent: number;
+    /** Each colour's count, after spares, rounded up to a whole number of this many (0 to MAX_ROUND_UP; 0 and 1: none). */
+    roundUp: number;
     /** Bricks changed by hand on the Bricks step. */
     touchUps: TouchUps | null;
 }
@@ -53,6 +56,7 @@ export const DEFAULT_PROJECT: ProjectSettings = {
     dithering: 'none',
     swaps: [],
     sparesPercent: 0,
+    roundUp: 0,
     touchUps: null,
 };
 
@@ -130,6 +134,7 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
             : d.swaps,
         sparesPercent:
             isId(v.sparesPercent) && v.sparesPercent <= MAX_SPARES_PERCENT ? v.sparesPercent : d.sparesPercent,
+        roundUp: isId(v.roundUp) && v.roundUp <= MAX_ROUND_UP ? v.roundUp : d.roundUp,
         touchUps: sanitizeTouchUps(v.touchUps),
     };
 };

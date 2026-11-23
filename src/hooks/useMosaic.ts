@@ -71,8 +71,8 @@ export const useMosaic = () => {
         [cards, cardGrid.columns, brick, plate],
     );
     const order = useMemo(
-        () => withSpares(parts, project.sparesPercent, plate.partId),
-        [parts, project.sparesPercent, plate.partId],
+        () => withSpares(parts, project.sparesPercent, plate.partId, project.roundUp),
+        [parts, project.sparesPercent, plate.partId, project.roundUp],
     );
     const maxCardColors = useMemo(
         () => cards.reduce((most, card) => Math.max(most, cardColorCounts(card).length), 0),
@@ -189,10 +189,12 @@ export const useMosaic = () => {
         cards,
         /** Exact counts, as the cards show them. */
         parts,
-        /** What to buy: the parts plus spares. */
+        /** What to buy: the parts plus spares, rounded up. */
         order,
         sparesPercent: project.sparesPercent,
         setSparesPercent: (n: number) => update({ sparesPercent: n }),
+        roundUp: project.roundUp,
+        setRoundUp: (n: number) => update({ roundUp: n }),
         /** How the cards print with the current settings. */
         layout: layoutFor(settings),
         layoutFor,
