@@ -30,6 +30,16 @@ describe('Print step', () => {
         await choose(user, 'Print', 'Cards, pages 1–2');
         expect(screen.queryByRole('list', { name: 'Colours used' })).not.toBeInTheDocument();
         expect(sheets()).toBe(12);
+        // white cards by default, each with a cutting guide: a thin dashed line half the gap out, so neighbouring
+        // cards share one line in the middle of the gap
+        expect(screen.getByRole('group', { name: 'Card A1' })).toHaveStyle({ backgroundColor: '#FFFFFF' });
+        const guides = screen.getAllByTestId('cutting-guide');
+        expect(guides).toHaveLength(12);
+        // dashed, in `muted`, 1mm out (the browser gives lengths in px: 1mm is 3.78px)
+        const guide = getComputedStyle(guides[0]);
+        expect(guide.outlineStyle).toBe('dashed');
+        expect(guide.outline).toContain('rgb(91, 99, 107)');
+        expect(parseFloat(guide.outlineOffset)).toBeCloseTo(96 / 25.4, 2);
         expect(tools().getByText('12 cards on 2 pages, 8 per A4 landscape page.')).toBeInTheDocument();
         expect(tools().getByRole('button', { name: 'Print cards' })).toBeInTheDocument();
     });
