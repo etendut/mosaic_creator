@@ -24,7 +24,7 @@ const STOPS = [
     ['Bricks', 'group-plate', "Pick the plate and brick you'll build with."],
     ['Bricks', 'info-bar', 'Check here as you change settings'],
     ['Touch up', 'group-paint', 'Paint single bricks to sharpen faces and edges.'],
-    ['Cards', 'group-size', 'Each card covers one plate.'],
+    ['Cards', 'group-text', 'Each card covers one plate'],
     ['Parts', 'download-xml', 'Download the parts as a BrickLink wanted list.'],
     ['Print', 'print-action', 'Print the map page for yourself and one card for each builder.'],
     ['Print', 'mosaics-link', "Open Mosaics to find every mosaic you've made"],

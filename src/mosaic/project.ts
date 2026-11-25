@@ -4,7 +4,7 @@ import type { ColorMetric } from './color';
 import type { PalettePreset } from './palette';
 import type { Dithering } from './quantize';
 import type { Edit, TouchUps } from './touchUp';
-import type { CardSettings, CardSize, PaperSize } from './types';
+import type { CardSettings, PaperSize } from './types';
 
 export const MAX_PLATES_ACROSS = 40;
 export const MAX_SPARES_PERCENT = 100;
@@ -36,11 +36,7 @@ export const DEFAULT_CARD: CardSettings = {
     clubEvent: 'Our Brick Club',
     topMessage: 'Take the ticket and using the bricks on the table, copy the grid below',
     bottomMessage: 'Then hand it to one of the volunteers.\nStand back and watch the magic',
-    backgroundColor: '#4CAF50',
     paperSize: 'A4',
-    cardSize: 'real',
-    // off by default: it costs space, e.g. 8×8 real size cards fit 4 to a page with it instead of 8
-    bagList: false,
 };
 
 export const DEFAULT_PROJECT: ProjectSettings = {
@@ -72,7 +68,6 @@ const oneOf =
     (v: unknown): v is T =>
         options.includes(v as T);
 const isString = (v: unknown): v is string => typeof v === 'string';
-const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean';
 
 /** Touch-ups from a file: a positive size, and edits inside it to a colour id or to no brick. */
 const sanitizeTouchUps = (value: unknown): TouchUps | null => {
@@ -114,14 +109,7 @@ export const sanitizeSettings = (value: unknown): ProjectSettings => {
             clubEvent: pick(card.clubEvent, isString, d.card.clubEvent),
             topMessage: pick(card.topMessage, isString, d.card.topMessage),
             bottomMessage: pick(card.bottomMessage, isString, d.card.bottomMessage),
-            backgroundColor: pick(
-                card.backgroundColor,
-                (c): c is string => isString(c) && /^#[0-9a-f]{6}$/i.test(c),
-                d.card.backgroundColor,
-            ),
             paperSize: pick(card.paperSize, oneOf<PaperSize>('A4', 'Letter', 'A3'), d.card.paperSize),
-            cardSize: pick(card.cardSize, oneOf<CardSize>('real', 'compact'), d.card.cardSize),
-            bagList: pick(card.bagList, isBoolean, d.card.bagList),
         },
         preset: pick(v.preset, oneOf<PalettePreset>('solid', 'all', 'greyscale', 'custom'), d.preset),
         customIds: Array.isArray(v.customIds) ? v.customIds.filter(isId) : d.customIds,
